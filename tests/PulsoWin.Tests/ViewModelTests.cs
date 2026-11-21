@@ -295,6 +295,49 @@ public class ViewModelTests
         Assert.False(vm.IsEasterEggOpen);
     }
 
+    [Fact]
+    public async Task Multi_check_marks_and_unmarks_the_highlighted_rows_together()
+    {
+        var vm = CreateUpdates(new FakeRunnerForVm(WingetTable), new FakeDialogs(true), TwoWindowsUpdates);
+        await vm.SearchCommand.ExecuteAsync(null);
+        ISelectableRow[] highlighted = [vm.Items[0], vm.Items[2]];       // Ctrl + clic en dos filas
+
+        MultiCheck.Toggle(highlighted);                                   // barra espaciadora
+        Assert.True(vm.Items[0].IsSelected && vm.Items[2].IsSelected);
+        Assert.False(vm.Items[1].IsSelected);                             // la no elegida no se toca
+        Assert.Null(vm.AllSelected);
+
+        MultiCheck.Toggle(highlighted);                                   // todas marcadas → se desmarcan
+        Assert.All(vm.Items, i => Assert.False(i.IsSelected));
+
+        vm.Items[0].IsSelected = true;                                    // clic en la casilla de una elegida…
+        MultiCheck.ApplyFrom(vm.Items[0], highlighted);                   // …se aplica a todas las elegidas
+        Assert.True(vm.Items[2].IsSelected);
+
+        vm.Items[1].IsSelected = true;                                    // clic en una fila NO elegida: solo ella
+        MultiCheck.ApplyFrom(vm.Items[1], highlighted);
+        Assert.True(vm.Items[0].IsSelected && vm.Items[2].IsSelected);
+    }
+
+    [Fact]
+    public void Start_fades_out_and_does_nothing_on_the_updates_tab()
+    {
+        using var dir = new TempDir();
+        var vm = new MainViewModel(CreateClean(dir, new FakeDialogs(false)), new HardwareViewModel([]),
+            CreateUpdates(new FakeRunnerForVm(""), new FakeDialogs(false)), new StatusBar(), []);
+        var changed = new List<string?>();
+        vm.PropertyChanged += (_, e) => changed.Add(e.PropertyName);
+
+        Assert.True(vm.IsStartAvailable);
+        vm.SelectedTab = MainViewModel.UpdatesTab;
+        Assert.False(vm.IsStartAvailable);
+        Assert.False(vm.StartCommand.CanExecute(null));                   // ni clic ni teclado lo disparan
+        Assert.Contains(nameof(MainViewModel.IsStartAvailable), changed); // la vista se entera y anima
+
+        vm.SelectedTab = 1;                                               // Hardware: vuelve a estar disponible
+        Assert.True(vm.StartCommand.CanExecute(null));
+    }
+
     [Theory]
     [InlineData("https://www.linkedin.com/in/x", true)]
     [InlineData("http://example.com", false)]

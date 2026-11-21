@@ -54,6 +54,35 @@ public sealed class SelectAllState<T> where T : ISelectableRow
     }
 }
 
+/// <summary>
+/// Marcado en bloque de varias filas elegidas a la vez (Ctrl/Shift + clic), como en el Explorador de Windows.
+/// </summary>
+public static class MultiCheck
+{
+    /// <summary>Barra espaciadora: si alguna elegida está sin marcar, las marca todas; si no, las desmarca todas.</summary>
+    public static void Toggle(IEnumerable<ISelectableRow> rows)
+    {
+        var list = rows.ToList();
+        if (list.Count == 0) return;
+        Set(list, list.Any(r => !r.IsSelected));
+    }
+
+    public static void Set(IEnumerable<ISelectableRow> rows, bool mark)
+    {
+        foreach (var row in rows) row.IsSelected = mark;
+    }
+
+    /// <summary>
+    /// Clic en la casilla de una fila que forma parte de una selección múltiple: el mismo valor
+    /// se aplica a todas las filas elegidas. Si la fila no está entre las elegidas, solo cambia ella.
+    /// </summary>
+    public static void ApplyFrom(ISelectableRow clicked, IReadOnlyCollection<ISelectableRow> highlighted)
+    {
+        if (highlighted.Count < 2 || !highlighted.Contains(clicked)) return;
+        Set(highlighted, clicked.IsSelected);
+    }
+}
+
 /// <summary>Fila de la lista de limpieza: una regla o la papelera.</summary>
 public sealed partial class RuleRow : ObservableObject, ISelectableRow
 {

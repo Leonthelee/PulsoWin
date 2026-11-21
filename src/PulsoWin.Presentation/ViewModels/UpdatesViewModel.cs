@@ -36,7 +36,7 @@ public sealed partial class UpdatesViewModel(
     }
 
     [ObservableProperty]
-    private string _summary = "Pulsa «Buscar actualizaciones». PulsoWin revisa programas y Windows en segundo plano, sin instalar nada todavía.";
+    private string _summary = "Pulsa «Buscar actualizaciones». PulsoWin revisa programas y Windows en segundo plano, sin instalar nada todavía. Para marcar varias: Ctrl o Shift + clic y barra espaciadora, o clic derecho.";
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(ProceedCommand), nameof(SelectAllCommand))]

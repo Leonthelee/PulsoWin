@@ -16,8 +16,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly IReadOnlyList<ISensorSource> _sources;
 
     public const int CleanTab = 0;
+    public const int UpdatesTab = 2;
 
-    [ObservableProperty] private int _selectedTab;
+    /// <summary>START solo sirve para limpiar: en la pestaña Actualizar se desvanece y no responde.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsStartAvailable))]
+    [NotifyCanExecuteChangedFor(nameof(StartCommand))]
+    private int _selectedTab;
+
+    public bool IsStartAvailable => SelectedTab != UpdatesTab;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _heroCaption = "PULSA START";
 
@@ -88,7 +95,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ?.InformationalVersion.Split('+')[0] ?? "?");
 
     /// <summary>El botón START de la cabecera: lleva a la pestaña Limpiar y lanza el análisis.</summary>
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(IsStartAvailable))]
     private async Task StartAsync()
     {
         SelectedTab = CleanTab;
