@@ -15,4 +15,10 @@
     <Deterministic>true</Deterministic>
     <PathMap>$(MSBuildThisFileDirectory)=/src/</PathMap>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- Limpia la ruta absoluta del .pdb en el encabezado CodeView (RSDS) del PE. -->
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <DebugType>none</DebugType>
+  </PropertyGroup>
 </Project>
