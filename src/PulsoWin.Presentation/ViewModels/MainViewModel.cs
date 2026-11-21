@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
+using PulsoWin.Core.Network;
 using PulsoWin.Core.Sensors;
 using PulsoWin.Core.Updates;
 using PulsoWin.Presentation.Services;
@@ -16,7 +17,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly IReadOnlyList<ISensorSource> _sources;
 
     public const int CleanTab = 0;
+    public const int HardwareTab = 1;
     public const int UpdatesTab = 2;
+    public const int NetworkTab = 3;
 
     /// <summary>START solo sirve para limpiar: en la pestaña Actualizar se desvanece y no responde.</summary>
     [ObservableProperty]
@@ -24,7 +27,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(StartCommand))]
     private int _selectedTab;
 
-    public bool IsStartAvailable => SelectedTab != UpdatesTab;
+    /// <summary>START sirve en Limpiar (analiza) y Hardware (lleva a Limpiar); en Actualizar y Red no aporta nada.</summary>
+    public bool IsStartAvailable => SelectedTab is CleanTab or HardwareTab;
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _heroCaption = "PULSA START";
 
@@ -55,11 +59,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         HardwareViewModel hardware,
         UpdatesViewModel updates,
         StatusBar status,
-        IReadOnlyList<ISensorSource> sources)
+        IReadOnlyList<ISensorSource> sources,
+        NetworkViewModel? network = null)
     {
         Clean = clean;
         Hardware = hardware;
         Updates = updates;
+        Network = network ?? new NetworkViewModel(new NetworkMonitorService());
         Status = status;
         _sources = sources;
         Clean.PropertyChanged += OnChildChanged;
@@ -88,6 +94,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public CleanViewModel Clean { get; }
     public HardwareViewModel Hardware { get; }
     public UpdatesViewModel Updates { get; }
+    public NetworkViewModel Network { get; }
     public StatusBar Status { get; }
 
     public string VersionText { get; } =

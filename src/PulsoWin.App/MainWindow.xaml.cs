@@ -34,6 +34,21 @@ public partial class MainWindow : Window
         };
 
         SourceInitialized += (_, _) => UseDarkTitleBar();
+
+        // Monitor de red: arranca con la ventana, en segundo plano, sin bloquear la interfaz.
+        // Al cerrar, _lifetime se cancela y el servicio libera la fuente (y detiene la sesión ETW).
+        Loaded += async (_, _) =>
+        {
+            try
+            {
+                await _vm.Network.RunAsync(_lifetime.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                // Cierre normal de la ventana.
+            }
+        };
+
         Loaded += async (_, _) =>
         {
             try

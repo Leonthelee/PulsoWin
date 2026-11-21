@@ -361,6 +361,43 @@
                     </Grid>
                 </Border>
             </TabItem>
+
+            <!-- RED: top 10 de tráfico en vivo. Arranca con la ventana, aunque la pestaña no esté abierta. -->
+            <TabItem Header="RED" DataContext="{Binding Network}">
+                <Border Style="{StaticResource Card}" CornerRadius="0,12,12,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <DockPanel>
+                            <Border DockPanel.Dock="Right" CornerRadius="6" Padding="8,2" VerticalAlignment="Center"
+                                    BorderBrush="{StaticResource Cyan}" BorderThickness="1">
+                                <TextBlock Text="{Binding ModeText}" FontFamily="{StaticResource MonoFont}" FontSize="11"
+                                           Foreground="{StaticResource Cyan}" />
+                            </Border>
+                            <TextBlock Text="Aquí te muestro tu tráfico de red actual (los primeros 10)"
+                                       Style="{StaticResource Heading}" FontSize="16" />
+                        </DockPanel>
+
+                        <!-- Aviso discreto: modo usuario estándar o motivo del modo por interfaz -->
+                        <TextBlock Grid.Row="1" Text="{Binding Notice}" Style="{StaticResource Muted}" Margin="0,2,0,10"
+                                   AutomationProperties.LiveSetting="Polite" />
+
+                        <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" IsReadOnly="True">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="PID" Binding="{Binding PidText}" Width="80" />
+                                <DataGridTextColumn Header="PROCESO" Binding="{Binding Process}" Width="2*" />
+                                <DataGridTextColumn Header="DESCARGA (RX)" Binding="{Binding RxText}" Width="*" />
+                                <DataGridTextColumn Header="SUBIDA (TX)" Binding="{Binding TxText}" Width="*" />
+                                <DataGridTextColumn Header="TOTAL SESIÓN" Binding="{Binding SessionTotalText}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </Grid>
+                </Border>
+            </TabItem>
         </TabControl>
 
         <!-- ===================== BARRA DE ESTADO ===================== -->

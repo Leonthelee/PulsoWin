@@ -10,5 +10,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.15" />
     <PackageReference Include="System.Management" Version="10.0.0" />
     <PackageReference Include="System.Diagnostics.PerformanceCounter" Version="10.0.15" />
+    <!-- ETW (Event Tracing for Windows) para medir red por proceso cuando la app corre como administrador. MIT. -->
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="4.0.2" />
   </ItemGroup>
 </Project>

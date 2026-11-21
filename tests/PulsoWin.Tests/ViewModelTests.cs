@@ -336,6 +336,8 @@ public class ViewModelTests
 
         vm.SelectedTab = 1;                                               // Hardware: vuelve a estar disponible
         Assert.True(vm.StartCommand.CanExecute(null));
+        vm.SelectedTab = MainViewModel.NetworkTab;                        // Red: tampoco sirve ahí
+        Assert.False(vm.IsStartAvailable);
     }
 
     [Theory]
