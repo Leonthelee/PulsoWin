@@ -1,9 +1,12 @@
 # PulsoWin
 
-Limpiador (tipo CCleaner) y visor de hardware (tipo Speccy) en una sola app para Windows 10/11.
-Diseño propio: no reutiliza código, reglas ni recursos de CCleaner o Speccy.
+Limpiador y visor de hardware en una sola app para Windows 10/11, **gratis y de código abierto**.
+Pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros:
+muestra qué va a borrar antes de hacerlo, no toca el registro y no usa drivers de kernel.
 
-Estado: **MVP inicial**. Compila sin advertencias con el SDK 10.0.404 y pasan las 35 pruebas del motor. Falta probarlo en hardware real (con y sin GPU NVIDIA, NVMe y SATA).
+Estado: **MVP inicial**. Compila sin advertencias con el SDK de .NET 10 y pasan las 55 pruebas del motor. Probado en un solo equipo (Intel + NVIDIA Quadro + NVMe/SATA); se agradecen reportes de otros equipos.
+
+> **Qué no hace (a propósito):** no promete más FPS, no «optimiza» la RAM y no limpia el registro. Borrar cachés libera espacio, pero no acelera un PC sano; la caché de shaders, de hecho, conviene dejarla (viene desactivada).
 
 ## Compilar y probar
 
@@ -62,3 +65,11 @@ tests/PulsoWin.Tests  pruebas xUnit del motor (sin tocar archivos reales del usu
 4. Extensión con `chrome.browsingData` para limpiar con el navegador abierto (desde Chrome 136 el DevTools Protocol ya no sirve sobre el perfil normal).
 5. Sensores de placa como módulo opcional (LibreHardwareMonitorLib con PawnIO), solo tras probarlo con Memory Integrity y la lista de bloqueo activas.
 6. Distribución: firma de código y build protegido. En 2017 CCleaner se distribuyó con malware y firma válida porque comprometieron su entorno de build.
+
+## Licencia y avisos
+
+[MIT](LICENSE). Puedes usarlo, modificarlo y redistribuirlo libremente, sin garantía de ningún tipo: revisa qué vas a borrar antes de confirmar.
+
+PulsoWin es un proyecto independiente, escrito desde cero. No está afiliado, patrocinado ni respaldado por Gen Digital, Piriform, CCleaner ni Speccy, que son marcas de sus respectivos dueños y se mencionan solo como referencia.
+
+Dependencias: Microsoft.Data.Sqlite y System.Management (MIT), SQLitePCLRaw (Apache-2.0); pruebas con xUnit (Apache-2.0).
