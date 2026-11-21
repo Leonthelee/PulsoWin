@@ -6,6 +6,7 @@ using System.Windows.Threading;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
 using PulsoWin.Core.Sensors;
+using PulsoWin.Core.Updates;
 
 namespace PulsoWin.App;
 
@@ -17,7 +18,11 @@ public partial class MainWindow : Window
 
     private readonly ObservableCollection<RuleRow> _rows = [];
     private readonly ObservableCollection<SensorReading> _sensors = [];
+    private readonly ObservableCollection<PackageRow> _packages = [];
+    private readonly ObservableCollection<WindowsUpdateItem> _winUpdates = [];
     private readonly IProcessProbe _probe = new ProcessProbe();
+    private readonly WingetClient _winget = new();
+    private readonly WindowsUpdateClient _windowsUpdate = new();
     private readonly List<ISensorSource> _sources;
     private readonly DispatcherTimer _timer = new() { Interval = TimeSpan.FromSeconds(2) };
     private List<CookiePlan> _cookiePlans = [];
@@ -34,6 +39,8 @@ public partial class MainWindow : Window
 
         RulesGrid.ItemsSource = _rows;
         SensorsGrid.ItemsSource = _sensors;
+        PackagesGrid.ItemsSource = _packages;
+        WindowsUpdatesGrid.ItemsSource = _winUpdates;
         KeepBox.Text = LoadKeepList();
 
         Loaded += async (_, _) =>
@@ -272,6 +279,125 @@ public partial class MainWindow : Window
         static string Signed(long v) => (v >= 0 ? "+" : "") + Bytes.Format(v);
         static string Percent(double? v) => v is { } x ? $"{x:0.#} %" : "no disponible";
         static string Celsius(double? v) => v is { } x ? $"{x:0.#} °C" : "no disponible";
+    }
+
+    // ------------------------------------------------------------------ actualizaciones
+
+    private async void ScanUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        SetUpdatesBusy(true, "Buscando actualizaciones en winget y Windows Update… (solo lectura)");
+        try
+        {
+            var wingetTask = _winget.ListUpgradesAsync();
+            var wuTask = Task.Run(() => _windowsUpdate.QueryPending());
+            await Task.WhenAll(wingetTask, wuTask);
+
+            var wingetScan = wingetTask.Result;
+            var wuScan = wuTask.Result;
+
+            _packages.Clear();
+            foreach (var pkg in wingetScan.Packages) _packages.Add(new PackageRow(pkg));
+
+            _winUpdates.Clear();
+            foreach (var item in wuScan.Updates) _winUpdates.Add(item);
+
+            WindowsUpdateStatus.Text = !wuScan.IsAvailable
+                ? $"Windows Update: {wuScan.Error}"
+                : wuScan.Updates.Count == 0
+                    ? "Windows Update: no hay actualizaciones pendientes."
+                    : $"Windows Update: {wuScan.Updates.Count} actualización(es) pendiente(s). Usa «Abrir Windows Update» para instalarlas.";
+
+            UpgradeButton.IsEnabled = _packages.Count > 0;
+            StatusText.Text = !wingetScan.IsAvailable
+                ? $"winget no disponible: {wingetScan.Error}"
+                : $"Búsqueda lista: {_packages.Count} paquete(s) en winget y {_winUpdates.Count} en Windows Update.";
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "La búsqueda de actualizaciones falló: " + ex.Message;
+        }
+        finally
+        {
+            SetUpdatesBusy(false);
+        }
+    }
+
+    private async void UpgradeSelected_Click(object sender, RoutedEventArgs e)
+    {
+        var selected = _packages.Where(p => p.IsSelected).ToList();
+        if (selected.Count == 0)
+        {
+            StatusText.Text = "Selecciona al menos un paquete de winget para actualizar.";
+            return;
+        }
+
+        var preview = string.Join(Environment.NewLine, selected.Take(10).Select(p => $"• {p.Name} ({p.Id}): {p.InstalledVersion} → {p.AvailableVersion}"));
+        if (selected.Count > 10) preview += $"{Environment.NewLine}… y {selected.Count - 10} más.";
+        var confirm = $"Se actualizarán {selected.Count} paquete(s) vía winget:\n\n{preview}\n\nAlgunos instaladores pueden pedir confirmación UAC. ¿Continuar?";
+        if (MessageBox.Show(this, confirm, "Confirmar actualización", MessageBoxButton.YesNo, MessageBoxImage.Question)
+            != MessageBoxResult.Yes)
+            return;
+
+        SetUpdatesBusy(true, $"Actualizando {selected.Count} paquete(s)…");
+        var log = new List<string> { $"PulsoWin · actualización winget del {DateTime.Now.ToString("F", CultureInfo.CurrentCulture)}", "" };
+        var ok = 0;
+        var failed = 0;
+        try
+        {
+            foreach (var row in selected)
+            {
+                row.Status = "Actualizando…";
+                StatusText.Text = $"Actualizando {row.Name} ({row.Id})…";
+                var res = await _winget.UpgradeAsync(row.Id);
+                if (res.Succeeded)
+                {
+                    ok++;
+                    row.Status = "Actualizado";
+                    row.IsSelected = false;
+                }
+                else
+                {
+                    failed++;
+                    row.Status = "Error: " + res.Summary;
+                }
+                log.Add($"[{row.Id}] {(res.Succeeded ? "OK" : "FAIL")} (exit {res.ExitCode}) · {res.Summary}");
+            }
+
+            string logPath;
+            try { logPath = CleanLog.Write(DataDir, log); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                logPath = "(no se pudo escribir el registro: " + ex.Message + ")";
+            }
+
+            StatusText.Text = $"Actualización terminada: {ok} OK, {failed} con error. Registro: {logPath}";
+        }
+        finally
+        {
+            SetUpdatesBusy(false);
+            UpgradeButton.IsEnabled = _packages.Any(p => p.IsSelected);
+        }
+    }
+
+    private void OpenWindowsUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            WindowsUpdateClient.OpenWindowsUpdateSettings();
+        }
+        catch (Exception ex)
+        {
+            StatusText.Text = "No se pudo abrir Windows Update: " + ex.Message;
+        }
+    }
+
+    private void SetUpdatesBusy(bool busy, string? status = null)
+    {
+        ScanUpdatesButton.IsEnabled = !busy;
+        if (busy) UpgradeButton.IsEnabled = false;
+        PackagesGrid.IsEnabled = !busy;
+        Cursor = busy ? System.Windows.Input.Cursors.Wait : null;
+        if (status is not null) StatusText.Text = status;
     }
 
     // ------------------------------------------------------------------ utilidades

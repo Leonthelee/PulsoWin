@@ -108,6 +108,64 @@
                                Text="Temperaturas de CPU, voltajes y ventiladores de placa necesitan un driver de kernel; esta versión no instala ninguno y los muestra como «no disponible» en vez de inventar un valor." />
                 </Grid>
             </TabItem>
+
+            <!-- ===================== ACTUALIZAR ===================== -->
+            <TabItem Header="Actualizar">
+                <Grid Margin="10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="2*" />
+                        <ColumnDefinition Width="*" MinWidth="260" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Text="Paquetes de winget con actualización" Style="{StaticResource Heading}" Margin="0,0,0,6" />
+                    <DataGrid x:Name="PackagesGrid" Grid.Row="1" AutoGenerateColumns="False" CanUserAddRows="False"
+                              CanUserDeleteRows="False" HeadersVisibility="Column" SelectionMode="Single"
+                              GridLinesVisibility="Horizontal">
+                        <DataGrid.Columns>
+                            <DataGridTemplateColumn Header="" Width="36">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
+                                                  HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTextColumn Header="Aplicación" Binding="{Binding Name}" IsReadOnly="True" Width="2*" />
+                            <DataGridTextColumn Header="ID" Binding="{Binding Id}" IsReadOnly="True" Width="1.6*" />
+                            <DataGridTextColumn Header="Actual" Binding="{Binding InstalledVersion}" IsReadOnly="True" Width="90" />
+                            <DataGridTextColumn Header="Disponible" Binding="{Binding AvailableVersion}" IsReadOnly="True" Width="90" />
+                            <DataGridTextColumn Header="Estado" Binding="{Binding Status}" IsReadOnly="True" Width="1.4*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+
+                    <TextBlock Grid.Column="1" Text="Windows Update (solo lectura)" Style="{StaticResource Heading}" Margin="14,0,0,6" />
+                    <DockPanel Grid.Row="1" Grid.Column="1" Margin="14,0,0,0">
+                        <TextBlock x:Name="WindowsUpdateStatus" DockPanel.Dock="Top" Style="{StaticResource Muted}"
+                                   TextWrapping="Wrap" Margin="0,0,0,8"
+                                   Text="Pulsa «Buscar actualizaciones» para consultar winget y Windows Update sin instalar nada todavía." />
+                        <Button x:Name="OpenWuButton" DockPanel.Dock="Bottom" Content="Abrir Windows Update"
+                                Margin="0,8,0,0" HorizontalAlignment="Left" Click="OpenWindowsUpdate_Click" />
+                        <DataGrid x:Name="WindowsUpdatesGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                                  HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="KB" Binding="{Binding KbId}" Width="85" />
+                                <DataGridTextColumn Header="Actualización" Binding="{Binding Title}" Width="*" />
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DockPanel>
+
+                    <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal"
+                                HorizontalAlignment="Right" Margin="0,10,0,0">
+                        <Button x:Name="ScanUpdatesButton" Content="Buscar actualizaciones" Margin="0,0,8,0" Click="ScanUpdates_Click" />
+                        <Button x:Name="UpgradeButton" Content="Actualizar seleccionados…" IsEnabled="False" Click="UpgradeSelected_Click" />
+                    </StackPanel>
+                </Grid>
+            </TabItem>
         </TabControl>
     </DockPanel>
 </Window>

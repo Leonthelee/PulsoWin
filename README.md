@@ -28,6 +28,11 @@ dotnet run --project src/PulsoWin.App
 - Sensores en vivo cada 2 s: uso de CPU y RAM, GPU NVIDIA (temperatura, ventilador en %, uso) vía NVML, salud y temperatura de discos (API de almacenamiento de Windows), zonas térmicas ACPI.
 - Lo que el equipo no expone aparece como **«no disponible»**, nunca como cero.
 
+**Actualizar** (`winget` + Windows Update en modo `asInvoker`):
+- Flujo en tres fases igual que Limpiar: **buscar** (solo lectura) → **confirmar** (selección explícita de paquetes) → **actualizar** (`winget upgrade --id <id> --exact --silent` con validación estricta de ID y sin shell).
+- Consulta de actualizaciones pendientes de Windows vía Windows Update Agent COM (`Microsoft.Update.Session`, solo lectura sin elevación) y acceso directo a `ms-settings:windowsupdate` para instalar parches del sistema.
+- Cada lote de actualización deja registro en `%LOCALAPPDATA%\PulsoWin\logs`.
+
 ## Decisiones de diseño
 
 | Decisión | Por qué |
