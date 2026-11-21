@@ -21,4 +21,10 @@
     <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
     <DebugType>none</DebugType>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyMetadata Include="Author" Value="Daniel Elias Diaz Lepe (Leonthelee)" />
+    <AssemblyMetadata Include="Profile" Value="https://www.linkedin.com/in/daniel-elías-diaz-lepe-6a4a6667" />
+    <AssemblyMetadata Include="HelloDev" Value="Si llegaste hasta aqui con strings, ILSpy o REA: bienvenido colega. Codigo limpio, cero telemetria, cero drivers raros. Nos vemos en LinkedIn." />
+  </ItemGroup>
 </Project>
