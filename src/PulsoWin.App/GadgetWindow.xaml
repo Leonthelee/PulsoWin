@@ -56,6 +56,10 @@
         <Border.Effect>
             <DropShadowEffect Color="#FF3EA5" BlurRadius="16" ShadowDepth="0" Opacity="0.45" />
         </Border.Effect>
+        <!-- Todo el gadget al 90 %: más discreto en pantalla sin tocar las proporciones de los diales -->
+        <Border.LayoutTransform>
+            <ScaleTransform ScaleX="0.9" ScaleY="0.9" />
+        </Border.LayoutTransform>
 
         <StackPanel>
             <DockPanel Margin="2,0,0,2">
@@ -81,6 +85,11 @@
                                 ValueText="{Binding CpuText}" SubText="uso total" />
                 <controls:Gauge Width="180" Height="180" Title="RAM" Value="{Binding RamPercent}" Maximum="100"
                                 ValueText="{Binding RamPercentText}" SubText="{Binding RamGbText}" />
+                <controls:Gauge Width="180" Height="180" Title="GPU" Value="{Binding GpuPercent}" Maximum="100"
+                                ValueText="{Binding GpuText}" SubText="{Binding GpuSubText}" />
+                <!-- Temperatura de la GPU en °C (0–100): verde, amarillo desde 70 °C y rojo desde 85 °C -->
+                <controls:Gauge Width="180" Height="180" Title="TEMP GPU" Value="{Binding GpuTempC}" Maximum="100"
+                                ValueText="{Binding GpuTempText}" SubText="{Binding GpuTempSubText}" ScaleText="0–100 °C" />
             </StackPanel>
         </StackPanel>
     </Border>

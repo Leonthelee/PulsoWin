@@ -8,7 +8,7 @@ namespace PulsoWin.App.Controls;
 
 /// <summary>
 /// Dial circular con aguja animada. <see cref="Value"/>/<see cref="Maximum"/> definen la posición (0..1);
-/// la aguja y el arco de valor siguen a <see cref="Displayed"/>, que se anima con suavizado (CubicEase, 0,7 s)
+/// la aguja y el arco de valor siguen a <see cref="Displayed"/>, que se anima con suavizado (CubicEase, 0,6 s: termina antes del siguiente refresco de 1 s)
 /// para que la aguja no salte. Con <see cref="UseThresholdColors"/> el arco es verde, amarillo (&gt;70 %) o rojo (&gt;85 %).
 /// </summary>
 public partial class Gauge : UserControl
@@ -68,7 +68,7 @@ public partial class Gauge : UserControl
             Displayed = target;
             return;
         }
-        var animation = new DoubleAnimation(target, TimeSpan.FromMilliseconds(700))
+        var animation = new DoubleAnimation(target, TimeSpan.FromMilliseconds(600))
         {
             EasingFunction = new CubicEase { EasingMode = EasingMode.EaseOut },
         };

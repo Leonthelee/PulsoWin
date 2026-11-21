@@ -28,6 +28,14 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
     [ObservableProperty] private string _ramPercentText = "—";
     [ObservableProperty] private string _ramGbText = "";
 
+    // GPU (uso y temperatura; «no disponible» cuando el equipo no los expone)
+    [ObservableProperty] private double _gpuPercent;
+    [ObservableProperty] private string _gpuText = "—";
+    [ObservableProperty] private string _gpuSubText = "";
+    [ObservableProperty] private double _gpuTempC;
+    [ObservableProperty] private string _gpuTempText = "—";
+    [ObservableProperty] private string _gpuTempSubText = "";
+
     // Red
     [ObservableProperty] private double _netBytesPerSecond;
     [ObservableProperty] private string _netRateText = "—";
@@ -69,6 +77,13 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
         RamPercentText = $"{s.RamPercent:0.#} %";
         RamGbText = $"{s.RamUsedGB:0.0} / {s.RamTotalGB:0.0} GB";
 
+        GpuPercent = s.GpuPercent ?? 0;
+        GpuText = s.GpuPercent is { } g ? $"{g:0} %" : "—";
+        GpuSubText = s.GpuPercent is null ? "no disponible" : Shorten(s.GpuName) ?? "uso total";
+        GpuTempC = s.GpuTempC ?? 0;
+        GpuTempText = s.GpuTempC is { } t ? $"{t:0} °C" : "—";
+        GpuTempSubText = s.GpuTempC is null ? "no disponible" : "GPU";
+
         var bytesPerSecond = (s.NetRxKBps + s.NetTxKBps) * 1024;
         NetScaleMax = _scale.Next(bytesPerSecond);
         NetBytesPerSecond = bytesPerSecond;
@@ -94,14 +109,22 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
         }
         while (TopNetwork.Count > items.Count) TopNetwork.RemoveAt(TopNetwork.Count - 1);
     }
+
+    /// <summary>"NVIDIA Quadro P1000" → "Quadro P1000": el nombre cabe bajo el dial.</summary>
+    private static string? Shorten(string? gpuName)
+    {
+        if (string.IsNullOrWhiteSpace(gpuName)) return null;
+        var name = gpuName.Replace("NVIDIA ", "", StringComparison.OrdinalIgnoreCase).Replace("GeForce ", "", StringComparison.OrdinalIgnoreCase);
+        return name.Length <= 22 ? name : name[..21] + "…";
+    }
 }
 
 /// <summary>
 /// Escala dinámica del dial de red: el máximo es el escalón redondo más chico que cubre el pico
-/// de las últimas <c>window</c> lecturas (≈30 s). Sube de inmediato y baja solo cuando el pico se olvida,
+/// de las últimas <c>window</c> lecturas (30 lecturas de 1 s ≈ 30 s). Sube de inmediato y baja solo cuando el pico se olvida,
 /// así la aguja no salta de escala con cada ráfaga corta.
 /// </summary>
-public sealed class NetworkScale(int window = 15)
+public sealed class NetworkScale(int window = 30)
 {
     public static readonly double[] Steps =
     [

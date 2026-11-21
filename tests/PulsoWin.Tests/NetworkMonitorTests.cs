@@ -38,7 +38,8 @@ public class NetworkMonitorTests
             () => interfaces,
             TimeSpan.FromMilliseconds(40),
             cpu: () => cpu,
-            memory: () => FakeRam);
+            memory: () => FakeRam,
+            gpu: () => new GpuStatus("NVIDIA Quadro P1000", 37, 64, "NVML"));
 
     private static async Task<List<SystemMetricsSnapshot>> RunUntil(SystemMetricsService service, int snapshots)
     {
@@ -133,6 +134,8 @@ public class NetworkMonitorTests
         Assert.Equal(12, last.RamUsedGB, 3);
         Assert.Equal(16, last.RamTotalGB, 3);
         Assert.True(last.NetRxKBps > 0);
+        Assert.Equal(37, last.GpuPercent);
+        Assert.Equal(64, last.GpuTempC);
         Assert.True(etw.Disposed);                                 // sesión ETW cerrada al cancelar
     }
 
@@ -204,6 +207,54 @@ public class NetworkMonitorTests
             "vEthernet (Default Switch)", "vEthernet (Default Switch)-QoS Packet Scheduler-0000", "Wi-Fi",
         ];
         Assert.Equal(new[] { "Ethernet", "vEthernet (Default Switch)", "Wi-Fi" }, InterfaceTrafficSource.WithoutFilterCopies(names));
+    }
+
+    [Fact]
+    public void Engine_refreshes_every_second_by_default()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(1), SystemMetricsService.DefaultInterval);
+    }
+
+    [Fact]
+    public void Total_gpu_usage_is_the_busiest_engine_summed_across_processes()
+    {
+        GpuEngineUsage[] usage =
+        [
+            new(100, "3D", 30), new(200, "3D", 25),          // dos juegos/apps en 3D → 55 %
+            new(100, "VideoDecode", 40),                      // un video → 40 %
+            new(300, "Copy", 5),
+        ];
+        Assert.Equal(55, GpuEngineCounters.Total(usage));
+        Assert.Equal(100, GpuEngineCounters.Total([new(1, "3D", 80), new(2, "3D", 70)])); // nunca más de 100 %
+        Assert.Null(GpuEngineCounters.Total([]));                                           // primera lectura
+    }
+
+    [Theory]
+    [InlineData(false, new string[0], true)]                         // usuario estándar al abrir: se pide
+    [InlineData(true, new string[0], false)]                         // ya es administrador
+    [InlineData(false, new[] { "--sin-admin" }, false)]               // la persona no lo quiere
+    [InlineData(false, new[] { "--elevado" }, false)]                 // ya se intentó: no preguntar en bucle
+    [InlineData(false, new[] { "--wu-install", "x" }, false)]         // el auxiliar de Windows Update no se toca
+    public void Admin_is_requested_once_at_startup_and_can_be_skipped(bool isAdmin, string[] args, bool expected)
+    {
+        Assert.Equal(expected, PulsoWin.Presentation.Services.ElevationPolicy.ShouldRequestAdmin(isAdmin, args));
+    }
+
+    [Fact]
+    public void Gpu_dials_show_not_available_instead_of_zero()
+    {
+        var vm = new MetricsViewModel(new SystemMetricsService());
+        vm.Apply(new SystemMetricsSnapshot(DateTimeOffset.Now, 10, 50, 8, 16, 0, 0, 0, [], false,
+            NetworkMonitorMode.PerInterface, "", GpuPercent: null, GpuTempC: null));
+        Assert.Equal("—", vm.GpuText);
+        Assert.Equal("no disponible", vm.GpuSubText);
+        Assert.Equal("no disponible", vm.GpuTempSubText);
+
+        vm.Apply(new SystemMetricsSnapshot(DateTimeOffset.Now, 10, 50, 8, 16, 0, 0, 0, [], false,
+            NetworkMonitorMode.PerInterface, "", GpuPercent: 37.4, GpuTempC: 64, GpuName: "NVIDIA Quadro P1000"));
+        Assert.Equal("37 %", vm.GpuText);
+        Assert.Equal("Quadro P1000", vm.GpuSubText);
+        Assert.Equal("64 °C", vm.GpuTempText);
     }
 
     // ------------------------------------------------------------------ vista: diales y escala

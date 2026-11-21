@@ -17,7 +17,10 @@ public sealed record SystemMetricsSnapshot(
     IReadOnlyList<NetworkUsageItem> TopNetworkProcesses,
     bool IsAdminMode,
     NetworkMonitorMode NetworkMode,
-    string NetworkNotice);
+    string NetworkNotice,
+    double? GpuPercent = null,
+    double? GpuTempC = null,
+    string? GpuName = null);
 
 /// <summary>
 /// Motor único en segundo plano: CPU (GetSystemTimes), RAM (GlobalMemoryStatusEx) y red (ETW con administrador,
@@ -33,8 +36,12 @@ public sealed class SystemMetricsService(
     int top = 10,
     TimeProvider? time = null,
     Func<double?>? cpu = null,
-    Func<MemoryInfo?>? memory = null)
+    Func<MemoryInfo?>? memory = null,
+    Func<GpuStatus>? gpu = null)
 {
+    /// <summary>Cada cuánto se publica una foto: 1 s para que las agujas se vean casi en vivo.</summary>
+    public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(1);
+
     public const string StandardUserNotice =
         "Modo usuario estándar: para ver el consumo exacto en MB por proceso, ejecuta la app como Administrador.";
     public const string AdministratorNotice = "Modo administrador: consumo exacto por proceso (ETW del kernel).";
@@ -42,7 +49,7 @@ public sealed class SystemMetricsService(
     private readonly Func<bool> _isAdministrator = isAdministrator ?? IsRunningAsAdministrator;
     private readonly Func<ITrafficSource> _etwFactory = etwFactory ?? (() => new EtwTrafficSource());
     private readonly Func<ITrafficSource> _interfaceFactory = interfaceFactory ?? (() => new InterfaceTrafficSource());
-    private readonly TimeSpan _interval = interval ?? TimeSpan.FromSeconds(2);
+    private readonly TimeSpan _interval = interval ?? DefaultInterval;
     private readonly TimeProvider _time = time ?? TimeProvider.System;
     private readonly Func<double?> _cpu = cpu ?? new CpuSampler().Sample;
     private readonly Func<MemoryInfo?> _memory = memory ?? MemoryInfo.Current;
@@ -66,18 +73,21 @@ public sealed class SystemMetricsService(
     {
         var isAdmin = _isAdministrator();
         var (source, notice) = await Task.Run(() => OpenNetworkSource(isAdmin), cancellationToken);
+        using var gpuSampler = gpu is null ? new GpuSampler() : null;   // NVML se libera al terminar
+        var readGpu = gpu ?? gpuSampler!.Sample;
         using (source)
         {
             var calculator = new TrafficRateCalculator(top);
             var last = _time.GetTimestamp();
-            await Task.Run(() => { _cpu(); calculator.Next(source.ReadCounters(), _interval); }, cancellationToken); // referencias
+            await Task.Run(() => { _cpu(); readGpu(); calculator.Next(source.ReadCounters(), _interval); }, cancellationToken); // referencias
 
             using var timer = new PeriodicTimer(_interval, _time);
             try
             {
                 while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(true))
                 {
-                    var (cpuNow, mem, counters) = await Task.Run(() => (_cpu(), _memory(), source.ReadCounters()), cancellationToken)
+                    var (cpuNow, mem, counters, gpuNow) = await Task.Run(() => (_cpu(), _memory(), source.ReadCounters(), readGpu()),
+                            cancellationToken)
                         .ConfigureAwait(true);
                     var now = _time.GetTimestamp();
                     var net = calculator.Next(counters, _time.GetElapsedTime(last, now));
@@ -96,7 +106,10 @@ public sealed class SystemMetricsService(
                         net.Top,
                         isAdmin,
                         source.Mode,
-                        notice);
+                        notice,
+                        gpuNow.UsagePercent,
+                        gpuNow.TemperatureC,
+                        gpuNow.Name);
                     Latest = snapshot;
                     SnapshotUpdated?.Invoke(this, snapshot);
                 }

@@ -50,6 +50,25 @@ public sealed class NvmlSource : ISensorSource, IDisposable
         }
     }
 
+    /// <summary>Estado de la primera GPU NVIDIA (para los diales). null si no hay NVML.</summary>
+    public NvmlStatus? ReadPrimary()
+    {
+        lock (_gate)
+        {
+            if (!EnsureInitialized()) return null;
+            if (Native.nvmlDeviceGetCount_v2(out var count) != NVML_SUCCESS || count == 0) return null;
+            if (Native.nvmlDeviceGetHandleByIndex_v2(0, out var device) != NVML_SUCCESS) return null;
+
+            var buffer = new byte[96];
+            var name = Native.nvmlDeviceGetName(device, buffer, (uint)buffer.Length) == NVML_SUCCESS
+                ? Encoding.ASCII.GetString(buffer).TrimEnd('\0')
+                : "GPU NVIDIA";
+            double? temperature = Native.nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, out var t) == NVML_SUCCESS ? t : null;
+            double? usage = Native.nvmlDeviceGetUtilizationRates(device, out var u) == NVML_SUCCESS ? u.Gpu : null;
+            return new NvmlStatus(name, temperature, usage);
+        }
+    }
+
     private bool EnsureInitialized()
     {
         if (_initialized is { } done) return done;

@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 10.0 LTS](https://img.shields.io/badge/.NET-10.0%20LTS-512BD4.svg?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![WPF · MVVM](https://img.shields.io/badge/UI-WPF%20%C2%B7%20MVVM%20Ne%C3%B3n%20Retro-00E5FF.svg)](#-arquitectura-y-flujos-de-ejecución)
-[![Tests 76/76](https://img.shields.io/badge/Tests-76%2F76%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
+[![Tests 119/119](https://img.shields.io/badge/Tests-119%2F119%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
 [![Zero Kernel Drivers](https://img.shields.io/badge/Drivers-Zero%20Kernel%20Drivers-success.svg)](#-decisiones-de-diseño)
 [![Deterministic & AOT-Ready](https://img.shields.io/badge/Build-Deterministic%20%C2%B7%20AOT--Safe-orange.svg)](#-estándares-de-ingeniería-y-trazabilidad)
 
@@ -25,7 +25,13 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **MVP inicial (`v0.2.0`)**. Compila sin advertencias con el SDK de .NET 10 y pasan las **76 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA); se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.3.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **119 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+
+> 🔐 **Para ver las opciones de red por proceso, PulsoWin debe ejecutarse como Administrador.**
+> Al abrir, la app **pide permiso de administrador** (aviso UAC de Windows). Con él, la pestaña **RED** y el Modo Gadget
+> muestran el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión) vía ETW.
+> Si rechazas el aviso, PulsoWin abre igual en **modo usuario estándar**: la red se muestra **por interfaz**
+> (Ethernet, Wi-Fi…) y un aviso lo indica. Para no ver el aviso al abrir: `PulsoWin.exe --sin-admin`.
 - **Qué no hace (a propósito):** no promete más FPS, no «optimiza» la RAM y no limpia el registro. Borrar cachés libera espacio, pero no acelera un PC sano; la caché de shaders, de hecho, conviene dejarla (viene desactivada por defecto).
 
 ---
@@ -54,6 +60,17 @@ Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para q
   - Programas: `winget.exe upgrade --id <id> --exact --silent` con ruta absoluta del ejecutable, validación estricta de ID y sin shell.
   - Parches de Windows: proceso auxiliar acotado (`ElevatedUpdates` / `WindowsUpdateInstaller`) que solicita **un** permiso UAC y solo acepta identificadores con formato GUID. Avisa si requiere reinicio; nunca reinicia solo.
 - Cada lote de actualización queda auditado en `%LOCALAPPDATA%\PulsoWin\logs`.
+
+### 5. Red (tráfico en vivo, Top 10) — por proceso requiere Administrador
+- **«Aquí te muestro tu tráfico de red actual (los primeros 10)»:** se refresca **cada 1 s**, ordenado por descarga + subida, con PID, proceso, descarga y subida (KB/s o MB/s) y total de la sesión (B/KB/MB/GB, base 1024).
+- **Como Administrador:** ETW del kernel (`TraceEvent`, sesión propia con `StopOnDispose`), bytes exactos **por proceso**. La sesión se cierra al salir: no quedan sesiones del kernel huérfanas.
+- **Sin Administrador:** tráfico real **por interfaz** activa (sin loopback ni las copias de filtros del driver) y el aviso «Modo usuario estándar…». Nunca falla por falta de permisos.
+
+### 6. Modo Gadget (tablero flotante)
+- Botón **«◔ Modo Gadget»** en la cabecera: oculta la app completa y muestra una ventana flotante **sin detener el monitoreo**.
+- **5 diales con aguja animada** (suavizada, se refrescan cada 1 s): **Red** (velocidad con escala automática + total de la sesión), **CPU**, **RAM** (con `X.X / Y.Y GB`), **GPU** (uso) y **Temp GPU** (°C). Arco verde → amarillo (&gt;70) → rojo (&gt;85).
+- Sin bordes, translúcida, fuera de la barra de tareas, arrastrable, **siempre visible** (📌) e ícono en la bandeja del sistema. Doble clic o **⤢** vuelve a la app completa.
+- **Sin drivers de kernel ni temperatura de CPU** (no choca con antitrampas como Vanguard): CPU con `GetSystemTimes`, RAM con `GlobalMemoryStatusEx`, GPU con NVML (driver normal de NVIDIA) o los contadores de Windows.
 
 ---
 
@@ -113,7 +130,7 @@ flowchart TD
 
 | Decisión | Por qué |
 |---|---|
-| La app corre como usuario (`asInvoker`) | Patrón recomendado por Microsoft; lo único que necesita administrador (instalar Windows Update) va en un proceso auxiliar aparte y acotado. |
+| Pide administrador al abrir, pero no lo exige | El manifiesto sigue en `asInvoker`: la app se relanza elevada solo si aceptas el aviso (necesario para la red por proceso con ETW). Si lo rechazas, abre igual en modo estándar; `--sin-admin` se salta el aviso. |
 | Front y back separados (MVVM) | `Core` (lógica) ← `Presentation` (estado y comandos, testeable sin ventanas) ← `App` (vistas WPF). |
 | Sin driver de kernel en el MVP | WinRing0 está en la lista de drivers vulnerables (Defender lo detecta, CVE-2020-14979) y Windows 11 la aplica por defecto. |
 | Cookies: borrar filas por dominio, sin descifrar | El dominio se guarda en claro (`host_key` en Chromium, `host` en Firefox); el cifrado app-bound de Chrome no impide borrar. |
@@ -136,7 +153,7 @@ src/
 ├── PulsoWin.Presentation/        ViewModels MVVM y servicios desacoplados de WPF
 └── PulsoWin.App/                 front WPF, tema Neón retro, Assets/pulsowin.ico y auxiliar elevado
 tests/
-└── PulsoWin.Tests/               suite xUnit (76 pruebas unitarias y de ViewModels)
+└── PulsoWin.Tests/               suite xUnit (119 pruebas unitarias y de ViewModels)
 tools/
 └── icon.cs                       generador reproducible del ícono multi-resolución
 ```
@@ -148,7 +165,7 @@ tools/
 Requisito: [SDK de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) (LTS). .NET 8 dejó de tener soporte en noviembre de 2026.
 
 ```powershell
-# 1. Ejecutar toda la suite de pruebas (76/76 en verde)
+# 1. Ejecutar toda la suite de pruebas (119/119 en verde)
 dotnet test --nologo
 
 # 2. Compilar en Release tratando advertencias como errores (sin rutas locales en RSDS)

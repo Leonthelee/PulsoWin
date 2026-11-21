@@ -3,6 +3,32 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub: son los puntos de retorno.
 
+## [0.3.0] — 2026-11-21
+
+> 🔐 **Para ver la red por proceso, PulsoWin debe ejecutarse como Administrador.** Desde esta versión la app
+> lo pide al abrir; si se rechaza, abre igual en modo estándar (red por interfaz). `--sin-admin` se salta el aviso.
+
+### Agregado
+- **Pestaña RED:** «Aquí te muestro tu tráfico de red actual (los primeros 10)». Top 10 en vivo con PID, proceso,
+  descarga, subida y total de la sesión. Con administrador: ETW por proceso (`Microsoft.Diagnostics.Tracing.TraceEvent`,
+  MIT; sesión propia con `StopOnDispose`). Sin administrador: tráfico por interfaz y aviso.
+- **Motor único `SystemMetricsService`:** CPU (`GetSystemTimes`), RAM (`GlobalMemoryStatusEx`), GPU (NVML o contadores
+  de Windows) y red en una sola foto inmutable **cada 1 s**. HUD, pestaña RED y Modo Gadget leen del mismo motor.
+- **Modo Gadget:** ventana flotante sin bordes, translúcida, arrastrable, siempre visible e ícono en la bandeja, con
+  **5 diales** de aguja suavizada: Red (escala automática), CPU, RAM, GPU y Temp GPU. Ocupa un 10 % menos de pantalla.
+- **Pedido de administrador al abrir** (relanzamiento elevado; si se rechaza, sigue en modo estándar).
+- Huevo de pascua: el código Konami muestra la firma de autoría. Selección múltiple en las tablas (Ctrl/Shift + clic,
+  barra espaciadora, clic derecho). Ícono propio de la app.
+- Pruebas: 119 (de 76 en la 0.2.0).
+
+### Cambiado
+- START se desvanece en las pestañas donde no hace nada (Actualizar y Red).
+- El top de GPU por programa y el uso total de GPU comparten la misma lectura de contadores (`GpuEngineCounters`).
+
+### Seguridad
+- Sin drivers de kernel ni temperatura de CPU: el monitoreo no choca con antitrampas (probado junto a Vanguard).
+- La sesión ETW se cierra al salir (verificado: 1 sesión mientras mide, 0 al cerrar).
+
 ## [0.2.0] — 2026-11-21
 
 Ver la [release v0.2.0](https://github.com/Leonthelee/PulsoWin/releases/tag/v0.2.0).

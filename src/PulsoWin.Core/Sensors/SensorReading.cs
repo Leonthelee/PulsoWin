@@ -28,3 +28,6 @@ internal static class Wmi
             or UnauthorizedAccessException
             or System.Runtime.InteropServices.COMException;
 }
+
+/// <summary>Lectura rápida de la primera GPU NVIDIA (nombre, temperatura en °C y uso en %).</summary>
+public sealed record NvmlStatus(string Name, double? TemperatureC, double? UsagePercent);

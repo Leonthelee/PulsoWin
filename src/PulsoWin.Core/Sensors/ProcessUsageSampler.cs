@@ -30,11 +30,7 @@ public sealed partial class ProcessUsageSampler(int top = 3, TimeProvider? time 
     private readonly object _gate = new();
     private Dictionary<int, TimeSpan> _prevCpu = [];
     private DateTimeOffset _prevAt;
-    private Dictionary<string, CounterSample> _prevGpu = [];
-    private bool _gpuAvailable = true;
-
-    [GeneratedRegex(@"^pid_(\d+)_", RegexOptions.CultureInvariant)]
-    private static partial Regex GpuPidRegex();
+    private readonly Metrics.GpuEngineCounters _gpu = new(); // mismos contadores que el uso total de GPU
 
     public UsageTop Sample()
     {
@@ -90,43 +86,17 @@ public sealed partial class ProcessUsageSampler(int top = 3, TimeProvider? time 
                 Top(cpu.Select(kv => (kv.Key, Math.Min(kv.Value.Pct, 100), kv.Value.Count)), v => $"{v:0.#} %", minimum: 0.1),
                 Top(ram.Select(kv => (kv.Key, (double)kv.Value.Bytes, kv.Value.Count)), v => Bytes.Format((long)v), minimum: 1),
                 Top(SampleGpu(names), v => $"{v:0} %", minimum: 0.5),
-                _gpuAvailable);
+                _gpu.IsAvailable);
         }
     }
 
-    private IEnumerable<(string Name, double Value, int Count)> SampleGpu(Dictionary<int, string> names)
-    {
-        if (!_gpuAvailable) return [];
-        InstanceDataCollection data;
-        try
-        {
-            data = new PerformanceCounterCategory("GPU Engine").ReadCategory()["Utilization Percentage"];
-        }
-        catch (Exception ex) when (ex is InvalidOperationException or UnauthorizedAccessException
-                                       or System.ComponentModel.Win32Exception or NullReferenceException)
-        {
-            _gpuAvailable = false; // equipo sin contadores de GPU (o deshabilitados): no se insiste
-            return [];
-        }
-
-        var current = new Dictionary<string, CounterSample>(data.Count);
-        var perPid = new Dictionary<int, double>();
-        foreach (InstanceData instance in data.Values)
-        {
-            current[instance.InstanceName] = instance.Sample;
-            if (!_prevGpu.TryGetValue(instance.InstanceName, out var before)) continue;
-            var match = GpuPidRegex().Match(instance.InstanceName);
-            if (!match.Success || !int.TryParse(match.Groups[1].Value, out var pid)) continue;
-            var pct = CounterSample.Calculate(before, instance.Sample);
-            if (pct > perPid.GetValueOrDefault(pid)) perPid[pid] = pct; // motor más ocupado del proceso
-        }
-        _prevGpu = current;
-
-        return perPid
-            .Where(kv => names.ContainsKey(kv.Key))
-            .GroupBy(kv => names[kv.Key], StringComparer.OrdinalIgnoreCase)
-            .Select(g => (g.Key, Math.Min(g.Sum(kv => kv.Value), 100), g.Count()));
-    }
+    private IEnumerable<(string Name, double Value, int Count)> SampleGpu(Dictionary<int, string> names) =>
+        _gpu.Sample()
+            .GroupBy(u => u.Pid)
+            .Select(g => (Pid: g.Key, Percent: g.Max(u => u.Percent)))   // motor más ocupado del proceso
+            .Where(p => names.ContainsKey(p.Pid))
+            .GroupBy(p => names[p.Pid], StringComparer.OrdinalIgnoreCase)
+            .Select(g => (g.Key, Math.Min(g.Sum(p => p.Percent), 100), g.Count()));
 
     private IReadOnlyList<UsageItem> Top(IEnumerable<(string Name, double Value, int Count)> items, Func<double, string> format, double minimum) =>
         items

@@ -32,6 +32,15 @@ public partial class App : Application
             return;
         }
 
+        // Pide administrador al abrir (para ver la red por proceso). Si se acepta, esta instancia se cierra y sigue
+        // la elevada; si se rechaza, la app abre igual en modo estándar. "--sin-admin" se salta la petición.
+        if (ElevationPolicy.ShouldRequestAdmin(Core.Metrics.SystemMetricsService.IsRunningAsAdministrator(), e.Args)
+            && TryRelaunchElevated(e.Args))
+        {
+            Shutdown(0);
+            return;
+        }
+
         // Errores en el hilo de la interfaz (incluye comandos async): se registran y la app sigue viva.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         // Tareas en segundo plano cuyo error nadie esperó: se registran y se marcan como observadas.
@@ -57,6 +66,26 @@ public partial class App : Application
         MessageBox.Show(
             $"Algo salió mal, pero PulsoWin sigue abierto y no se borró nada a medias sin avisar.\n\n{e.Exception.Message}\n\nDetalle en: {ErrorLog}",
             "PulsoWin", MessageBoxButton.OK, MessageBoxImage.Warning);
+    }
+
+    /// <summary>Relanza este mismo .exe con el aviso de administrador. false si se rechazó o no se pudo.</summary>
+    private static bool TryRelaunchElevated(string[] args)
+    {
+        try
+        {
+            var arguments = string.Join(' ', args.Append(ElevationPolicy.RelaunchedSwitch).Select(a => $"\"{a.Replace("\"", "")}\""));
+            using var elevated = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+                Arguments = arguments,
+            });
+            return elevated is not null;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false; // 1223 = la persona rechazó el aviso: se sigue sin administrador
+        }
     }
 
     private static void Log(string origin, Exception ex)
