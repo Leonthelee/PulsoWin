@@ -76,6 +76,11 @@ tests/PulsoWin.Tests  pruebas xUnit del motor (sin tocar archivos reales del usu
 5. Sensores de placa como módulo opcional (LibreHardwareMonitorLib con PawnIO), solo tras probarlo con Memory Integrity y la lista de bloqueo activas.
 6. Distribución: firma de código y build protegido. En 2017 CCleaner se distribuyó con malware y firma válida porque comprometieron su entorno de build.
 
+## Créditos y desarrollo
+
+- **Autoría y dirección:** Daniel Elías Díaz Lepe ([@Leonthelee](https://github.com/Leonthelee))
+- **Co-desarrollo y revisión cruzada:** Claude (Opus 5.5) y Antigravity Orquestador (Gemini 4 Neon)
+
 ## Licencia y avisos
 
 [MIT](LICENSE). Puedes usarlo, modificarlo y redistribuirlo libremente, sin garantía de ningún tipo: revisa qué vas a borrar antes de confirmar.
