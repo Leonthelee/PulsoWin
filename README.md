@@ -79,7 +79,7 @@ tests/PulsoWin.Tests  pruebas xUnit del motor (sin tocar archivos reales del usu
 ## Créditos y desarrollo
 
 - **Autoría y dirección:** Daniel Elías Díaz Lepe ([@Leonthelee](https://github.com/Leonthelee))
-- **Co-desarrollo y revisión cruzada:** Claude (Opus 5.5) y Antigravity Orquestador (Gemini 4 Neon)
+- **Co-desarrollo y revisión cruzada:** Claude (Opus 5.5 · Anthropic) y Antigravity Orquestador (Gemini 4 Neon · Google)
 
 ## Licencia y avisos
 
