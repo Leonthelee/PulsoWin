@@ -348,5 +348,44 @@
                            AutomationProperties.LiveSetting="Polite" />
             </DockPanel>
         </Border>
+
+        <!-- ===================== HUEVO DE PASCUA: código Konami (↑ ↑ ↓ ↓ ← → ← → B A) ===================== -->
+        <Grid Grid.RowSpan="3" Background="#D90E0B1A"
+              Visibility="{Binding IsEasterEggOpen, Converter={StaticResource BoolToVisibility}}">
+            <Border Width="560" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="32,26" CornerRadius="16"
+                    Background="{StaticResource Surface}" BorderBrush="{StaticResource Magenta}" BorderThickness="2"
+                    Effect="{StaticResource MagentaGlow}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
+                        <Image Source="Assets/pulsowin.ico" Width="48" Height="48" Margin="0,0,14,0" />
+                        <TextBlock Text="CHEAT CODE DESBLOQUEADO" FontFamily="{StaticResource DisplayFont}" FontSize="24"
+                                   FontWeight="Bold" Foreground="{StaticResource Magenta}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Text="↑ ↑ ↓ ↓ ← → ← → B A" HorizontalAlignment="Center" FontFamily="{StaticResource MonoFont}"
+                               FontSize="14" Foreground="{StaticResource Cyan}" Margin="0,0,0,18" />
+
+                    <TextBlock Text="HECHO POR" Style="{StaticResource Heading}" Margin="0,0,0,2" />
+                    <TextBlock Text="{Binding Signature.Author}" FontFamily="{StaticResource DisplayFont}" FontSize="20"
+                               FontWeight="SemiBold" Foreground="{StaticResource Text}" TextWrapping="Wrap" />
+                    <TextBlock Margin="0,4,0,16">
+                        <Hyperlink x:Name="ProfileLink" Click="ProfileLink_Click" Foreground="{StaticResource Cyan}"
+                                   ToolTip="Abrir el perfil en el navegador">
+                            <Run Text="{Binding Signature.Profile, Mode=OneWay}" />
+                        </Hyperlink>
+                    </TextBlock>
+
+                    <Border Background="{StaticResource SurfaceAlt}" CornerRadius="8" Padding="12,10"
+                            BorderBrush="{StaticResource Line}" BorderThickness="1">
+                        <TextBlock Text="{Binding Signature.HelloDev}" TextWrapping="Wrap" FontFamily="{StaticResource MonoFont}"
+                                   Foreground="{StaticResource Green}" LineHeight="20" />
+                    </Border>
+
+                    <TextBlock Text="Co-desarrollo: Claude (Anthropic) y Antigravity (Google)." Style="{StaticResource Muted}"
+                               Margin="0,14,0,18" />
+                    <Button Style="{StaticResource PrimaryButton}" Content="Volver al juego  (Esc)" HorizontalAlignment="Center"
+                            Command="{Binding CloseEasterEggCommand}" />
+                </StackPanel>
+            </Border>
+        </Grid>
     </Grid>
 </Window>

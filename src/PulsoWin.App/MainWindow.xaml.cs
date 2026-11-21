@@ -18,7 +18,20 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         _vm = MainViewModel.Create(new WpfDialogService(this), ElevatedUpdates.InstallAsync);
+        _vm.UseSignatureFrom(typeof(App).Assembly);
         DataContext = _vm;
+
+        // Huevo de pascua: PreviewKeyDown ve las flechas aunque una tabla tenga el foco (y no las consume).
+        PreviewKeyDown += (_, e) =>
+        {
+            if (_vm.IsEasterEggOpen && e.Key == System.Windows.Input.Key.Escape)
+            {
+                _vm.CloseEasterEggCommand.Execute(null);
+                e.Handled = true;
+                return;
+            }
+            _vm.OnKey(e.Key.ToString());
+        };
 
         SourceInitialized += (_, _) => UseDarkTitleBar();
         Loaded += async (_, _) =>
@@ -37,6 +50,19 @@ public partial class MainWindow : Window
             _lifetime.Cancel();
             _vm.Dispose();
         };
+    }
+
+    private void ProfileLink_Click(object sender, RoutedEventArgs e)
+    {
+        if (!_vm.Signature.HasSafeProfileLink) return;
+        try
+        {
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(_vm.Signature.Profile) { UseShellExecute = true });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            // Sin navegador predeterminado: no pasa nada, el enlace queda visible para copiarlo.
+        }
     }
 
     /// <summary>Barra de título oscura (Windows 10 20H1+ y 11), a juego con el tema.</summary>

@@ -21,6 +21,28 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [ObservableProperty] private bool _isBusy;
     [ObservableProperty] private string _heroCaption = "PULSA START";
 
+    // ------------------------------------------------------------------ huevo de pascua
+    private readonly KonamiCode _konami = new();
+
+    /// <summary>Firma de autoría, leída de los metadatos del ensamblado de la app.</summary>
+    public AuthorSignature Signature { get; private set; } = AuthorSignature.FromAssembly(typeof(MainViewModel).Assembly);
+
+    [ObservableProperty] private bool _isEasterEggOpen;
+
+    /// <summary>La vista indica qué ensamblado firma (el .exe), para leer sus metadatos.</summary>
+    public void UseSignatureFrom(Assembly assembly) => Signature = AuthorSignature.FromAssembly(assembly);
+
+    /// <summary>Recibe cada tecla ("Up", "B", …). Devuelve true si con ella se completó el código Konami.</summary>
+    public bool OnKey(string key)
+    {
+        if (!_konami.Push(key)) return false;
+        IsEasterEggOpen = true;
+        return true;
+    }
+
+    [RelayCommand]
+    private void CloseEasterEgg() => IsEasterEggOpen = false;
+
     public MainViewModel(
         CleanViewModel clean,
         HardwareViewModel hardware,

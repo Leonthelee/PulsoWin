@@ -259,6 +259,52 @@ public class ViewModelTests
         Assert.All(vm.Items, i => Assert.True(i.IsSelected));
     }
 
+    [Theory]
+    [InlineData("Up Up Down Down Left Right Left Right B A", true)]
+    [InlineData("Up Up Up Down Down Left Right Left Right B A", true)]       // un "Up" de más no lo arruina
+    [InlineData("X Up Up Down Down Left Right Left Right b a", true)]        // ruido antes y minúsculas
+    [InlineData("Up Up Down Down Left Right Left Right A B", false)]         // B y A invertidas
+    [InlineData("Up Down Down Left Right Left Right B A", false)]
+    public void Konami_code_is_detected_exactly(string keys, bool expected)
+    {
+        var konami = new KonamiCode();
+        var unlocked = keys.Split(' ').Select(konami.Push).ToList();
+        Assert.Equal(expected, unlocked.Last());
+        Assert.True(unlocked.Count(u => u) <= 1);                             // se dispara una sola vez, al final
+    }
+
+    [Fact]
+    public void Easter_egg_opens_with_the_code_and_shows_the_build_signature()
+    {
+        var vm = new MainViewModel(
+            new CleanViewModel([], new FakeProbe(), new FakeDialogs(false), new FakeRecycleBin(), new StatusBar(),
+                Path.GetTempPath(), Array.Empty<ISensorSource>()),
+            new HardwareViewModel([]),
+            CreateUpdates(new FakeRunnerForVm(""), new FakeDialogs(false)), new StatusBar(), []);
+
+        foreach (var key in "Up Up Down Down Left Right Left Right B".Split(' ')) Assert.False(vm.OnKey(key));
+        Assert.True(vm.OnKey("A"));
+        Assert.True(vm.IsEasterEggOpen);
+
+        // La firma visible sale de los mismos AssemblyMetadata que quedan ocultos en el binario.
+        Assert.StartsWith("Daniel Elias Diaz Lepe", vm.Signature.Author);
+        Assert.True(vm.Signature.HasSafeProfileLink);
+        Assert.Contains("bienvenido colega", vm.Signature.HelloDev);
+
+        vm.CloseEasterEggCommand.Execute(null);
+        Assert.False(vm.IsEasterEggOpen);
+    }
+
+    [Theory]
+    [InlineData("https://www.linkedin.com/in/x", true)]
+    [InlineData("http://example.com", false)]
+    [InlineData("file:///C:/Windows/System32/calc.exe", false)]
+    [InlineData("calc.exe", false)]
+    public void Only_https_profile_links_are_opened(string profile, bool safe)
+    {
+        Assert.Equal(safe, new AuthorSignature("a", profile, "h").HasSafeProfileLink);
+    }
+
     [Fact]
     public void Usage_sampler_reports_ram_at_once_and_cpu_from_the_second_sample()
     {
