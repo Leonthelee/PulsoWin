@@ -2,18 +2,16 @@ using System.Runtime.InteropServices;
 
 namespace PulsoWin.Core.Sensors;
 
-/// <summary>Uso de CPU y RAM con APIs de Win32 (sin administrador).</summary>
+/// <summary>Uso de CPU y RAM con APIs de Win32 (sin administrador). El cálculo de CPU es el de <see cref="Metrics.CpuSampler"/>.</summary>
 public sealed class SystemLoadSource : ISensorSource
 {
-    private readonly object _gate = new();
-    private long _prevIdle, _prevKernel, _prevUser;
-    private bool _hasPrevious;
+    private readonly Metrics.CpuSampler _cpu = new();
 
     public string Name => "Sistema";
 
     public IReadOnlyList<SensorReading> Read()
     {
-        var cpu = CpuPercent();
+        var cpu = _cpu.Sample();
         var ram = MemoryInfo.Current();
         return
         [
@@ -24,26 +22,6 @@ public sealed class SystemLoadSource : ISensorSource
         ];
     }
 
-    private double? CpuPercent()
-    {
-        lock (_gate)
-        {
-            if (!GetSystemTimes(out var idle, out var kernel, out var user)) return null;
-            double? result = null;
-            if (_hasPrevious)
-            {
-                var total = (kernel - _prevKernel) + (user - _prevUser); // kernel incluye el tiempo inactivo
-                if (total > 0)
-                    result = Math.Round(Math.Clamp(100.0 * (total - (idle - _prevIdle)) / total, 0, 100), 1);
-            }
-            (_prevIdle, _prevKernel, _prevUser, _hasPrevious) = (idle, kernel, user, true);
-            return result;
-        }
-    }
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [DefaultDllImportSearchPaths(DllImportSearchPath.System32)]
-    private static extern bool GetSystemTimes(out long idleTime, out long kernelTime, out long userTime);
 }
 
 public readonly record struct MemoryInfo(ulong TotalBytes, ulong AvailableBytes, double LoadPercent)

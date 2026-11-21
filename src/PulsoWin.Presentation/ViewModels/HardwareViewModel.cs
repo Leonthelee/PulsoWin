@@ -20,8 +20,6 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
     public ObservableCollection<SensorReading> Sensors { get; } = [];
 
     // Marcadores de la cabecera ("HUD"): lo que un jugador mira primero.
-    [ObservableProperty] private string _cpuText = "—";
-    [ObservableProperty] private string _ramText = "—";
     [ObservableProperty] private string _gpuTempText = "—";
 
     /// <summary>
@@ -64,8 +62,6 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
                 foreach (var reading in readings) Sensors.Add(reading);
             }
 
-            CpuText = Find(readings, r => r.Label == "CPU · uso");
-            RamText = Find(readings, r => r.Label == "RAM · en uso");
             GpuTempText = Find(readings, r => r.Unit == "°C" && r.Label.EndsWith("· temperatura") && r.Source.StartsWith("GPU"));
         }
         finally

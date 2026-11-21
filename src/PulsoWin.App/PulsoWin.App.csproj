@@ -3,6 +3,8 @@
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWPF>true</UseWPF>
+    <!-- Solo para el ícono de la bandeja (NotifyIcon) del Modo Gadget; viene con .NET, sin paquetes extra. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>PulsoWin</AssemblyName>
     <RootNamespace>PulsoWin.App</RootNamespace>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -11,6 +13,12 @@
     <!-- Ícono del .exe (Explorador, accesos directos). Lo genera tools/icon.cs a partir del diseño del mando. -->
     <ApplicationIcon>Assets\pulsowin.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- Windows Forms y System.Drawing NO van como usings implícitos: chocarían con los tipos de WPF
+         (Application, MessageBox, Point, Color…). Se usan con el alias explícito "Forms". -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
   <ItemGroup>
     <!-- El mismo ícono para la barra de título y la barra de tareas. -->
     <Resource Include="Assets\pulsowin.ico" />

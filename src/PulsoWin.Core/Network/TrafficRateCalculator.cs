@@ -1,15 +1,22 @@
 namespace PulsoWin.Core.Network;
 
+/// <summary>Resultado de un intervalo: el top y los totales de TODO el tráfico (no solo del top).</summary>
+public sealed record TrafficResult(
+    IReadOnlyList<NetworkUsageItem> Top,
+    double TotalRxBytesPerSecond,
+    double TotalTxBytesPerSecond,
+    long TotalSessionBytes);
+
 /// <summary>
 /// Convierte contadores acumulados en velocidad actual: (acumulado actual − acumulado anterior) / intervalo.
-/// Ordena de mayor a menor consumo actual (RX + TX) y devuelve como máximo <c>top</c> filas.
+/// Ordena de mayor a menor consumo actual (RX + TX) y devuelve como máximo <c>top</c> filas, más los totales.
 /// Lógica pura y sin estado externo: se prueba sin red ni administrador.
 /// </summary>
 public sealed class TrafficRateCalculator(int top = 10)
 {
     private Dictionary<string, (long Rx, long Tx)> _previous = [];
 
-    public IReadOnlyList<NetworkUsageItem> Next(IReadOnlyList<TrafficCounter> counters, TimeSpan elapsed)
+    public TrafficResult Next(IReadOnlyList<TrafficCounter> counters, TimeSpan elapsed)
     {
         var seconds = Math.Max(elapsed.TotalSeconds, 0.001);
         var current = new Dictionary<string, (long Rx, long Tx)>(counters.Count);
@@ -29,11 +36,13 @@ public sealed class TrafficRateCalculator(int top = 10)
         }
 
         _previous = current;
-        return items
+        var topItems = items
             .OrderByDescending(i => i.CurrentBytesPerSecond)
             .ThenByDescending(i => i.SessionTotalBytes)
             .ThenBy(i => i.Process, StringComparer.OrdinalIgnoreCase)
             .Take(top)
             .ToList();
+        return new TrafficResult(topItems, items.Sum(i => i.RxBytesPerSecond), items.Sum(i => i.TxBytesPerSecond),
+            items.Sum(i => i.SessionTotalBytes));
     }
 }

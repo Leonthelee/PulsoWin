@@ -4,7 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
-using PulsoWin.Core.Network;
+using PulsoWin.Core.Metrics;
 using PulsoWin.Core.Sensors;
 using PulsoWin.Core.Updates;
 using PulsoWin.Presentation.Services;
@@ -60,12 +60,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         UpdatesViewModel updates,
         StatusBar status,
         IReadOnlyList<ISensorSource> sources,
-        NetworkViewModel? network = null)
+        MetricsViewModel? metrics = null)
     {
         Clean = clean;
         Hardware = hardware;
         Updates = updates;
-        Network = network ?? new NetworkViewModel(new NetworkMonitorService());
+        Metrics = metrics ?? new MetricsViewModel(new SystemMetricsService());
         Status = status;
         _sources = sources;
         Clean.PropertyChanged += OnChildChanged;
@@ -94,7 +94,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public CleanViewModel Clean { get; }
     public HardwareViewModel Hardware { get; }
     public UpdatesViewModel Updates { get; }
-    public NetworkViewModel Network { get; }
+    /// <summary>Motor único de métricas en vivo (HUD, pestaña Red y Modo Gadget).</summary>
+    public MetricsViewModel Metrics { get; }
     public StatusBar Status { get; }
 
     public string VersionText { get; } =

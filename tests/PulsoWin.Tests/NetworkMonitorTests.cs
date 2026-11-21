@@ -1,4 +1,6 @@
+using PulsoWin.Core.Metrics;
 using PulsoWin.Core.Network;
+using PulsoWin.Core.Sensors;
 using PulsoWin.Presentation.ViewModels;
 
 namespace PulsoWin.Tests;
@@ -28,6 +30,31 @@ internal sealed class FakeTrafficSource(NetworkMonitorMode mode, bool failOnStar
 
 public class NetworkMonitorTests
 {
+    private static readonly MemoryInfo FakeRam = new(16UL * 1024 * 1024 * 1024, 4UL * 1024 * 1024 * 1024, 75);
+
+    private static SystemMetricsService Service(bool admin, ITrafficSource? etw, ITrafficSource interfaces, double? cpu = 42.5) =>
+        new(() => admin,
+            () => etw ?? throw new InvalidOperationException("ETW no debería usarse"),
+            () => interfaces,
+            TimeSpan.FromMilliseconds(40),
+            cpu: () => cpu,
+            memory: () => FakeRam);
+
+    private static async Task<List<SystemMetricsSnapshot>> RunUntil(SystemMetricsService service, int snapshots)
+    {
+        var received = new List<SystemMetricsSnapshot>();
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        service.SnapshotUpdated += (_, s) =>
+        {
+            lock (received) received.Add(s);
+            if (received.Count >= snapshots) cts.Cancel();
+        };
+        await service.RunAsync(cts.Token);
+        return received;
+    }
+
+    // ------------------------------------------------------------------ formato y cálculo
+
     [Theory]
     [InlineData(0, "0.0 KB/s")]
     [InlineData(1536, "1.5 KB/s")]
@@ -41,35 +68,33 @@ public class NetworkMonitorTests
     }
 
     [Fact]
-    public void Calculator_computes_rate_from_delta_and_sorts_by_current_usage()
+    public void Calculator_computes_rate_from_delta_sorts_and_totals_everything()
     {
-        var calc = new TrafficRateCalculator();
+        var calc = new TrafficRateCalculator(top: 1);
         var first = calc.Next([new("a", 1, "lento", 1000, 0), new("b", 2, "rapido", 0, 0)], TimeSpan.FromSeconds(2));
-        Assert.All(first, i => Assert.Equal(0, i.CurrentBytesPerSecond)); // primera lectura: solo referencia
+        Assert.All(first.Top, i => Assert.Equal(0, i.CurrentBytesPerSecond)); // primera lectura: solo referencia
 
         var second = calc.Next([new("a", 1, "lento", 3000, 0), new("b", 2, "rapido", 8000, 2000)], TimeSpan.FromSeconds(2));
 
-        Assert.Equal("rapido", second[0].Process);
-        Assert.Equal(4000, second[0].RxBytesPerSecond);   // (8000 − 0) / 2 s
-        Assert.Equal(1000, second[0].TxBytesPerSecond);
-        Assert.Equal(1000, second[1].RxBytesPerSecond);   // (3000 − 1000) / 2 s
-        Assert.Equal(10000, second[0].SessionTotalBytes); // RX + TX acumulados en la sesión
+        var only = Assert.Single(second.Top);
+        Assert.Equal("rapido", only.Process);
+        Assert.Equal(4000, only.RxBytesPerSecond);           // (8000 − 0) / 2 s
+        Assert.Equal(1000, only.TxBytesPerSecond);
+        Assert.Equal(5000, second.TotalRxBytesPerSecond);    // los totales incluyen lo que quedó fuera del top
+        Assert.Equal(13000, second.TotalSessionBytes);
     }
 
     [Fact]
     public void Calculator_returns_strictly_the_top_10()
     {
         var calc = new TrafficRateCalculator();
-        var counters = Enumerable.Range(1, 15).Select(i => new TrafficCounter($"k{i}", i, $"p{i}", 0, 0)).ToList();
-        calc.Next(counters, TimeSpan.FromSeconds(2));
-        var next = Enumerable.Range(1, 15).Select(i => new TrafficCounter($"k{i}", i, $"p{i}", i * 1000L, 0)).ToList();
-
-        var top = calc.Next(next, TimeSpan.FromSeconds(1));
+        calc.Next(Enumerable.Range(1, 15).Select(i => new TrafficCounter($"k{i}", i, $"p{i}", 0, 0)).ToList(), TimeSpan.FromSeconds(2));
+        var top = calc.Next(Enumerable.Range(1, 15).Select(i => new TrafficCounter($"k{i}", i, $"p{i}", i * 1000L, 0)).ToList(),
+            TimeSpan.FromSeconds(1)).Top;
 
         Assert.Equal(10, top.Count);
         Assert.Equal("p15", top[0].Process);
         Assert.Equal("p6", top[^1].Process);
-        Assert.True(top.Zip(top.Skip(1)).All(p => p.First.CurrentBytesPerSecond >= p.Second.CurrentBytesPerSecond));
     }
 
     [Fact]
@@ -77,36 +102,37 @@ public class NetworkMonitorTests
     {
         var calc = new TrafficRateCalculator();
         calc.Next([new("a", 7, "x", 5000, 5000)], TimeSpan.FromSeconds(2));
-        var after = calc.Next([new("a", 7, "x", 100, 100)], TimeSpan.FromSeconds(2)); // PID reutilizado / interfaz reiniciada
-        Assert.Equal(0, after[0].CurrentBytesPerSecond);
+        Assert.Equal(0, calc.Next([new("a", 7, "x", 100, 100)], TimeSpan.FromSeconds(2)).Top[0].CurrentBytesPerSecond);
     }
 
-    private static async Task<List<NetworkSnapshot>> RunUntil(NetworkMonitorService service, int snapshots)
+    [Fact]
+    public void Cpu_is_the_busy_share_of_kernel_plus_user_time()
     {
-        var received = new List<NetworkSnapshot>();
-        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
-        service.SnapshotUpdated += (_, s) =>
-        {
-            lock (received) received.Add(s);
-            if (received.Count >= snapshots) cts.Cancel();
-        };
-        await service.RunAsync(cts.Token);
-        return received;
+        var cpu = new CpuSampler();
+        Assert.Null(cpu.Next(idle: 100, kernel: 300, user: 100));          // primera lectura: referencia
+        // +100 de kernel (incluye 50 inactivos) y +100 de usuario → 150 de 200 ocupados = 75 %.
+        Assert.Equal(75, cpu.Next(idle: 150, kernel: 400, user: 200));
+        Assert.Equal(0, cpu.Next(idle: 250, kernel: 500, user: 200));        // todo inactivo
     }
+
+    // ------------------------------------------------------------------ motor único
 
     [Fact]
     public async Task Administrator_uses_ETW_per_process_and_releases_it_on_close()
     {
         var etw = new FakeTrafficSource(NetworkMonitorMode.PerProcess);
-        var service = new NetworkMonitorService(() => true, () => etw,
-            () => throw new InvalidOperationException("no debería usarse"), TimeSpan.FromMilliseconds(40));
+        var snapshots = await RunUntil(Service(admin: true, etw, new FakeTrafficSource(NetworkMonitorMode.PerInterface)), 3);
 
-        var snapshots = await RunUntil(service, 3);
-
-        Assert.All(snapshots, s => Assert.Equal(NetworkMonitorMode.PerProcess, s.Mode));
-        Assert.Equal(NetworkMonitorService.AdministratorNotice, snapshots[0].Notice);
-        Assert.Equal("steam", snapshots[^1].Items[0].Process);   // 5000 B por lectura > 1100 B de chrome
-        Assert.True(etw.Started);
+        var last = snapshots[^1];
+        Assert.True(last.IsAdminMode);
+        Assert.Equal(NetworkMonitorMode.PerProcess, last.NetworkMode);
+        Assert.Equal(SystemMetricsService.AdministratorNotice, last.NetworkNotice);
+        Assert.Equal("steam", last.TopNetworkProcesses[0].Process);
+        Assert.Equal(42.5, last.CpuPercent);
+        Assert.Equal(75, last.RamPercent);
+        Assert.Equal(12, last.RamUsedGB, 3);
+        Assert.Equal(16, last.RamTotalGB, 3);
+        Assert.True(last.NetRxKBps > 0);
         Assert.True(etw.Disposed);                                 // sesión ETW cerrada al cancelar
     }
 
@@ -114,15 +140,11 @@ public class NetworkMonitorTests
     public async Task Standard_user_falls_back_to_interfaces_with_the_exact_notice()
     {
         var interfaces = new FakeTrafficSource(NetworkMonitorMode.PerInterface);
-        var service = new NetworkMonitorService(() => false,
-            () => throw new InvalidOperationException("ETW no debe intentarse sin administrador"),
-            () => interfaces, TimeSpan.FromMilliseconds(40));
+        var snapshots = await RunUntil(Service(admin: false, etw: null, interfaces), 2);
 
-        var snapshots = await RunUntil(service, 2);
-
-        Assert.All(snapshots, s => Assert.Equal(NetworkMonitorMode.PerInterface, s.Mode));
+        Assert.All(snapshots, s => Assert.False(s.IsAdminMode));
         Assert.Equal("Modo usuario estándar: para ver el consumo exacto en MB por proceso, ejecuta la app como Administrador.",
-            snapshots[0].Notice);
+            snapshots[0].NetworkNotice);
         Assert.True(interfaces.Disposed);
     }
 
@@ -131,34 +153,34 @@ public class NetworkMonitorTests
     {
         var etw = new FakeTrafficSource(NetworkMonitorMode.PerProcess, failOnStart: true);
         var interfaces = new FakeTrafficSource(NetworkMonitorMode.PerInterface);
-        var service = new NetworkMonitorService(() => true, () => etw, () => interfaces, TimeSpan.FromMilliseconds(40));
+        var snapshots = await RunUntil(Service(admin: true, etw, interfaces), 2);
 
-        var snapshots = await RunUntil(service, 2);
-
-        Assert.Equal(NetworkMonitorMode.PerInterface, snapshots[0].Mode);
-        Assert.StartsWith("No se pudo iniciar el monitoreo por proceso", snapshots[0].Notice);
-        Assert.True(etw.Disposed);        // la sesión fallida también se libera
-        Assert.True(interfaces.Disposed);
+        Assert.True(snapshots[0].IsAdminMode);
+        Assert.Equal(NetworkMonitorMode.PerInterface, snapshots[0].NetworkMode);
+        Assert.StartsWith("No se pudo iniciar el monitoreo por proceso", snapshots[0].NetworkNotice);
+        Assert.True(etw.Disposed && interfaces.Disposed);
     }
 
     [Fact]
-    public void Driver_filter_copies_of_an_interface_are_not_listed_twice()
+    public async Task Two_views_share_one_engine_without_restarting_it()
     {
-        // Lista real observada en Windows 11 (sin administrador).
-        string[] names =
-        [
-            "Ethernet",
-            "Ethernet-QoS Packet Scheduler-0000",
-            "Ethernet-WFP 802.3 MAC Layer LightWeight Filter-0000",
-            "Ethernet-WFP Native MAC Layer LightWeight Filter-0000",
-            "vEthernet (Default Switch)",
-            "vEthernet (Default Switch)-QoS Packet Scheduler-0000",
-            "vEthernet (WSL (Hyper-V firewall))",
-            "Wi-Fi",                                   // el guion propio del nombre no la descarta
-        ];
+        var interfaces = new FakeTrafficSource(NetworkMonitorMode.PerInterface);
+        var service = Service(admin: false, etw: null, interfaces);
+        var fullApp = new MetricsViewModel(service);
+        using var cts = new CancellationTokenSource();
+        var run = fullApp.RunAsync(cts.Token);
+        await Task.Delay(250);
 
-        Assert.Equal(new[] { "Ethernet", "vEthernet (Default Switch)", "vEthernet (WSL (Hyper-V firewall))", "Wi-Fi" },
-            InterfaceTrafficSource.WithoutFilterCopies(names));
+        // El gadget se conecta a la MISMA fuente: Latest ya tiene datos sin reiniciar nada.
+        Assert.NotNull(service.Latest);
+        var gadget = new MetricsViewModel(service);
+        gadget.Apply(service.Latest!);
+        Assert.Equal(fullApp.CpuText, gadget.CpuText);
+        Assert.Equal(1, interfaces.Started ? 1 : 0);
+
+        await cts.CancelAsync();
+        await run;
+        Assert.True(interfaces.Disposed);
     }
 
     [Fact]
@@ -166,8 +188,7 @@ public class NetworkMonitorTests
     {
         using var source = new InterfaceTrafficSource();
         source.Start();
-        var counters = source.ReadCounters();
-        Assert.All(counters, c =>
+        Assert.All(source.ReadCounters(), c =>
         {
             Assert.Null(c.Pid);
             Assert.True(c.RxTotal >= 0 && c.TxTotal >= 0);
@@ -175,19 +196,54 @@ public class NetworkMonitorTests
     }
 
     [Fact]
-    public async Task View_model_keeps_at_most_10_rows_and_shows_the_mode()
+    public void Driver_filter_copies_of_an_interface_are_not_listed_twice()
     {
-        var interfaces = new FakeTrafficSource(NetworkMonitorMode.PerInterface);
-        var vm = new NetworkViewModel(new NetworkMonitorService(() => false, null, () => interfaces, TimeSpan.FromMilliseconds(40)));
-        using var cts = new CancellationTokenSource();
-        var run = vm.RunAsync(cts.Token);
-        await Task.Delay(300);
-        await cts.CancelAsync();
-        await run;
+        string[] names =
+        [
+            "Ethernet", "Ethernet-QoS Packet Scheduler-0000", "Ethernet-WFP 802.3 MAC Layer LightWeight Filter-0000",
+            "vEthernet (Default Switch)", "vEthernet (Default Switch)-QoS Packet Scheduler-0000", "Wi-Fi",
+        ];
+        Assert.Equal(new[] { "Ethernet", "vEthernet (Default Switch)", "Wi-Fi" }, InterfaceTrafficSource.WithoutFilterCopies(names));
+    }
 
-        Assert.InRange(vm.Items.Count, 1, 10);
-        Assert.False(vm.IsPerProcess);
-        Assert.Equal("POR INTERFAZ", vm.ModeText);
-        Assert.Equal(NetworkMonitorService.StandardUserNotice, vm.Notice);
+    // ------------------------------------------------------------------ vista: diales y escala
+
+    [Theory]
+    [InlineData(0, 64d * 1024)]
+    [InlineData(50d * 1024, 64d * 1024)]
+    [InlineData(300d * 1024, 1d * 1024 * 1024)]
+    [InlineData(1.3 * 1024 * 1024, 4d * 1024 * 1024)]
+    [InlineData(5000d * 1024 * 1024, 1024d * 1024 * 1024)]   // por encima del último escalón: se queda en el máximo
+    public void Network_scale_picks_the_smallest_round_step_that_fits(double bytesPerSecond, double expected)
+    {
+        Assert.Equal(expected, new NetworkScale().Next(bytesPerSecond));
+    }
+
+    [Fact]
+    public void Network_scale_goes_up_at_once_and_down_only_after_the_peak_is_forgotten()
+    {
+        var scale = new NetworkScale(window: 3);
+        Assert.Equal(4d * 1024 * 1024, scale.Next(2d * 1024 * 1024)); // ráfaga de 2 MB/s
+        Assert.Equal(4d * 1024 * 1024, scale.Next(10 * 1024));         // sigue recordando el pico
+        Assert.Equal(4d * 1024 * 1024, scale.Next(10 * 1024));
+        Assert.Equal(64d * 1024, scale.Next(10 * 1024));               // pico olvidado: baja
+    }
+
+    [Fact]
+    public void Metrics_view_model_formats_everything_for_the_dials()
+    {
+        var vm = new MetricsViewModel(new SystemMetricsService());
+        vm.Apply(new SystemMetricsSnapshot(DateTimeOffset.Now, 91.2, 75, 12, 16, 1024, 256, 6L * 1024 * 1024 * 1024,
+            [new NetworkUsageItem(10, "steam", 1024 * 1024, 256 * 1024, 123)], true, NetworkMonitorMode.PerProcess,
+            SystemMetricsService.AdministratorNotice));
+
+        Assert.Equal("91.2 %", vm.CpuText.Replace(',', '.'));
+        Assert.Equal("12.0 / 16.0 GB", vm.RamGbText.Replace(',', '.'));
+        Assert.Equal("1.3 MB/s", vm.NetRateText.Replace(',', '.'));    // 1024 + 256 KB/s
+        Assert.Equal("Sesión 6.0 GB", vm.NetSessionText.Replace(',', '.'));
+        Assert.Equal(4d * 1024 * 1024, vm.NetScaleMax);
+        Assert.InRange(vm.NetNeedle, 0.31, 0.32);                      // 1,25 MB/s de 4 MB/s
+        Assert.Equal("POR PROCESO · ETW", vm.ModeText);
+        Assert.Single(vm.TopNetwork);
     }
 }

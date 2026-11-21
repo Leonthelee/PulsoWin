@@ -35,13 +35,15 @@ public partial class MainWindow : Window
 
         SourceInitialized += (_, _) => UseDarkTitleBar();
 
-        // Monitor de red: arranca con la ventana, en segundo plano, sin bloquear la interfaz.
-        // Al cerrar, _lifetime se cancela y el servicio libera la fuente (y detiene la sesión ETW).
+        // Motor único de métricas (CPU, RAM, red): arranca con la ventana, en segundo plano, sin bloquear la interfaz.
+        // Ocultar esta ventana para el Modo Gadget NO lo detiene (Loaded no se repite al mostrarla de nuevo).
+        // Al cerrar, _lifetime se cancela y el servicio libera la fuente de red (y detiene la sesión ETW).
+        _gadget = new GadgetMode(this, _vm.Metrics);
         Loaded += async (_, _) =>
         {
             try
             {
-                await _vm.Network.RunAsync(_lifetime.Token);
+                await _vm.Metrics.RunAsync(_lifetime.Token);
             }
             catch (OperationCanceledException)
             {
@@ -63,9 +65,14 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             _lifetime.Cancel();
+            _gadget.Dispose();   // cierra el gadget y quita el ícono de la bandeja
             _vm.Dispose();
         };
     }
+
+    private readonly GadgetMode _gadget;
+
+    private void GadgetMode_Click(object sender, RoutedEventArgs e) => _gadget.Enter();
 
     private void ProfileLink_Click(object sender, RoutedEventArgs e)
     {

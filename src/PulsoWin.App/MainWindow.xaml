@@ -101,6 +101,7 @@
                     </StackPanel>
                     <TextBlock Text="Limpia lo que sobra. Mira lo que importa." Style="{StaticResource Muted}" Margin="2,0,0,12" />
 
+                    <StackPanel Orientation="Horizontal">
                     <!-- START es de LIMPIAR: en ACTUALIZAR se desvanece (sin mover el diseño) y no responde a clic ni teclado. -->
                     <Button HorizontalAlignment="Left" FontSize="18" Padding="28,10"
                             Command="{Binding StartCommand}" ToolTip="Analiza qué se puede liberar. No borra nada todavía."
@@ -131,6 +132,13 @@
                         </Button.Style>
                         <TextBlock Text="▶  START" />
                     </Button>
+                    <!-- Modo Gadget: oculta esta ventana y muestra los diales flotantes; el monitoreo no se detiene. -->
+                    <Button Style="{StaticResource SecondaryButton}" Margin="10,0,0,0" Padding="16,10" FontSize="14"
+                            Click="GadgetMode_Click" ToolTip="Ventana flotante con diales de Red, CPU y RAM"
+                            AutomationProperties.Name="Modo Gadget">
+                        <TextBlock Text="◔  Modo Gadget" />
+                    </Button>
+                    </StackPanel>
                 </StackPanel>
 
                 <!-- HUD: valor grande + top 3 de programas que más consumen -->
@@ -143,7 +151,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="CPU" Style="{StaticResource HudLabel}" />
-                                <TextBlock Text="{Binding Hardware.CpuText}" Style="{StaticResource HudValue}" />
+                                <TextBlock Text="{Binding Metrics.CpuText}" Style="{StaticResource HudValue}" />
                             </StackPanel>
                             <ItemsControl Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
                                           ItemsSource="{Binding Hardware.TopCpu}" ItemTemplate="{StaticResource TopItem}" />
@@ -157,7 +165,7 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
                                 <TextBlock Text="RAM" Style="{StaticResource HudLabel}" />
-                                <TextBlock Text="{Binding Hardware.RamText}" Style="{StaticResource HudValue}" />
+                                <TextBlock Text="{Binding Metrics.RamPercentText}" Style="{StaticResource HudValue}" ToolTip="{Binding Metrics.RamGbText}" />
                             </StackPanel>
                             <ItemsControl Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
                                           ItemsSource="{Binding Hardware.TopRam}" ItemTemplate="{StaticResource TopItem}" />
@@ -363,7 +371,7 @@
             </TabItem>
 
             <!-- RED: top 10 de tráfico en vivo. Arranca con la ventana, aunque la pestaña no esté abierta. -->
-            <TabItem Header="RED" DataContext="{Binding Network}">
+            <TabItem Header="RED" DataContext="{Binding Metrics}">
                 <Border Style="{StaticResource Card}" CornerRadius="0,12,12,12">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -386,7 +394,7 @@
                         <TextBlock Grid.Row="1" Text="{Binding Notice}" Style="{StaticResource Muted}" Margin="0,2,0,10"
                                    AutomationProperties.LiveSetting="Polite" />
 
-                        <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" IsReadOnly="True">
+                        <DataGrid Grid.Row="2" ItemsSource="{Binding TopNetwork}" IsReadOnly="True">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="PID" Binding="{Binding PidText}" Width="80" />
                                 <DataGridTextColumn Header="PROCESO" Binding="{Binding Process}" Width="2*" />

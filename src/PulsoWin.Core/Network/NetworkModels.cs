@@ -25,8 +25,6 @@ public sealed record NetworkUsageItem(
     public string SessionTotalText => Bytes.Format(SessionTotalBytes);
 }
 
-/// <summary>Foto del top 10 que el servicio publica cada intervalo.</summary>
-public sealed record NetworkSnapshot(NetworkMonitorMode Mode, IReadOnlyList<NetworkUsageItem> Items, string Notice);
 
 /// <summary>Bytes acumulados desde que empezó la sesión de monitoreo, por proceso o por interfaz.</summary>
 public readonly record struct TrafficCounter(string Key, int? Pid, string Name, long RxTotal, long TxTotal);

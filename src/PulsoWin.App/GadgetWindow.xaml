@@ -1,0 +1,87 @@
+<!--
+  Modo Gadget: ventana flotante sin bordes con 3 diales (Red, CPU, RAM) conectados al MISMO MetricsViewModel
+  que la app completa. Arrastrable; doble clic o el botón ⤢ vuelve a la app completa.
+-->
+<Window x:Class="PulsoWin.App.GadgetWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="clr-namespace:PulsoWin.App.Controls"
+        Title="PulsoWin · Modo Gadget"
+        Icon="Assets/pulsowin.ico"
+        WindowStyle="None" AllowsTransparency="True" Background="Transparent"
+        ShowInTaskbar="False" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
+        Topmost="True" FontFamily="{StaticResource BodyFont}">
+
+    <Window.Resources>
+        <Style x:Key="ChromeButton" TargetType="ButtonBase">
+            <Setter Property="Foreground" Value="{StaticResource TextDim}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Width" Value="28" />
+            <Setter Property="Height" Value="24" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ButtonBase">
+                        <Border x:Name="B" CornerRadius="6" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="B" Property="Background" Value="#2E2754" />
+                                <Setter Property="Foreground" Value="{StaticResource Text}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="PinButton" TargetType="ToggleButton" BasedOn="{StaticResource ChromeButton}">
+            <Style.Triggers>
+                <Trigger Property="IsChecked" Value="True">
+                    <Setter Property="Foreground" Value="{StaticResource Magenta}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+
+    <Border x:Name="Shell" Margin="10" CornerRadius="18" Padding="14,8,14,10" Background="#F2100C1F"
+            BorderThickness="1.5" MouseLeftButtonDown="Shell_MouseLeftButtonDown"
+            ToolTip="Arrastra para mover · doble clic para volver a la app completa">
+        <Border.BorderBrush>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FF3EA5" Offset="0" />
+                <GradientStop Color="#2DE2E6" Offset="1" />
+            </LinearGradientBrush>
+        </Border.BorderBrush>
+        <Border.Effect>
+            <DropShadowEffect Color="#FF3EA5" BlurRadius="16" ShadowDepth="0" Opacity="0.45" />
+        </Border.Effect>
+
+        <StackPanel>
+            <DockPanel Margin="2,0,0,2">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                    <ToggleButton x:Name="PinButton" Style="{StaticResource PinButton}" Content="📌"
+                                  IsChecked="{Binding Topmost, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  ToolTip="Siempre visible" AutomationProperties.Name="Siempre visible" />
+                    <Button Style="{StaticResource ChromeButton}" Content="⤢" Click="Return_Click"
+                            ToolTip="Volver a la app completa" AutomationProperties.Name="Volver a la app completa" />
+                </StackPanel>
+                <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DisplayFont}" FontSize="12" FontWeight="Bold">
+                    <Run Text="PULSO" Foreground="{StaticResource Text}" /><Run Text="WIN" Foreground="{StaticResource Magenta}" />
+                    <Run Text="  ·  " Foreground="{StaticResource TextDim}" /><Run Text="{Binding ModeText, Mode=OneWay}" Foreground="{StaticResource Cyan}" FontFamily="{StaticResource MonoFont}" FontWeight="Normal" FontSize="10.5" />
+                </TextBlock>
+            </DockPanel>
+
+            <StackPanel Orientation="Horizontal">
+                <controls:Gauge Width="180" Height="180" Title="RED" UseThresholdColors="False"
+                                Value="{Binding NetBytesPerSecond}" Maximum="{Binding NetScaleMax}"
+                                ValueText="{Binding NetRateText}" SubText="{Binding NetSessionText}"
+                                ScaleText="{Binding NetScaleText}" />
+                <controls:Gauge Width="180" Height="180" Title="CPU" Value="{Binding CpuPercent}" Maximum="100"
+                                ValueText="{Binding CpuText}" SubText="uso total" />
+                <controls:Gauge Width="180" Height="180" Title="RAM" Value="{Binding RamPercent}" Maximum="100"
+                                ValueText="{Binding RamPercentText}" SubText="{Binding RamGbText}" />
+            </StackPanel>
+        </StackPanel>
+    </Border>
+</Window>
