@@ -149,7 +149,18 @@
                             </StackPanel>
                             <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
                                 <ItemsControl ItemsSource="{Binding Hardware.TopGpu}" ItemTemplate="{StaticResource TopItem}" />
-                                <TextBlock Text="{Binding Hardware.GpuTopNote}" Foreground="{StaticResource TextDim}" FontSize="12" />
+                                <TextBlock Text="{Binding Hardware.GpuTopNote}" Foreground="{StaticResource TextDim}" FontSize="12">
+                                    <!-- Sin nota (hay top de GPU), la línea no ocupa espacio: si no, la tarjeta se desborda -->
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding Hardware.GpuTopNote}" Value="">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
                             </StackPanel>
                         </Grid>
                     </Border>
