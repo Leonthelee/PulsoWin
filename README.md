@@ -3,7 +3,7 @@
 Limpiador (tipo CCleaner) y visor de hardware (tipo Speccy) en una sola app para Windows 10/11.
 Diseño propio: no reutiliza código, reglas ni recursos de CCleaner o Speccy.
 
-Estado: **esqueleto del MVP**. Escrito sin compilar todavía (el equipo donde se generó no tenía SDK de .NET).
+Estado: **MVP inicial**. Compila sin advertencias con el SDK 10.0.404 y pasan las 35 pruebas del motor. Falta probarlo en hardware real (con y sin GPU NVIDIA, NVMe y SATA).
 
 ## Compilar y probar
 
@@ -51,7 +51,7 @@ tests/PulsoWin.Tests  pruebas xUnit del motor (sin tocar archivos reales del usu
 
 ## Próximos pasos
 
-1. Compilar, correr las pruebas y probar en equipos reales (con y sin GPU NVIDIA, NVMe y SATA).
+1. Probar en equipos reales (con y sin GPU NVIDIA, NVMe y SATA).
 2. GPU AMD con ADLX.
 3. Proceso elevado acotado para caché de Windows Update (detener `bits`, `wuauserv` y `cryptsvc`) y `cleanmgr /sagerun`.
 4. Extensión con `chrome.browsingData` para limpiar con el navegador abierto (desde Chrome 136 el DevTools Protocol ya no sirve sobre el perfil normal).
