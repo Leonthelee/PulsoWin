@@ -4,7 +4,7 @@ Limpiador y visor de hardware en una sola app para Windows 10/11, **gratis y de 
 Pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros:
 muestra qué va a borrar antes de hacerlo, no toca el registro y no usa drivers de kernel.
 
-Estado: **MVP inicial**. Compila sin advertencias con el SDK de .NET 10 y pasan las 55 pruebas del motor. Probado en un solo equipo (Intel + NVIDIA Quadro + NVMe/SATA); se agradecen reportes de otros equipos.
+Estado: **MVP inicial**. Compila sin advertencias con el SDK de .NET 10 y pasan las 76 pruebas (motor y pantallas). Probado en un solo equipo (Intel + NVIDIA Quadro + NVMe/SATA); se agradecen reportes de otros equipos.
 
 > **Qué no hace (a propósito):** no promete más FPS, no «optimiza» la RAM y no limpia el registro. Borrar cachés libera espacio, pero no acelera un PC sano; la caché de shaders, de hecho, conviene dejarla (viene desactivada).
 
@@ -26,21 +26,30 @@ dotnet run --project src/PulsoWin.App
 - Flujo en tres fases: **analizar** (solo lectura) → **confirmar** (muestra archivos y tamaño) → **borrar**. Cada limpieza deja un registro en `%LOCALAPPDATA%\PulsoWin\logs`.
 - **Antes / después**: espacio libre, RAM en uso y temperatura máxima leída.
 
+**HUD** (cabecera, siempre visible):
+- CPU, RAM, temperatura de GPU y espacio liberable, cada uno con su **top 3**: los programas que más consumen
+  (agrupando sus procesos, como el Administrador de tareas) y las categorías que más liberan.
+- Botón **▶ START**: va a Limpiar y analiza. El mando de la cabecera se anima mientras la app trabaja.
+
 **Hardware** (sin administrador ni driver):
 - Resumen: SO, CPU, RAM por módulo, placa, BIOS, GPU y discos (WMI).
 - Sensores en vivo cada 2 s: uso de CPU y RAM, GPU NVIDIA (temperatura, ventilador en %, uso) vía NVML, salud y temperatura de discos (API de almacenamiento de Windows), zonas térmicas ACPI.
 - Lo que el equipo no expone aparece como **«no disponible»**, nunca como cero.
 
-**Actualizar** (`winget` + Windows Update en modo `asInvoker`):
-- Flujo en tres fases igual que Limpiar: **buscar** (solo lectura) → **confirmar** (selección explícita de paquetes) → **actualizar** (`winget upgrade --id <id> --exact --silent` con validación estricta de ID y sin shell).
-- Consulta de actualizaciones pendientes de Windows vía Windows Update Agent COM (`Microsoft.Update.Session`, solo lectura sin elevación) y acceso directo a `ms-settings:windowsupdate` para instalar parches del sistema.
-- Cada lote de actualización deja registro en `%LOCALAPPDATA%\PulsoWin\logs`.
+**Actualizar** (todo dentro de PulsoWin):
+- **Buscar** consulta winget y Windows Update en segundo plano (solo lectura) y muestra todo lo pendiente en **una sola lista**.
+- **Proceder** instala lo marcado: programas con `winget upgrade --id <id> --exact --silent` (ID validado, sin shell);
+  actualizaciones de Windows con un proceso auxiliar que pide **un** permiso de administrador (UAC) y solo acepta
+  identificadores con formato GUID. Avisa si hay que reiniciar; nunca reinicia solo.
+- Nada viene marcado: cada actualización se elige a propósito (o con la casilla «seleccionar todo»).
+- Cada lote deja registro en `%LOCALAPPDATA%\PulsoWin\logs`.
 
 ## Decisiones de diseño
 
 | Decisión | Por qué |
 |---|---|
-| La app corre como usuario (`asInvoker`) | Patrón recomendado por Microsoft; la elevación irá en un proceso aparte y acotado. |
+| La app corre como usuario (`asInvoker`) | Patrón recomendado por Microsoft; lo único que necesita administrador (instalar Windows Update) va en un proceso auxiliar aparte y acotado. |
+| Front y back separados (MVVM) | `Core` (lógica) ← `Presentation` (estado y comandos, testeable sin ventanas) ← `App` (vistas WPF). |
 | Sin driver de kernel en el MVP | WinRing0 está en la lista de drivers vulnerables (Defender lo detecta, CVE-2020-14979) y Windows 11 la aplica por defecto. |
 | Cookies: borrar filas por dominio, sin descifrar | El dominio se guarda en claro (`host_key` en Chromium, `host` en Firefox); el cifrado app-bound de Chrome no impide borrar. |
 | No escribir en la base de un navegador abierto | Evita corrupción y bloqueos de SQLite. |
@@ -52,8 +61,9 @@ dotnet run --project src/PulsoWin.App
 ## Estructura
 
 ```
-src/PulsoWin.Core     motor: reglas, escaneo, borrado, cookies, sensores, foto antes/después
-src/PulsoWin.App      interfaz WPF (pestañas Limpiar y Hardware)
+src/PulsoWin.Core          back: reglas, escaneo, borrado, cookies, sensores, top de consumo, winget y Windows Update
+src/PulsoWin.Presentation  ViewModels (MVVM): estado de pantalla y comandos, sin WPF
+src/PulsoWin.App           front WPF: vistas, tema «Neón retro», cabecera animada y auxiliar elevado
 tests/PulsoWin.Tests  pruebas xUnit del motor (sin tocar archivos reales del usuario)
 ```
 

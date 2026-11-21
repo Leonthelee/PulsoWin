@@ -3,7 +3,9 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub: son los puntos de retorno.
 
-## [Sin publicar] — rama `feat/ui-gamer`
+## [0.2.0] — 2026-11-21
+
+Ver la [release v0.2.0](https://github.com/Leonthelee/PulsoWin/releases/tag/v0.2.0).
 
 ### Agregado
 - Diseño «Neón retro» para jugadores: tema oscuro con acentos magenta y cian, tipografía Bahnschrift,
@@ -22,9 +24,12 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   escribe su resultado únicamente en la carpeta de datos de PulsoWin. Se informa si hace falta reiniciar.
 - 9 pruebas más (70 en total): lista única, instala solo los UpdateID marcados, rechazo del UAC, validación de
   identificadores y medición de consumo.
+- Casilla «seleccionar todo» en la cabecera de las tablas de Limpiar y Actualizar (todo / nada / algunas).
+- 6 pruebas más (76 en total): tamaño de Windows Update y casilla «seleccionar todo».
 
 ### Quitado
 - El botón «Abrir Windows Update» (abría Configuración de Windows): ahora todo ocurre dentro de la app.
+- El botón «Marcar todo»: lo reemplaza la casilla de la cabecera.
 
 ### Cambiado
 - Front y back separados en tres capas: `Core` (lógica) ← `Presentation` (estado y comandos) ← `App` (vistas).
@@ -33,6 +38,9 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 ### Corregido
 - La app ya no se cierra ante un error inesperado: se registra en `%LOCALAPPDATA%\PulsoWin\logs\errores.log`,
   se muestra un aviso y la ventana sigue abierta.
+- La pantalla ya no salta cada 2 segundos: tarjetas del HUD de alto fijo y sensores actualizados fila por fila.
+- El tamaño de las actualizaciones de Windows ya no muestra el máximo teórico de Windows Update como real
+  (una acumulativa figuraba con 90,5 GB): ahora dice «variable» o «hasta X».
 
 ## [0.1.0] — 2026-11-21
 

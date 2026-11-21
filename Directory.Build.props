@@ -6,7 +6,7 @@
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
 
     <!-- Versión y metadatos que se ven en Propiedades → Detalles del .exe -->
-    <Version>0.2.0-dev</Version>
+    <Version>0.2.0</Version>
     <Product>PulsoWin</Product>
     <Company>PulsoWin (proyecto open source)</Company>
     <Copyright>Copyright (c) 2026 LeonThelee · MIT</Copyright>
