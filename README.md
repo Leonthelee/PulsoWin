@@ -73,3 +73,5 @@ tests/PulsoWin.Tests  pruebas xUnit del motor (sin tocar archivos reales del usu
 PulsoWin es un proyecto independiente, escrito desde cero. No está afiliado, patrocinado ni respaldado por Gen Digital, Piriform, CCleaner ni Speccy, que son marcas de sus respectivos dueños y se mencionan solo como referencia.
 
 Dependencias: Microsoft.Data.Sqlite y System.Management (MIT), SQLitePCLRaw (Apache-2.0); pruebas con xUnit (Apache-2.0).
+
+Historial de versiones y cómo volver atrás: [CHANGELOG.md](CHANGELOG.md).

@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/PulsoWin.Core/PulsoWin.Core.csproj" />
+    <Project Path="src/PulsoWin.Presentation/PulsoWin.Presentation.csproj" />
     <Project Path="src/PulsoWin.App/PulsoWin.App.csproj" />
   </Folder>
   <Folder Name="/tests/">

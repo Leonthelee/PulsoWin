@@ -10,6 +10,7 @@
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PulsoWin.Core\PulsoWin.Core.csproj" />
+    <!-- El front solo conoce la capa de presentación; Core llega de forma transitiva. -->
+    <ProjectReference Include="..\PulsoWin.Presentation\PulsoWin.Presentation.csproj" />
   </ItemGroup>
 </Project>

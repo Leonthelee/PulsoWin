@@ -13,6 +13,6 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PulsoWin.Core\PulsoWin.Core.csproj" />
+    <ProjectReference Include="..\..\src\PulsoWin.Presentation\PulsoWin.Presentation.csproj" />
   </ItemGroup>
 </Project>

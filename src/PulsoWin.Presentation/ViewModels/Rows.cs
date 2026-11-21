@@ -1,16 +1,16 @@
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
+using PulsoWin.Core.Updates;
 
-namespace PulsoWin.App;
+namespace PulsoWin.Presentation.ViewModels;
 
 /// <summary>Fila de la lista de limpieza: una regla o la papelera.</summary>
-public sealed class RuleRow : INotifyPropertyChanged
+public sealed partial class RuleRow : ObservableObject
 {
-    private bool _isSelected;
-    private string _sizeText = "—";
-    private string _status = "";
+    [ObservableProperty] private bool _isSelected;
+    [ObservableProperty] private string _sizeText = "—";
+    [ObservableProperty] private string _status = "";
 
     public RuleRow(CleanRule rule)
     {
@@ -46,24 +46,6 @@ public sealed class RuleRow : INotifyPropertyChanged
     public int PendingFiles => LastScan is { BlockedBy: null } s ? s.Files.Count : 0;
     public bool HasWork => IsRecycleBin ? RecycleItems > 0 : PendingFiles > 0;
 
-    public bool IsSelected
-    {
-        get => _isSelected;
-        set { if (_isSelected != value) { _isSelected = value; OnChanged(); } }
-    }
-
-    public string SizeText
-    {
-        get => _sizeText;
-        private set { _sizeText = value; OnChanged(); }
-    }
-
-    public string Status
-    {
-        get => _status;
-        private set { _status = value; OnChanged(); }
-    }
-
     public void ApplyScan(ScanItem item)
     {
         LastScan = item;
@@ -83,10 +65,7 @@ public sealed class RuleRow : INotifyPropertyChanged
 
     public void ApplyCleaned(string status)
     {
-        LastScan = null;
-        RecycleBytes = 0;
-        RecycleItems = 0;
-        SizeText = "—";
+        Reset();
         Status = status;
     }
 
@@ -98,9 +77,18 @@ public sealed class RuleRow : INotifyPropertyChanged
         SizeText = "—";
         Status = "";
     }
+}
 
-    public event PropertyChangedEventHandler? PropertyChanged;
+/// <summary>Paquete actualizable detectado por winget. Llega desmarcado: cada uno se elige a propósito.</summary>
+public sealed partial class PackageRow(WingetPackage package) : ObservableObject
+{
+    [ObservableProperty] private bool _isSelected;
+    [ObservableProperty] private string _status = "Pendiente";
 
-    private void OnChanged([CallerMemberName] string? property = null) =>
-        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(property));
+    public WingetPackage Package { get; } = package;
+    public string Name => Package.Name;
+    public string Id => Package.Id;
+    public string InstalledVersion => Package.InstalledVersion;
+    public string AvailableVersion => Package.AvailableVersion;
+    public string Source => Package.Source;
 }
