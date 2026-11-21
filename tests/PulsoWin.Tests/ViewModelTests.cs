@@ -213,6 +213,52 @@ public class ViewModelTests
         Assert.Equal(valid, WindowsUpdateInstaller.IsValidUpdateId(id));
     }
 
+    [Theory]
+    // Caso real del KB5132061: Windows Update informó mínimo 0 y máximo 92.712 MB (≈ 90,5 GB).
+    [InlineData(97_214_000_000L, 0L, "variable")]
+    [InlineData(800L * 1024 * 1024, 0L, "hasta 800,0 MB")]
+    [InlineData(120L * 1024 * 1024, 110L * 1024 * 1024, "120,0 MB")]
+    [InlineData(0L, 0L, "")]
+    public void Windows_update_size_never_shows_the_theoretical_maximum_as_real(long max, long min, string expected)
+    {
+        var item = new WindowsUpdateItem("t", "KB1", false, false, max, KbA, min);
+        Assert.Equal(expected, item.SizeText.Replace('.', ','));
+    }
+
+    [Fact]
+    public void Select_all_checkbox_tracks_rows_both_ways()
+    {
+        using var dir = new TempDir();
+        var vm = new CleanViewModel(
+            [
+                new CleanRule { Id = "a", Name = "A", Category = "x", Base = dir.Path },
+                new CleanRule { Id = "b", Name = "B", Category = "x", Base = dir.Path, DefaultOn = false },
+            ],
+            new FakeProbe(), new FakeDialogs(true), new FakeRecycleBin(), new StatusBar(), dir.Path, Array.Empty<ISensorSource>());
+        var raised = 0;
+        vm.PropertyChanged += (_, e) => { if (e.PropertyName == nameof(CleanViewModel.AllSelected)) raised++; };
+
+        Assert.Null(vm.AllSelected);                 // algunas marcadas: casilla a medias
+        vm.AllSelected = true;
+        Assert.All(vm.Rules, r => Assert.True(r.IsSelected));
+        vm.AllSelected = false;
+        Assert.All(vm.Rules, r => Assert.False(r.IsSelected));
+        vm.Rules[0].IsSelected = true;               // marcar una fila a mano actualiza la cabecera
+        Assert.Null(vm.AllSelected);
+        Assert.True(raised > 0);
+    }
+
+    [Fact]
+    public async Task Select_all_works_on_the_updates_list_after_a_search()
+    {
+        var vm = CreateUpdates(new FakeRunnerForVm(WingetTable), new FakeDialogs(true), TwoWindowsUpdates);
+        await vm.SearchCommand.ExecuteAsync(null);
+
+        Assert.False(vm.AllSelected);
+        vm.AllSelected = true;
+        Assert.All(vm.Items, i => Assert.True(i.IsSelected));
+    }
+
     [Fact]
     public void Usage_sampler_reports_ram_at_once_and_cpu_from_the_second_sample()
     {

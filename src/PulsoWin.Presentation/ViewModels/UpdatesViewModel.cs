@@ -24,6 +24,17 @@ public sealed partial class UpdatesViewModel(
 {
     public ObservableCollection<UpdateRow> Items { get; } = [];
 
+    private SelectAllState<UpdateRow>? _selectAll;
+    private SelectAllState<UpdateRow> SelectAllTracker =>
+        _selectAll ??= new SelectAllState<UpdateRow>(Items, () => OnPropertyChanged(nameof(AllSelected)));
+
+    /// <summary>Casilla «seleccionar todo» de la cabecera: true, false o null (algunas marcadas).</summary>
+    public bool? AllSelected
+    {
+        get => SelectAllTracker.Value;
+        set => SelectAllTracker.Value = value;
+    }
+
     [ObservableProperty]
     private string _summary = "Pulsa «Buscar actualizaciones». PulsoWin revisa programas y Windows en segundo plano, sin instalar nada todavía.";
 
@@ -51,6 +62,7 @@ public sealed partial class UpdatesViewModel(
             var programs = wingetTask.Result;
             var windows = wuTask.Result;
 
+            _ = SelectAllTracker; // se suscribe a la lista antes de llenarla
             Items.Clear();
             foreach (var u in windows.Updates.Where(u => WindowsUpdateInstaller.IsValidUpdateId(u.UpdateId)))
                 Items.Add(UpdateRow.FromWindows(u));

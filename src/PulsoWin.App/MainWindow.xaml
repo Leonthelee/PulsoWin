@@ -33,6 +33,8 @@
             <Setter Property="CornerRadius" Value="12" />
             <Setter Property="Padding" Value="12,8" />
             <Setter Property="Margin" Value="0,0,10,0" />
+            <!-- Alto fijo: el top tiene de 0 a 3 líneas y, si el alto cambiara, toda la pantalla saltaría cada 2 s -->
+            <Setter Property="Height" Value="74" />
         </Style>
 
         <!-- Una línea del top: nombre del programa (recortado) y su consumo -->
@@ -187,7 +189,13 @@
 
                         <DataGrid ItemsSource="{Binding Rules}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="" Width="40" CellTemplate="{StaticResource SelectCell}" />
+                                <DataGridTemplateColumn Width="44" CellTemplate="{StaticResource SelectCell}">
+                                    <DataGridTemplateColumn.Header>
+                                        <CheckBox HorizontalAlignment="Center" IsThreeState="False"
+                                                  IsChecked="{Binding DataContext.AllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  ToolTip="Seleccionar todo / nada" AutomationProperties.Name="Seleccionar todo" />
+                                    </DataGridTemplateColumn.Header>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="ELEMENTO" Binding="{Binding Name}" IsReadOnly="True" Width="2.6*" MinWidth="230" />
                                 <DataGridTextColumn Header="CATEGORÍA" Binding="{Binding Category}" IsReadOnly="True" Width="*" />
                                 <DataGridTextColumn Header="TAMAÑO" Binding="{Binding SizeText}" IsReadOnly="True" Width="90" />
@@ -200,7 +208,7 @@
                             </DataGrid.RowStyle>
                         </DataGrid>
 
-                        <ScrollViewer Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto" Padding="0,0,4,0">
                             <StackPanel>
                                 <TextBlock Text="COOKIES" Style="{StaticResource Heading}" />
                                 <CheckBox Content="Borrar cookies" IsChecked="{Binding DeleteCookies}" Margin="0,0,0,6" />
@@ -289,7 +297,13 @@
 
                         <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}">
                             <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="" Width="40" CellTemplate="{StaticResource SelectCell}" />
+                                <DataGridTemplateColumn Width="44" CellTemplate="{StaticResource SelectCell}">
+                                    <DataGridTemplateColumn.Header>
+                                        <CheckBox HorizontalAlignment="Center" IsThreeState="False"
+                                                  IsChecked="{Binding DataContext.AllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                                  ToolTip="Seleccionar todo / nada" AutomationProperties.Name="Seleccionar todo" />
+                                    </DataGridTemplateColumn.Header>
+                                </DataGridTemplateColumn>
                                 <DataGridTextColumn Header="TIPO" Binding="{Binding KindText}" IsReadOnly="True" Width="90" />
                                 <DataGridTextColumn Header="NOMBRE" Binding="{Binding Name}" IsReadOnly="True" Width="3*" />
                                 <DataGridTextColumn Header="ACTUAL" Binding="{Binding CurrentVersion}" IsReadOnly="True" Width="95" />
@@ -303,8 +317,6 @@
                             <Button Style="{StaticResource SecondaryButton}" Content="Buscar actualizaciones" Margin="0,0,10,0"
                                     Command="{Binding SearchCommand}" ToolTip="Revisa en segundo plano; no instala nada."
                                     AutomationProperties.Name="Buscar actualizaciones" />
-                            <Button Style="{StaticResource SecondaryButton}" Content="Marcar todo" Margin="0,0,10,0"
-                                    Command="{Binding SelectAllCommand}" />
                             <Button Style="{StaticResource PrimaryButton}" Content="Proceder con las actualizaciones…"
                                     Command="{Binding ProceedCommand}"
                                     ToolTip="Pide confirmación y, para las de Windows, un permiso de administrador." />

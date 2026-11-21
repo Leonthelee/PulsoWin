@@ -9,7 +9,20 @@ public sealed record WindowsUpdateItem(
     bool IsMandatory,
     bool IsDownloaded,
     long SizeBytes,
-    string UpdateId = "");
+    string UpdateId = "",
+    long MinSizeBytes = 0)
+{
+    /// <summary>
+    /// Tamaño honesto para mostrar. Windows Update informa un MÁXIMO teórico que suma todas las variantes
+    /// del paquete (en una acumulativa de Windows 11 puede superar 90 GB con mínimo 0) y luego descarga
+    /// solo lo que el equipo necesita. Por eso un máximo grande sin mínimo se muestra como «variable».
+    /// </summary>
+    public string SizeText =>
+        SizeBytes <= 0 ? ""
+        : MinSizeBytes > 0 && SizeBytes <= MinSizeBytes * 2 ? Common.Bytes.Format(SizeBytes)
+        : SizeBytes <= 4L * 1024 * 1024 * 1024 ? "hasta " + Common.Bytes.Format(SizeBytes)
+        : "variable";
+}
 
 public sealed record WindowsUpdateScanResult(
     IReadOnlyList<WindowsUpdateItem> Updates,
@@ -73,8 +86,10 @@ public sealed class WindowsUpdateClient
                 try { size = Convert.ToInt64(u.MaxDownloadSize); } catch { }
                 var updateId = "";
                 try { updateId = (string)u.Identity.UpdateID; } catch { }
+                long minSize = 0;
+                try { minSize = Convert.ToInt64(u.MinDownloadSize); } catch { }
 
-                items.Add(new WindowsUpdateItem(title, kb, mandatory, downloaded, size, updateId));
+                items.Add(new WindowsUpdateItem(title, kb, mandatory, downloaded, size, updateId, minSize));
             }
 
             return new WindowsUpdateScanResult(items);

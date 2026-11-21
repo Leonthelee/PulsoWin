@@ -5,8 +5,57 @@ using PulsoWin.Core.Updates;
 
 namespace PulsoWin.Presentation.ViewModels;
 
+/// <summary>Fila que se puede marcar.</summary>
+public interface ISelectableRow : System.ComponentModel.INotifyPropertyChanged
+{
+    bool IsSelected { get; set; }
+}
+
+/// <summary>
+/// Estado de la casilla «seleccionar todo» de una tabla: true (todas), false (ninguna) o null (algunas).
+/// Se mantiene al día cuando se marcan filas una a una o cambia la lista.
+/// </summary>
+public sealed class SelectAllState<T> where T : ISelectableRow
+{
+    private readonly System.Collections.ObjectModel.ObservableCollection<T> _rows;
+    private readonly Action _changed;
+
+    public SelectAllState(System.Collections.ObjectModel.ObservableCollection<T> rows, Action changed)
+    {
+        _rows = rows;
+        _changed = changed;
+        foreach (var row in rows) row.PropertyChanged += OnRowChanged;
+        rows.CollectionChanged += (_, e) =>
+        {
+            foreach (var row in e.NewItems?.OfType<T>() ?? []) row.PropertyChanged += OnRowChanged;
+            foreach (var row in e.OldItems?.OfType<T>() ?? []) row.PropertyChanged -= OnRowChanged;
+            _changed();
+        };
+    }
+
+    public bool? Value
+    {
+        get
+        {
+            if (_rows.Count == 0) return false;
+            var selected = _rows.Count(r => r.IsSelected);
+            return selected == 0 ? false : selected == _rows.Count ? true : null;
+        }
+        set
+        {
+            if (value is not { } mark) return;
+            foreach (var row in _rows) row.IsSelected = mark;
+        }
+    }
+
+    private void OnRowChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ISelectableRow.IsSelected)) _changed();
+    }
+}
+
 /// <summary>Fila de la lista de limpieza: una regla o la papelera.</summary>
-public sealed partial class RuleRow : ObservableObject
+public sealed partial class RuleRow : ObservableObject, ISelectableRow
 {
     [ObservableProperty] private bool _isSelected;
     [ObservableProperty] private string _sizeText = "—";
@@ -85,7 +134,7 @@ public enum UpdateKind { Program, Windows }
 /// Una actualización pendiente en la lista única: un programa (winget) o una actualización de Windows.
 /// Llega desmarcada: cada una se elige a propósito.
 /// </summary>
-public sealed partial class UpdateRow : ObservableObject
+public sealed partial class UpdateRow : ObservableObject, ISelectableRow
 {
     [ObservableProperty] private bool _isSelected;
     [ObservableProperty] private string _status = "Pendiente";
@@ -104,8 +153,7 @@ public sealed partial class UpdateRow : ObservableObject
         new(UpdateKind.Program, p.Name, p.Id, p.InstalledVersion, p.AvailableVersion, "");
 
     public static UpdateRow FromWindows(WindowsUpdateItem u) =>
-        new(UpdateKind.Windows, u.Title, u.UpdateId, "", u.KbId.Length > 0 ? u.KbId : "—",
-            u.SizeBytes > 0 ? Bytes.Format(u.SizeBytes) : "")
+        new(UpdateKind.Windows, u.Title, u.UpdateId, "", u.KbId.Length > 0 ? u.KbId : "—", u.SizeText)
         {
             Status = u.IsDownloaded ? "Descargada, lista para instalar" : "Pendiente",
         };

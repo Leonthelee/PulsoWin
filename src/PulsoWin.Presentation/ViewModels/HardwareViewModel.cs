@@ -52,8 +52,17 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
             TopRam = top.Ram;
             TopGpu = top.Gpu;
             GpuTopNote = !top.GpuAvailable ? "sin contadores de GPU" : top.Gpu.Count == 0 ? "GPU en reposo" : "";
-            Sensors.Clear();
-            foreach (var reading in readings) Sensors.Add(reading);
+            // Actualiza fila por fila en vez de vaciar y rellenar: la tabla no salta ni pierde el scroll cada 2 s.
+            if (Sensors.Count == readings.Count)
+            {
+                for (var i = 0; i < readings.Count; i++)
+                    if (!Equals(Sensors[i], readings[i])) Sensors[i] = readings[i];
+            }
+            else
+            {
+                Sensors.Clear();
+                foreach (var reading in readings) Sensors.Add(reading);
+            }
 
             CpuText = Find(readings, r => r.Label == "CPU · uso");
             RamText = Find(readings, r => r.Label == "RAM · en uso");

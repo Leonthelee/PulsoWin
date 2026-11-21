@@ -60,9 +60,19 @@ public sealed partial class CleanViewModel : ObservableObject
         foreach (var rule in rules) Rules.Add(new RuleRow(rule));
         Rules.Add(RuleRow.CreateRecycleBin());
         _keepText = LoadKeepList();
+        _selectAll = new SelectAllState<RuleRow>(Rules, () => OnPropertyChanged(nameof(AllSelected)));
     }
 
+    private readonly SelectAllState<RuleRow> _selectAll;
+
     public ObservableCollection<RuleRow> Rules { get; } = [];
+
+    /// <summary>Casilla «seleccionar todo» de la cabecera: true, false o null (algunas marcadas).</summary>
+    public bool? AllSelected
+    {
+        get => _selectAll.Value;
+        set => _selectAll.Value = value;
+    }
 
     private string KeepFile => Path.Combine(_dataDir, "cookies-conservar.txt");
 
