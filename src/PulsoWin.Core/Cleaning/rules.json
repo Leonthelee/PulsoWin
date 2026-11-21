@@ -1,0 +1,60 @@
+[
+  {
+    "id": "win-temp",
+    "name": "Temporales del usuario",
+    "category": "Windows",
+    "base": "%TEMP%",
+    "minAgeHours": 24,
+    "note": "Solo archivos con más de 24 horas sin cambios."
+  },
+  {
+    "id": "win-thumbs",
+    "name": "Caché de miniaturas",
+    "category": "Windows",
+    "base": "%LOCALAPPDATA%\\Microsoft\\Windows\\Explorer",
+    "pattern": "thumbcache_*.db",
+    "recursive": false,
+    "note": "El Explorador suele tener algunos abiertos; esos se omiten."
+  },
+  {
+    "id": "win-crashdumps",
+    "name": "Volcados de errores de aplicaciones",
+    "category": "Windows",
+    "base": "%LOCALAPPDATA%\\CrashDumps"
+  },
+  {
+    "id": "win-dx-shader",
+    "name": "Caché de shaders DirectX",
+    "category": "Windows",
+    "base": "%LOCALAPPDATA%\\D3DSCache",
+    "defaultOn": false,
+    "note": "Ruta sin confirmar en documentación oficial; desactivada por defecto."
+  },
+  {
+    "id": "chrome-cache",
+    "name": "Chrome · caché",
+    "category": "Navegadores",
+    "base": "%LOCALAPPDATA%\\Google\\Chrome\\User Data",
+    "profiles": "chromium",
+    "subPaths": [ "Cache\\Cache_Data", "Code Cache", "GPUCache" ],
+    "blockingProcesses": [ "chrome" ]
+  },
+  {
+    "id": "edge-cache",
+    "name": "Edge · caché",
+    "category": "Navegadores",
+    "base": "%LOCALAPPDATA%\\Microsoft\\Edge\\User Data",
+    "profiles": "chromium",
+    "subPaths": [ "Cache\\Cache_Data", "Code Cache", "GPUCache" ],
+    "blockingProcesses": [ "msedge" ]
+  },
+  {
+    "id": "firefox-cache",
+    "name": "Firefox · caché",
+    "category": "Navegadores",
+    "base": "%LOCALAPPDATA%\\Mozilla\\Firefox\\Profiles",
+    "profiles": "firefox",
+    "subPaths": [ "cache2" ],
+    "blockingProcesses": [ "firefox" ]
+  }
+]
