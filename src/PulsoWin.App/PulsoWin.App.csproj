@@ -8,7 +8,13 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <!-- SHQUERYRBINFO cambia de tamaño en x86; la app se publica solo para 64 bits. -->
     <PlatformTarget>x64</PlatformTarget>
+    <!-- Ícono del .exe (Explorador, accesos directos). Lo genera tools/icon.cs a partir del diseño del mando. -->
+    <ApplicationIcon>Assets\pulsowin.ico</ApplicationIcon>
   </PropertyGroup>
+  <ItemGroup>
+    <!-- El mismo ícono para la barra de título y la barra de tareas. -->
+    <Resource Include="Assets\pulsowin.ico" />
+  </ItemGroup>
   <ItemGroup>
     <!-- El front solo conoce la capa de presentación; Core llega de forma transitiva. -->
     <ProjectReference Include="..\PulsoWin.Presentation\PulsoWin.Presentation.csproj" />
