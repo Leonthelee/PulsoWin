@@ -6,6 +6,8 @@ namespace PulsoWin.Tests;
 
 public sealed class WingetClientTests
 {
+    private const string FakeWinget = @"C:\Users\prueba\AppData\Local\Microsoft\WindowsApps\winget.exe";
+
     private sealed class FakeRunner : IProcessRunner
     {
         public List<(string FileName, IReadOnlyList<string> Args)> Calls { get; } = [];
@@ -81,14 +83,14 @@ public sealed class WingetClientTests
         {
             Handler = (_, _) => throw new Win32Exception("not found")
         };
-        var client = new WingetClient(runner);
+        var client = new WingetClient(runner, wingetPath: FakeWinget);
 
         var result = await client.ListUpgradesAsync();
 
         Assert.False(result.IsAvailable);
         Assert.Empty(result.Packages);
         var call = Assert.Single(runner.Calls);
-        Assert.Equal("winget", call.FileName);
+        Assert.Equal(FakeWinget, call.FileName);
         Assert.Equal(["upgrade", "--accept-source-agreements"], call.Args);
     }
 
@@ -96,7 +98,7 @@ public sealed class WingetClientTests
     public async Task UpgradeAsync_RejectsInvalidIdWithoutRunningProcess()
     {
         var runner = new FakeRunner();
-        var client = new WingetClient(runner);
+        var client = new WingetClient(runner, wingetPath: FakeWinget);
 
         var result = await client.UpgradeAsync("bad;id");
 
@@ -111,13 +113,13 @@ public sealed class WingetClientTests
         {
             Handler = (_, _) => new ProcessResult(0, "Instalado correctamente", "")
         };
-        var client = new WingetClient(runner);
+        var client = new WingetClient(runner, wingetPath: FakeWinget);
 
         var result = await client.UpgradeAsync("GitHub.cli");
 
         Assert.True(result.Succeeded);
         var call = Assert.Single(runner.Calls);
-        Assert.Equal("winget", call.FileName);
+        Assert.Equal(FakeWinget, call.FileName);
         Assert.Equal(
             [
                 "upgrade",
@@ -128,5 +130,25 @@ public sealed class WingetClientTests
                 "--silent"
             ],
             call.Args);
+    }
+
+    [Fact]
+    public async Task Never_runs_winget_by_bare_name()
+    {
+        var runner = new FakeRunner { Handler = (_, _) => new ProcessResult(0, "", "") };
+        var client = new WingetClient(runner);
+
+        await client.ListUpgradesAsync();
+
+        // Con App Installer: ruta completa al alias. Sin él: no se ejecuta nada.
+        Assert.All(runner.Calls, c => Assert.True(Path.IsPathFullyQualified(c.FileName), c.FileName));
+    }
+
+    [Fact]
+    public void Default_path_points_to_the_user_WindowsApps_alias()
+    {
+        var path = WingetClient.DefaultWingetPath();
+        if (path is not null)
+            Assert.EndsWith(Path.Combine("Microsoft", "WindowsApps", "winget.exe"), path, StringComparison.OrdinalIgnoreCase);
     }
 }

@@ -7,7 +7,9 @@ namespace PulsoWin.App;
 /// <summary>Fila de paquete actualizable detectado por <c>winget</c>.</summary>
 public sealed class PackageRow : INotifyPropertyChanged
 {
-    private bool _isSelected = true;
+    // Desmarcado por defecto: la actualización es silenciosa y acepta licencias,
+    // así que cada paquete se elige a conciencia.
+    private bool _isSelected;
     private string _status = "Pendiente";
 
     public PackageRow(WingetPackage package)

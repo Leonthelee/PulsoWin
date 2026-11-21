@@ -8,28 +8,48 @@ public sealed class WingetClient
     private readonly IProcessRunner _runner;
     private readonly TimeSpan _scanTimeout;
     private readonly TimeSpan _upgradeTimeout;
+    private readonly string? _wingetPath;
 
-    public WingetClient(IProcessRunner? runner = null, TimeSpan? scanTimeout = null, TimeSpan? upgradeTimeout = null)
+    /// <param name="wingetPath">
+    /// Ruta completa de winget.exe. Por defecto, el alias que instala App Installer en
+    /// %LOCALAPPDATA%\Microsoft\WindowsApps. Nunca se ejecuta "winget" a secas: Windows buscaría
+    /// primero en la carpeta de la app y en la carpeta actual, donde alguien podría dejar un ejecutable falso.
+    /// </param>
+    public WingetClient(IProcessRunner? runner = null, TimeSpan? scanTimeout = null, TimeSpan? upgradeTimeout = null,
+        string? wingetPath = null)
     {
         _runner = runner ?? new ProcessRunner();
         _scanTimeout = scanTimeout ?? TimeSpan.FromSeconds(45);
         _upgradeTimeout = upgradeTimeout ?? TimeSpan.FromMinutes(10);
+        _wingetPath = wingetPath ?? DefaultWingetPath();
+    }
+
+    /// <summary>Ruta del alias de winget del usuario actual, o null si App Installer no está instalado.</summary>
+    public static string? DefaultWingetPath()
+    {
+        var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (local.Length == 0) return null;
+        var path = Path.Combine(local, "Microsoft", "WindowsApps", "winget.exe");
+        return File.Exists(path) ? path : null;
     }
 
     public async Task<WingetScanResult> ListUpgradesAsync(CancellationToken cancellationToken = default)
     {
+        if (_wingetPath is null)
+            return new WingetScanResult([], "winget no está instalado (falta App Installer de Microsoft Store).");
+
         ProcessResult result;
         try
         {
             result = await _runner.RunAsync(
-                "winget",
+                _wingetPath,
                 ["upgrade", "--accept-source-agreements"],
                 _scanTimeout,
                 cancellationToken).ConfigureAwait(false);
         }
         catch (Win32Exception)
         {
-            return new WingetScanResult([], "winget no está instalado o no está en el PATH.");
+            return new WingetScanResult([], "No se pudo ejecutar winget.");
         }
 
         if (result.TimedOut)
@@ -47,11 +67,14 @@ public sealed class WingetClient
         if (!WingetParser.IsValidPackageId(packageId))
             return new WingetUpgradeResult(packageId, false, -1, "ID de paquete rechazado por validación.");
 
+        if (_wingetPath is null)
+            return new WingetUpgradeResult(packageId, false, -1, "winget no está instalado.");
+
         ProcessResult result;
         try
         {
             result = await _runner.RunAsync(
-                "winget",
+                _wingetPath,
                 [
                     "upgrade",
                     "--id", packageId,

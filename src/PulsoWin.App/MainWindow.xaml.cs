@@ -372,10 +372,17 @@ public partial class MainWindow : Window
 
             StatusText.Text = $"Actualización terminada: {ok} OK, {failed} con error. Registro: {logPath}";
         }
+        catch (Exception ex)
+        {
+            // async void: una excepción sin capturar cerraría la aplicación.
+            foreach (var row in selected.Where(r => r.Status == "Actualizando…")) row.Status = "Interrumpido";
+            StatusText.Text = $"La actualización se interrumpió ({ok} OK y {failed} con error hasta ese momento): {ex.Message}";
+        }
         finally
         {
             SetUpdatesBusy(false);
-            UpgradeButton.IsEnabled = _packages.Any(p => p.IsSelected);
+            // Con los paquetes desmarcados por defecto, el botón sigue activo y avisa si no hay nada marcado.
+            UpgradeButton.IsEnabled = _packages.Count > 0;
         }
     }
 
