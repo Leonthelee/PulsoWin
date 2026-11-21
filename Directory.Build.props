@@ -4,5 +4,15 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+
+    <!-- Versión y metadatos que se ven en Propiedades → Detalles del .exe -->
+    <Version>0.1.0</Version>
+    <Product>PulsoWin</Product>
+    <Company>PulsoWin (proyecto open source)</Company>
+    <Copyright>Copyright (c) 2026 LeonThelee · MIT</Copyright>
+    <Description>Limpiador y visor de hardware para Windows</Description>
+    <!-- Builds reproducibles: el mismo código produce el mismo binario y no incrusta rutas locales. -->
+    <Deterministic>true</Deterministic>
+    <PathMap>$(MSBuildThisFileDirectory)=/src/</PathMap>
   </PropertyGroup>
 </Project>
