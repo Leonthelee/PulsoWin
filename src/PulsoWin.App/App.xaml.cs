@@ -15,6 +15,23 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Modo auxiliar elevado (instalar Windows Update): sin ventana, en un hilo MTA para COM, y termina.
+        if (e.Args.Length > 0 && e.Args[0] == ElevatedUpdates.Switch)
+        {
+            int code;
+            try
+            {
+                code = Task.Run(() => ElevatedUpdates.RunHelper(e.Args)).GetAwaiter().GetResult();
+            }
+            catch (Exception ex)
+            {
+                Log("instalador de Windows Update", ex);
+                code = 1;
+            }
+            Shutdown(code);
+            return;
+        }
+
         // Errores en el hilo de la interfaz (incluye comandos async): se registran y la app sigue viva.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         // Tareas en segundo plano cuyo error nadie esperó: se registran y se marcan como observadas.
@@ -29,6 +46,8 @@ public partial class App : Application
             if (args.ExceptionObject is Exception ex) Log("error fatal", ex);
         };
         base.OnStartup(e);
+        MainWindow = new MainWindow();
+        MainWindow.Show();
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)

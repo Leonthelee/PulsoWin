@@ -79,16 +79,44 @@ public sealed partial class RuleRow : ObservableObject
     }
 }
 
-/// <summary>Paquete actualizable detectado por winget. Llega desmarcado: cada uno se elige a propósito.</summary>
-public sealed partial class PackageRow(WingetPackage package) : ObservableObject
+public enum UpdateKind { Program, Windows }
+
+/// <summary>
+/// Una actualización pendiente en la lista única: un programa (winget) o una actualización de Windows.
+/// Llega desmarcada: cada una se elige a propósito.
+/// </summary>
+public sealed partial class UpdateRow : ObservableObject
 {
     [ObservableProperty] private bool _isSelected;
     [ObservableProperty] private string _status = "Pendiente";
 
-    public WingetPackage Package { get; } = package;
-    public string Name => Package.Name;
-    public string Id => Package.Id;
-    public string InstalledVersion => Package.InstalledVersion;
-    public string AvailableVersion => Package.AvailableVersion;
-    public string Source => Package.Source;
+    private UpdateRow(UpdateKind kind, string name, string id, string current, string next, string size)
+    {
+        Kind = kind;
+        Name = name;
+        Id = id;
+        CurrentVersion = current;
+        NewVersion = next;
+        SizeText = size;
+    }
+
+    public static UpdateRow FromWinget(WingetPackage p) =>
+        new(UpdateKind.Program, p.Name, p.Id, p.InstalledVersion, p.AvailableVersion, "");
+
+    public static UpdateRow FromWindows(WindowsUpdateItem u) =>
+        new(UpdateKind.Windows, u.Title, u.UpdateId, "", u.KbId.Length > 0 ? u.KbId : "—",
+            u.SizeBytes > 0 ? Bytes.Format(u.SizeBytes) : "")
+        {
+            Status = u.IsDownloaded ? "Descargada, lista para instalar" : "Pendiente",
+        };
+
+    public UpdateKind Kind { get; }
+    public string KindText => Kind == UpdateKind.Program ? "Programa" : "Windows";
+    public string Name { get; }
+    /// <summary>ID de winget o UpdateID de Windows Update (lo que se instala de verdad).</summary>
+    public string Id { get; }
+    public string CurrentVersion { get; }
+    /// <summary>Versión nueva del programa, o el KB de la actualización de Windows.</summary>
+    public string NewVersion { get; }
+    public string SizeText { get; }
 }

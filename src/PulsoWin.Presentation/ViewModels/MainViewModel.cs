@@ -38,7 +38,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Arma la pantalla con las dependencias reales del equipo.</summary>
-    public static MainViewModel Create(IDialogService dialogs)
+    /// <param name="installWindowsUpdates">
+    /// Instala actualizaciones de Windows por UpdateID. Lo provee la vista porque necesita lanzar el
+    /// proceso auxiliar elevado (un permiso de administrador), cosa que esta capa no debe hacer.
+    /// </param>
+    public static MainViewModel Create(IDialogService dialogs,
+        Func<IReadOnlyList<string>, Task<WindowsUpdateInstallResult>> installWindowsUpdates)
     {
         IReadOnlyList<ISensorSource> sources =
             [new SystemLoadSource(), new NvmlSource(), new DiskHealthSource(), new AcpiThermalSource()];
@@ -47,7 +52,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var dataDir = AppPaths.DataDir;
         var clean = new CleanViewModel(RuleCatalog.LoadBuiltIn(), probe, dialogs, new WindowsRecycleBin(), status, dataDir, sources);
         var updates = new UpdatesViewModel(new WingetClient(), () => new WindowsUpdateClient().QueryPending(),
-            WindowsUpdateClient.OpenWindowsUpdateSettings, dialogs, status, dataDir);
+            installWindowsUpdates, dialogs, status, dataDir);
         return new MainViewModel(clean, new HardwareViewModel(sources), updates, status, sources);
     }
 

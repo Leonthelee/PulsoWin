@@ -6,7 +6,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:PulsoWin.App.Controls"
         Title="PulsoWin · limpiador y visor de hardware"
-        Width="1180" Height="800" MinWidth="900" MinHeight="620"
+        Width="1240" Height="860" MinWidth="980" MinHeight="680"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource Bg}" Foreground="{StaticResource Text}"
         FontFamily="{StaticResource BodyFont}" FontSize="13">
@@ -26,15 +26,28 @@
             <Setter Property="FontWeight" Value="SemiBold" />
             <Setter Property="Foreground" Value="{StaticResource Text}" />
         </Style>
-        <Style x:Key="HudChip" TargetType="Border">
+        <Style x:Key="HudCard" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource Surface}" />
             <Setter Property="BorderBrush" Value="{StaticResource Line}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="CornerRadius" Value="10" />
-            <Setter Property="Padding" Value="12,6" />
-            <Setter Property="Margin" Value="0,0,8,0" />
-            <Setter Property="MinWidth" Value="92" />
+            <Setter Property="CornerRadius" Value="12" />
+            <Setter Property="Padding" Value="12,8" />
+            <Setter Property="Margin" Value="0,0,10,0" />
         </Style>
+
+        <!-- Una línea del top: nombre del programa (recortado) y su consumo -->
+        <DataTemplate x:Key="TopItem">
+            <Grid Margin="0,1" ToolTip="{Binding Processes, StringFormat='{}{0} proceso(s) con este nombre'}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Name}" Foreground="{StaticResource TextDim}" FontSize="12"
+                           TextTrimming="CharacterEllipsis" Margin="0,0,8,0" />
+                <TextBlock Grid.Column="1" Text="{Binding Display}" Foreground="{StaticResource Text}"
+                           FontFamily="{StaticResource MonoFont}" FontSize="12" />
+            </Grid>
+        </DataTemplate>
 
         <DataTemplate x:Key="SelectCell">
             <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}"
@@ -63,8 +76,12 @@
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <controls:RetroPadHero Height="190" HorizontalAlignment="Left"
+                <controls:RetroPadHero Height="165" HorizontalAlignment="Left"
                                        IsActive="{Binding IsBusy}" Caption="{Binding HeroCaption}" />
 
                 <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="16,0,0,0">
@@ -81,40 +98,74 @@
                     </StackPanel>
                     <TextBlock Text="Limpia lo que sobra. Mira lo que importa." Style="{StaticResource Muted}" Margin="2,0,0,12" />
 
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
-                        <Border Style="{StaticResource HudChip}">
-                            <StackPanel>
-                                <TextBlock Text="CPU" Style="{StaticResource HudLabel}" />
-                                <TextBlock Text="{Binding Hardware.CpuText}" Style="{StaticResource HudValue}" />
-                            </StackPanel>
-                        </Border>
-                        <Border Style="{StaticResource HudChip}">
-                            <StackPanel>
-                                <TextBlock Text="RAM" Style="{StaticResource HudLabel}" />
-                                <TextBlock Text="{Binding Hardware.RamText}" Style="{StaticResource HudValue}" />
-                            </StackPanel>
-                        </Border>
-                        <Border Style="{StaticResource HudChip}">
-                            <StackPanel>
-                                <TextBlock Text="GPU" Style="{StaticResource HudLabel}" />
-                                <TextBlock Text="{Binding Hardware.GpuTempText}" Style="{StaticResource HudValue}" />
-                            </StackPanel>
-                        </Border>
-                        <Border Style="{StaticResource HudChip}" BorderBrush="{StaticResource Magenta}">
-                            <StackPanel>
-                                <TextBlock Text="LIBERABLE" Style="{StaticResource HudLabel}" />
-                                <TextBlock Text="{Binding Clean.FreeableText}" Style="{StaticResource HudValue}"
-                                           Foreground="{StaticResource Magenta}" />
-                            </StackPanel>
-                        </Border>
-                    </StackPanel>
-
                     <Button Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" FontSize="18" Padding="28,10"
                             Command="{Binding StartCommand}" ToolTip="Analiza qué se puede liberar. No borra nada todavía."
                             AutomationProperties.Name="Start: analizar">
                         <TextBlock Text="▶  START" />
                     </Button>
                 </StackPanel>
+
+                <!-- HUD: valor grande + top 3 de programas que más consumen -->
+                <UniformGrid Grid.Row="1" Grid.ColumnSpan="2" Columns="4" Margin="0,10,-10,0">
+                    <Border Style="{StaticResource HudCard}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="84" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="CPU" Style="{StaticResource HudLabel}" />
+                                <TextBlock Text="{Binding Hardware.CpuText}" Style="{StaticResource HudValue}" />
+                            </StackPanel>
+                            <ItemsControl Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
+                                          ItemsSource="{Binding Hardware.TopCpu}" ItemTemplate="{StaticResource TopItem}" />
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource HudCard}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="84" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="RAM" Style="{StaticResource HudLabel}" />
+                                <TextBlock Text="{Binding Hardware.RamText}" Style="{StaticResource HudValue}" />
+                            </StackPanel>
+                            <ItemsControl Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
+                                          ItemsSource="{Binding Hardware.TopRam}" ItemTemplate="{StaticResource TopItem}" />
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource HudCard}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="84" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="GPU" Style="{StaticResource HudLabel}" />
+                                <TextBlock Text="{Binding Hardware.GpuTempText}" Style="{StaticResource HudValue}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                <ItemsControl ItemsSource="{Binding Hardware.TopGpu}" ItemTemplate="{StaticResource TopItem}" />
+                                <TextBlock Text="{Binding Hardware.GpuTopNote}" Foreground="{StaticResource TextDim}" FontSize="12" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Style="{StaticResource HudCard}" BorderBrush="{StaticResource Magenta}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" MinWidth="84" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="LIBERABLE" Style="{StaticResource HudLabel}" />
+                                <TextBlock Text="{Binding Clean.FreeableText}" Style="{StaticResource HudValue}" Foreground="{StaticResource Magenta}" />
+                            </StackPanel>
+                            <ItemsControl Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
+                                          ItemsSource="{Binding Clean.TopFreeable}" ItemTemplate="{StaticResource TopItem}" />
+                        </Grid>
+                    </Border>
+                </UniformGrid>
             </Grid>
         </Border>
 
@@ -218,50 +269,45 @@
                 </Border>
             </TabItem>
 
-            <!-- ACTUALIZAR -->
+            <!-- ACTUALIZAR: buscar en segundo plano -> lista única -> proceder, sin salir de PulsoWin -->
             <TabItem Header="ACTUALIZAR" DataContext="{Binding Updates}">
                 <Border Style="{StaticResource Card}" CornerRadius="0,12,12,12">
                     <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="2*" />
-                            <ColumnDefinition Width="*" MinWidth="270" />
-                        </Grid.ColumnDefinitions>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="PROGRAMAS CON ACTUALIZACIÓN (WINGET)" Style="{StaticResource Heading}" />
-                        <DataGrid Grid.Row="1" ItemsSource="{Binding Packages}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}">
+                        <TextBlock Text="ACTUALIZACIONES PENDIENTES · WINDOWS Y PROGRAMAS" Style="{StaticResource Heading}" />
+                        <StackPanel Grid.Row="1" Margin="0,0,0,10">
+                            <TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" AutomationProperties.LiveSetting="Polite" />
+                            <ProgressBar Height="4" Margin="0,8,0,0" IsIndeterminate="{Binding IsBusy}"
+                                         Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
+
+                        <DataGrid Grid.Row="2" ItemsSource="{Binding Items}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBool}}">
                             <DataGrid.Columns>
                                 <DataGridTemplateColumn Header="" Width="40" CellTemplate="{StaticResource SelectCell}" />
-                                <DataGridTextColumn Header="APLICACIÓN" Binding="{Binding Name}" IsReadOnly="True" Width="2*" />
-                                <DataGridTextColumn Header="ID" Binding="{Binding Id}" IsReadOnly="True" Width="1.6*" />
-                                <DataGridTextColumn Header="ACTUAL" Binding="{Binding InstalledVersion}" IsReadOnly="True" Width="90" />
-                                <DataGridTextColumn Header="NUEVA" Binding="{Binding AvailableVersion}" IsReadOnly="True" Width="90" />
-                                <DataGridTextColumn Header="ESTADO" Binding="{Binding Status}" IsReadOnly="True" Width="1.4*" />
+                                <DataGridTextColumn Header="TIPO" Binding="{Binding KindText}" IsReadOnly="True" Width="90" />
+                                <DataGridTextColumn Header="NOMBRE" Binding="{Binding Name}" IsReadOnly="True" Width="3*" />
+                                <DataGridTextColumn Header="ACTUAL" Binding="{Binding CurrentVersion}" IsReadOnly="True" Width="95" />
+                                <DataGridTextColumn Header="NUEVA / KB" Binding="{Binding NewVersion}" IsReadOnly="True" Width="110" />
+                                <DataGridTextColumn Header="TAMAÑO" Binding="{Binding SizeText}" IsReadOnly="True" Width="85" />
+                                <DataGridTextColumn Header="ESTADO" Binding="{Binding Status}" IsReadOnly="True" Width="1.6*" />
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <TextBlock Grid.Column="1" Text="WINDOWS UPDATE · SOLO LECTURA" Style="{StaticResource Heading}" Margin="16,0,0,8" />
-                        <DockPanel Grid.Row="1" Grid.Column="1" Margin="16,0,0,0">
-                            <TextBlock DockPanel.Dock="Top" Text="{Binding WindowsUpdateStatus}" Style="{StaticResource Muted}" Margin="0,0,0,8" />
-                            <Button DockPanel.Dock="Bottom" Style="{StaticResource SecondaryButton}" Content="Abrir Windows Update"
-                                    Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenWindowsUpdateCommand}" />
-                            <DataGrid ItemsSource="{Binding WindowsUpdates}" IsReadOnly="True">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="KB" Binding="{Binding KbId}" Width="90" />
-                                    <DataGridTextColumn Header="ACTUALIZACIÓN" Binding="{Binding Title}" Width="*" />
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </DockPanel>
-
-                        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                             <Button Style="{StaticResource SecondaryButton}" Content="Buscar actualizaciones" Margin="0,0,10,0"
-                                    Command="{Binding SearchCommand}" ToolTip="Solo consulta; no instala nada." />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Actualizar marcados…"
-                                    Command="{Binding UpgradeSelectedCommand}" ToolTip="Pide confirmación antes de instalar." />
+                                    Command="{Binding SearchCommand}" ToolTip="Revisa en segundo plano; no instala nada."
+                                    AutomationProperties.Name="Buscar actualizaciones" />
+                            <Button Style="{StaticResource SecondaryButton}" Content="Marcar todo" Margin="0,0,10,0"
+                                    Command="{Binding SelectAllCommand}" />
+                            <Button Style="{StaticResource PrimaryButton}" Content="Proceder con las actualizaciones…"
+                                    Command="{Binding ProceedCommand}"
+                                    ToolTip="Pide confirmación y, para las de Windows, un permiso de administrador." />
                         </StackPanel>
                     </Grid>
                 </Border>

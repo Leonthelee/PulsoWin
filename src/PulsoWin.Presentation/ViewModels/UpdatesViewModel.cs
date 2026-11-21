@@ -8,27 +8,32 @@ using PulsoWin.Presentation.Services;
 
 namespace PulsoWin.Presentation.ViewModels;
 
-/// <summary>Pestaña Actualizar: winget (elegir y actualizar) y Windows Update (solo lectura).</summary>
+/// <summary>
+/// Pestaña Actualizar, todo dentro de PulsoWin:
+/// 1) «Buscar» consulta winget y Windows Update en segundo plano, sin abrir otras pantallas.
+/// 2) Al terminar muestra en una sola lista todo lo pendiente.
+/// 3) «Proceder» instala lo marcado: programas con winget y Windows Update con un único permiso de administrador.
+/// </summary>
 public sealed partial class UpdatesViewModel(
     WingetClient winget,
     Func<WindowsUpdateScanResult> queryWindowsUpdate,
-    Action openWindowsUpdate,
+    Func<IReadOnlyList<string>, Task<WindowsUpdateInstallResult>> installWindowsUpdates,
     IDialogService dialogs,
     StatusBar status,
     string dataDir) : ObservableObject
 {
-    public ObservableCollection<PackageRow> Packages { get; } = [];
-    public ObservableCollection<WindowsUpdateItem> WindowsUpdates { get; } = [];
+    public ObservableCollection<UpdateRow> Items { get; } = [];
 
     [ObservableProperty]
-    private string _windowsUpdateStatus =
-        "Pulsa «Buscar actualizaciones» para consultar winget y Windows Update sin instalar nada todavía.";
+    private string _summary = "Pulsa «Buscar actualizaciones». PulsoWin revisa programas y Windows en segundo plano, sin instalar nada todavía.";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(UpgradeSelectedCommand))]
+    [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(ProceedCommand), nameof(SelectAllCommand))]
     private bool _isBusy;
 
     [ObservableProperty] private string _busyLabel = "";
+
+    // ------------------------------------------------------------------ buscar
 
     private bool CanSearch() => !IsBusy;
 
@@ -37,29 +42,30 @@ public sealed partial class UpdatesViewModel(
     {
         IsBusy = true;
         BusyLabel = "BUSCANDO…";
-        status.Message = "Buscando actualizaciones en winget y Windows Update… (solo lectura)";
+        status.Message = "Buscando actualizaciones de programas y de Windows… (solo lectura; puede tardar un minuto)";
         try
         {
             var wingetTask = winget.ListUpgradesAsync();
             var wuTask = Task.Run(queryWindowsUpdate);
             await Task.WhenAll(wingetTask, wuTask);
-            var wingetScan = wingetTask.Result;
-            var wuScan = wuTask.Result;
+            var programs = wingetTask.Result;
+            var windows = wuTask.Result;
 
-            Packages.Clear();
-            foreach (var pkg in wingetScan.Packages) Packages.Add(new PackageRow(pkg));
-            WindowsUpdates.Clear();
-            foreach (var item in wuScan.Updates) WindowsUpdates.Add(item);
+            Items.Clear();
+            foreach (var u in windows.Updates.Where(u => WindowsUpdateInstaller.IsValidUpdateId(u.UpdateId)))
+                Items.Add(UpdateRow.FromWindows(u));
+            foreach (var p in programs.Packages) Items.Add(UpdateRow.FromWinget(p));
 
-            WindowsUpdateStatus = !wuScan.IsAvailable
-                ? $"Windows Update: {wuScan.Error}"
-                : wuScan.Updates.Count == 0
-                    ? "Windows Update: no hay actualizaciones pendientes."
-                    : $"Windows Update: {wuScan.Updates.Count} actualización(es) pendiente(s). Usa «Abrir Windows Update» para instalarlas.";
-
-            status.Message = !wingetScan.IsAvailable
-                ? $"winget no disponible: {wingetScan.Error}"
-                : $"Búsqueda lista: {Packages.Count} paquete(s) en winget y {WindowsUpdates.Count} en Windows Update. Marca los que quieras actualizar.";
+            var programCount = Items.Count(i => i.Kind == UpdateKind.Program);
+            var windowsCount = Items.Count(i => i.Kind == UpdateKind.Windows);
+            Summary = Items.Count == 0
+                ? "Todo al día: no hay actualizaciones pendientes."
+                : $"{windowsCount} de Windows y {programCount} de programas pendientes. Marca las que quieras y pulsa «Proceder».";
+            var notes = new List<string>();
+            if (!programs.IsAvailable) notes.Add("winget: " + programs.Error);
+            if (!windows.IsAvailable) notes.Add("Windows Update: " + windows.Error);
+            if (notes.Count > 0) Summary += "  (" + string.Join(" · ", notes) + ")";
+            status.Message = "Búsqueda terminada.";
         }
         catch (Exception ex)
         {
@@ -69,28 +75,42 @@ public sealed partial class UpdatesViewModel(
         {
             IsBusy = false;
             BusyLabel = "";
-            UpgradeSelectedCommand.NotifyCanExecuteChanged();
+            ProceedCommand.NotifyCanExecuteChanged();
+            SelectAllCommand.NotifyCanExecuteChanged();
         }
     }
 
-    // Con los paquetes desmarcados por defecto, el botón se habilita en cuanto hay resultados y avisa si no hay nada marcado.
-    private bool CanUpgrade() => !IsBusy && Packages.Count > 0;
+    private bool HasItems() => !IsBusy && Items.Count > 0;
 
-    [RelayCommand(CanExecute = nameof(CanUpgrade))]
-    private async Task UpgradeSelectedAsync()
+    [RelayCommand(CanExecute = nameof(HasItems))]
+    private void SelectAll()
     {
-        var selected = Packages.Where(p => p.IsSelected).ToList();
+        var mark = Items.Any(i => !i.IsSelected);
+        foreach (var item in Items) item.IsSelected = mark;
+    }
+
+    // ------------------------------------------------------------------ proceder
+
+    [RelayCommand(CanExecute = nameof(HasItems))]
+    private async Task ProceedAsync()
+    {
+        var selected = Items.Where(i => i.IsSelected).ToList();
         if (selected.Count == 0)
         {
-            status.Message = "Marca al menos un paquete de winget para actualizar.";
+            status.Message = "Marca al menos una actualización (o usa «Marcar todo»).";
             return;
         }
 
-        var preview = string.Join(Environment.NewLine,
-            selected.Take(10).Select(p => $"• {p.Name} ({p.Id}): {p.InstalledVersion} → {p.AvailableVersion}"));
+        var windows = selected.Where(i => i.Kind == UpdateKind.Windows).ToList();
+        var programs = selected.Where(i => i.Kind == UpdateKind.Program).ToList();
+        var preview = string.Join(Environment.NewLine, selected.Take(10).Select(i =>
+            i.Kind == UpdateKind.Windows ? $"• Windows: {i.Name}" : $"• {i.Name}: {i.CurrentVersion} → {i.NewVersion}"));
         if (selected.Count > 10) preview += $"{Environment.NewLine}… y {selected.Count - 10} más.";
-        var confirm = $"Se actualizarán {selected.Count} paquete(s) vía winget, en silencio y aceptando sus licencias:\n\n{preview}\n\nAlgunos instaladores pueden pedir confirmación UAC. ¿Continuar?";
-        if (!dialogs.Confirm("Confirmar actualización", confirm))
+        var message = $"Se instalarán {selected.Count} actualización(es), aceptando sus términos de licencia:\n\n{preview}\n\n"
+                      + (windows.Count > 0 ? "Windows pedirá UNA vez permiso de administrador para las de Windows.\n" : "")
+                      + (programs.Count > 0 ? "Algunos programas pueden pedir su propio permiso.\n" : "")
+                      + "Puede tardar varios minutos. ¿Continuar?";
+        if (!dialogs.Confirm("Confirmar actualizaciones", message))
         {
             status.Message = "Actualización cancelada. No se instaló nada.";
             return;
@@ -98,27 +118,44 @@ public sealed partial class UpdatesViewModel(
 
         IsBusy = true;
         BusyLabel = "ACTUALIZANDO…";
-        var log = new List<string> { $"PulsoWin · actualización winget del {DateTime.Now.ToString("F", CultureInfo.CurrentCulture)}", "" };
+        var log = new List<string> { $"PulsoWin · actualizaciones del {DateTime.Now.ToString("F", CultureInfo.CurrentCulture)}", "" };
         var ok = 0;
         var failed = 0;
+        var reboot = false;
         try
         {
-            foreach (var row in selected)
+            if (windows.Count > 0)
             {
-                row.Status = "Actualizando…";
-                status.Message = $"Actualizando {row.Name} ({row.Id})…";
-                var res = await winget.UpgradeAsync(row.Id);
-                if (res.Succeeded)
+                foreach (var row in windows) row.Status = "Descargando e instalando…";
+                status.Message = $"Instalando {windows.Count} actualización(es) de Windows… acepta el permiso de administrador si aparece.";
+                var result = await installWindowsUpdates(windows.Select(w => w.Id).ToList());
+                if (result.Error is not null)
                 {
-                    ok++;
-                    row.Status = "Actualizado";
-                    row.IsSelected = false;
+                    foreach (var row in windows) row.Status = result.Cancelled ? "Cancelado (sin permiso)" : "Error: " + result.Error;
+                    failed += windows.Count;
+                    log.Add($"[windows] {(result.Cancelled ? "cancelado" : "error")}: {result.Error}");
                 }
                 else
                 {
-                    failed++;
-                    row.Status = "Error: " + res.Summary;
+                    reboot = result.RebootRequired;
+                    foreach (var row in windows)
+                    {
+                        var item = result.Items.FirstOrDefault(r => string.Equals(r.UpdateId, row.Id, StringComparison.OrdinalIgnoreCase));
+                        var success = item?.Succeeded == true;
+                        row.Status = success ? (reboot ? "Instalada · requiere reiniciar" : "Instalada") : $"No se instaló (código {item?.ResultCode ?? -1})";
+                        if (success) { ok++; row.IsSelected = false; } else failed++;
+                        log.Add($"[windows {row.NewVersion}] {(success ? "OK" : "FAIL")} · {row.Name}");
+                    }
                 }
+            }
+
+            foreach (var row in programs)
+            {
+                row.Status = "Actualizando…";
+                status.Message = $"Actualizando {row.Name}…";
+                var res = await winget.UpgradeAsync(row.Id);
+                if (res.Succeeded) { ok++; row.Status = "Actualizado"; row.IsSelected = false; }
+                else { failed++; row.Status = "Error: " + res.Summary; }
                 log.Add($"[{row.Id}] {(res.Succeeded ? "OK" : "FAIL")} (exit {res.ExitCode}) · {res.Summary}");
             }
 
@@ -128,30 +165,18 @@ public sealed partial class UpdatesViewModel(
             {
                 logPath = "(no se pudo escribir el registro: " + ex.Message + ")";
             }
-            status.Message = $"Actualización terminada: {ok} OK, {failed} con error. Registro: {logPath}";
+            Summary = $"Listo: {ok} instalada(s), {failed} con error." + (reboot ? " Reinicia el equipo para terminar de aplicar las de Windows." : "");
+            status.Message = $"Actualización terminada. Registro: {logPath}";
         }
         catch (Exception ex)
         {
-            foreach (var row in selected.Where(r => r.Status == "Actualizando…")) row.Status = "Interrumpido";
+            foreach (var row in selected.Where(r => r.Status.EndsWith('…'))) row.Status = "Interrumpido";
             status.Message = $"La actualización se interrumpió ({ok} OK y {failed} con error hasta ese momento): {ex.Message}";
         }
         finally
         {
             IsBusy = false;
             BusyLabel = "";
-        }
-    }
-
-    [RelayCommand]
-    private void OpenWindowsUpdate()
-    {
-        try
-        {
-            openWindowsUpdate();
-        }
-        catch (Exception ex)
-        {
-            status.Message = "No se pudo abrir Windows Update: " + ex.Message;
         }
     }
 }

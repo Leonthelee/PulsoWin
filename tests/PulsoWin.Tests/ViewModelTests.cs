@@ -90,9 +90,34 @@ public class ViewModelTests
         Assert.False(vm.CleanCommand.CanExecute(null)); // hay que volver a analizar antes de otra limpieza
     }
 
-    private static UpdatesViewModel CreateUpdates(FakeRunnerForVm runner, IDialogService dialogs) =>
+    private const string KbA = "11111111-1111-1111-1111-111111111111";
+    private const string KbB = "22222222-2222-2222-2222-222222222222";
+
+    private static readonly WindowsUpdateScanResult TwoWindowsUpdates = new(
+    [
+        new WindowsUpdateItem("Actualización de seguridad A", "KB5000001", true, false, 1024, KbA),
+        new WindowsUpdateItem("Definiciones B", "KB5000002", false, true, 2048, KbB),
+    ]);
+
+    /// <summary>Instalador falso de Windows Update: registra qué UpdateID le pidieron instalar.</summary>
+    private sealed class FakeWindowsInstaller(WindowsUpdateInstallResult? forced = null)
+    {
+        public List<string> Requested { get; } = [];
+
+        public Task<WindowsUpdateInstallResult> Install(IReadOnlyList<string> ids)
+        {
+            Requested.AddRange(ids);
+            return Task.FromResult(forced ?? new WindowsUpdateInstallResult(
+                ids.Select(id => new WindowsUpdateInstallItem(id, "t", 2)).ToList(), RebootRequired: true));
+        }
+    }
+
+    private static UpdatesViewModel CreateUpdates(FakeRunnerForVm runner, IDialogService dialogs,
+        WindowsUpdateScanResult? windows = null, FakeWindowsInstaller? installer = null) =>
         new(new WingetClient(runner, wingetPath: @"C:\fake\winget.exe"),
-            () => new WindowsUpdateScanResult([]), () => { }, dialogs, new StatusBar(),
+            () => windows ?? new WindowsUpdateScanResult([]),
+            (installer ?? new FakeWindowsInstaller()).Install,
+            dialogs, new StatusBar(),
             Path.Combine(Path.GetTempPath(), "pulsowin-tests"));
 
     private const string WingetTable = """
@@ -110,10 +135,10 @@ public class ViewModelTests
         var vm = CreateUpdates(runner, dialogs);
 
         await vm.SearchCommand.ExecuteAsync(null);
-        var package = Assert.Single(vm.Packages);
+        var package = Assert.Single(vm.Items);
         Assert.False(package.IsSelected);
 
-        await vm.UpgradeSelectedCommand.ExecuteAsync(null);
+        await vm.ProceedCommand.ExecuteAsync(null);
         Assert.Equal(0, dialogs.Asked);
         Assert.DoesNotContain(runner.Calls, c => c.Contains("--id"));
     }
@@ -124,16 +149,83 @@ public class ViewModelTests
         var runner = new FakeRunnerForVm(WingetTable);
         var vm = CreateUpdates(runner, new FakeDialogs(false));
         await vm.SearchCommand.ExecuteAsync(null);
-        vm.Packages[0].IsSelected = true;
+        vm.Items[0].IsSelected = true;
 
-        await vm.UpgradeSelectedCommand.ExecuteAsync(null);
+        await vm.ProceedCommand.ExecuteAsync(null);
         Assert.DoesNotContain(runner.Calls, c => c.Contains("--id"));
 
         var confirmed = CreateUpdates(runner, new FakeDialogs(true));
         await confirmed.SearchCommand.ExecuteAsync(null);
-        confirmed.Packages[0].IsSelected = true;
-        await confirmed.UpgradeSelectedCommand.ExecuteAsync(null);
+        confirmed.Items[0].IsSelected = true;
+        await confirmed.ProceedCommand.ExecuteAsync(null);
         Assert.Contains(runner.Calls, c => c.Contains("GitHub.cli"));
+    }
+
+    [Fact]
+    public async Task Search_lists_windows_and_programs_together_in_one_list()
+    {
+        var vm = CreateUpdates(new FakeRunnerForVm(WingetTable), new FakeDialogs(true), TwoWindowsUpdates);
+
+        await vm.SearchCommand.ExecuteAsync(null);
+
+        Assert.Equal(3, vm.Items.Count);
+        Assert.Equal(2, vm.Items.Count(i => i.Kind == UpdateKind.Windows));
+        Assert.Contains("2 de Windows y 1 de programas", vm.Summary);
+        Assert.All(vm.Items, i => Assert.False(i.IsSelected));
+    }
+
+    [Fact]
+    public async Task Proceed_installs_only_the_marked_windows_updates()
+    {
+        var installer = new FakeWindowsInstaller();
+        var vm = CreateUpdates(new FakeRunnerForVm(WingetTable), new FakeDialogs(true), TwoWindowsUpdates, installer);
+        await vm.SearchCommand.ExecuteAsync(null);
+        vm.Items.Single(i => i.Id == KbA).IsSelected = true;
+
+        await vm.ProceedCommand.ExecuteAsync(null);
+
+        Assert.Equal(new[] { KbA }, installer.Requested);
+        Assert.Equal("Instalada · requiere reiniciar", vm.Items.Single(i => i.Id == KbA).Status);
+        Assert.Contains("Reinicia el equipo", vm.Summary);
+    }
+
+    [Fact]
+    public async Task Refusing_the_admin_prompt_installs_nothing_and_says_so()
+    {
+        var installer = new FakeWindowsInstaller(WindowsUpdateInstallResult.UserCancelled());
+        var vm = CreateUpdates(new FakeRunnerForVm(""), new FakeDialogs(true), TwoWindowsUpdates, installer);
+        await vm.SearchCommand.ExecuteAsync(null);
+        vm.SelectAllCommand.Execute(null);
+
+        await vm.ProceedCommand.ExecuteAsync(null);
+
+        Assert.All(vm.Items, i => Assert.Equal("Cancelado (sin permiso)", i.Status));
+    }
+
+    [Theory]
+    [InlineData("11111111-1111-1111-1111-111111111111", true)]
+    [InlineData("11111111-1111-1111-1111-11111111111", false)]
+    [InlineData("KB5000001", false)]
+    [InlineData("--wu-install", false)]
+    [InlineData("11111111-1111-1111-1111-111111111111 & calc", false)]
+    public void Only_real_update_ids_reach_the_elevated_installer(string id, bool valid)
+    {
+        Assert.Equal(valid, WindowsUpdateInstaller.IsValidUpdateId(id));
+    }
+
+    [Fact]
+    public void Usage_sampler_reports_ram_at_once_and_cpu_from_the_second_sample()
+    {
+        var sampler = new ProcessUsageSampler(top: 3);
+
+        var first = sampler.Sample();
+        Thread.Sleep(300);
+        var second = sampler.Sample();
+
+        Assert.Empty(first.Cpu);                     // la primera muestra solo fija la referencia
+        Assert.InRange(second.Ram.Count, 1, 3);       // siempre hay procesos usando memoria
+        Assert.True(second.Ram.SequenceEqual(second.Ram.OrderByDescending(r => r.Value)));
+        Assert.All(second.Cpu, c => Assert.InRange(c.Value, 0, 100));
     }
 
     [Fact]

@@ -14,6 +14,17 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 - HUD en la cabecera (CPU, RAM, temperatura de GPU y espacio liberable) y botón START que lleva a Limpiar y analiza.
 - Proyecto `PulsoWin.Presentation` (MVVM con CommunityToolkit.Mvvm): ViewModels testeables, sin WPF.
 - 6 pruebas de ViewModels; entre ellas, que cancelar la confirmación no borra nada (61 pruebas en total).
+- **Top de consumo** bajo cada marcador del HUD: los 3 programas que más usan CPU, RAM y GPU
+  (agrupando sus procesos, como el Administrador de tareas, sin administrador), y las 3 categorías que más liberan.
+- **Actualizar sin salir de PulsoWin:** «Buscar» revisa winget y Windows Update en segundo plano y muestra todo
+  lo pendiente en una sola lista; «Proceder» instala lo marcado. Las de Windows se instalan con un proceso
+  auxiliar que pide **un** permiso de administrador (UAC), acepta solo identificadores válidos (GUID) y
+  escribe su resultado únicamente en la carpeta de datos de PulsoWin. Se informa si hace falta reiniciar.
+- 9 pruebas más (70 en total): lista única, instala solo los UpdateID marcados, rechazo del UAC, validación de
+  identificadores y medición de consumo.
+
+### Quitado
+- El botón «Abrir Windows Update» (abría Configuración de Windows): ahora todo ocurre dentro de la app.
 
 ### Cambiado
 - Front y back separados en tres capas: `Core` (lógica) ← `Presentation` (estado y comandos) ← `App` (vistas).

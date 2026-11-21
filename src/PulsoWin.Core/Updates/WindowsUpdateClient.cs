@@ -8,7 +8,8 @@ public sealed record WindowsUpdateItem(
     string KbId,
     bool IsMandatory,
     bool IsDownloaded,
-    long SizeBytes);
+    long SizeBytes,
+    string UpdateId = "");
 
 public sealed record WindowsUpdateScanResult(
     IReadOnlyList<WindowsUpdateItem> Updates,
@@ -70,13 +71,16 @@ public sealed class WindowsUpdateClient
                 try { mandatory = (bool)u.IsMandatory; } catch { }
                 try { downloaded = (bool)u.IsDownloaded; } catch { }
                 try { size = Convert.ToInt64(u.MaxDownloadSize); } catch { }
+                var updateId = "";
+                try { updateId = (string)u.Identity.UpdateID; } catch { }
 
-                items.Add(new WindowsUpdateItem(title, kb, mandatory, downloaded, size));
+                items.Add(new WindowsUpdateItem(title, kb, mandatory, downloaded, size, updateId));
             }
 
             return new WindowsUpdateScanResult(items);
         }
-        catch (Exception ex) when (ex is COMException or InvalidOperationException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is COMException or InvalidOperationException or UnauthorizedAccessException
+                                       or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
         {
             return new WindowsUpdateScanResult([], $"No disponible ({ex.Message})");
         }

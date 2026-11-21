@@ -278,6 +278,12 @@
         </Style.Triggers>
     </Style>
 
+    <Style TargetType="ProgressBar">
+        <Setter Property="Foreground" Value="{StaticResource Magenta}" />
+        <Setter Property="Background" Value="{StaticResource SurfaceAlt}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+
     <!-- Tarjeta: panel con borde neón suave -->
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource Surface}" />

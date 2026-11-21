@@ -29,6 +29,9 @@ public sealed partial class CleanViewModel : ObservableObject
     /// <summary>Total liberable del último análisis, para el marcador grande de la cabecera.</summary>
     [ObservableProperty] private string _freeableText = "—";
 
+    /// <summary>Las 3 categorías que más espacio liberan, bajo el marcador LIBERABLE.</summary>
+    [ObservableProperty] private IReadOnlyList<UsageItem> _topFreeable = [];
+
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ScanCommand), nameof(CleanCommand))]
     private bool _isBusy;
@@ -104,6 +107,10 @@ public sealed partial class CleanViewModel : ObservableObject
             var totalBytes = selected.Sum(x => x.PendingBytes);
             var cookies = plans.Where(p => p.BlockedBy is null && p.Error is null).Sum(p => p.ToDelete);
             FreeableText = Bytes.Format(totalBytes);
+            TopFreeable = selected.Where(r => r.PendingBytes > 0)
+                .OrderByDescending(r => r.PendingBytes).Take(3)
+                .Select(r => new UsageItem(r.Name, r.PendingBytes, Bytes.Format(r.PendingBytes), r.PendingFiles))
+                .ToList();
             HasPendingWork = selected.Any(x => x.HasWork) || cookies > 0;
             _status.Message = $"Análisis listo: {Bytes.Format(totalBytes)} se pueden liberar" +
                               (wantCookies ? $" y {cookies:N0} cookies se pueden borrar." : ".");
@@ -173,6 +180,7 @@ public sealed partial class CleanViewModel : ObservableObject
             CookieInfo = run.CookieSummary;
             HasPendingWork = false;
             FreeableText = "+" + Bytes.Format(run.BytesFreed);
+            TopFreeable = [];
             BeforeAfter = DescribeBeforeAfter(run);
             _status.Message = $"Limpieza terminada. Registro: {run.LogPath}";
         }

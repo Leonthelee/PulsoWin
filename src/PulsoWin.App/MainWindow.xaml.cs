@@ -17,7 +17,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
-        _vm = MainViewModel.Create(new WpfDialogService(this));
+        _vm = MainViewModel.Create(new WpfDialogService(this), ElevatedUpdates.InstallAsync);
         DataContext = _vm;
 
         SourceInitialized += (_, _) => UseDarkTitleBar();

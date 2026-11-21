@@ -5,9 +5,16 @@ using PulsoWin.Core.Sensors;
 namespace PulsoWin.Presentation.ViewModels;
 
 /// <summary>Pestaña Hardware: ficha del equipo y sensores en vivo cada 2 segundos.</summary>
-public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sources) : ObservableObject
+public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sources, ProcessUsageSampler? usage = null) : ObservableObject
 {
+    private readonly ProcessUsageSampler _usage = usage ?? new ProcessUsageSampler();
     private bool _reading;
+
+    // Top 3 de programas que más consumen, bajo cada marcador del HUD.
+    [ObservableProperty] private IReadOnlyList<UsageItem> _topCpu = [];
+    [ObservableProperty] private IReadOnlyList<UsageItem> _topRam = [];
+    [ObservableProperty] private IReadOnlyList<UsageItem> _topGpu = [];
+    [ObservableProperty] private string _gpuTopNote = "midiendo…";
 
     public ObservableCollection<SummaryRow> Summary { get; } = [];
     public ObservableCollection<SensorReading> Sensors { get; } = [];
@@ -40,7 +47,11 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
         _reading = true;
         try
         {
-            var readings = await Task.Run(() => sources.SelectMany(ReadSafe).ToList());
+            var (readings, top) = await Task.Run(() => (sources.SelectMany(ReadSafe).ToList(), SampleUsageSafe()));
+            TopCpu = top.Cpu;
+            TopRam = top.Ram;
+            TopGpu = top.Gpu;
+            GpuTopNote = !top.GpuAvailable ? "sin contadores de GPU" : top.Gpu.Count == 0 ? "GPU en reposo" : "";
             Sensors.Clear();
             foreach (var reading in readings) Sensors.Add(reading);
 
@@ -51,6 +62,18 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
         finally
         {
             _reading = false;
+        }
+    }
+
+    private UsageTop SampleUsageSafe()
+    {
+        try
+        {
+            return _usage.Sample();
+        }
+        catch (Exception)
+        {
+            return UsageTop.Empty; // el top es informativo: si falla, no debe frenar los sensores
         }
     }
 
