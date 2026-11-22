@@ -3,7 +3,7 @@
   No está en PulsoWin.slnx: se construye solo al publicar una versión.
 
   Uso (desde la raíz del repo, después de "dotnet publish ... -o artifacts\publish\<versión>-win-x64"):
-    dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 -p:PublishDir=<ruta absoluta de la publicación>
+    dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.4.0 -p:PublishDir=<ruta absoluta de la publicación>
 -->
 <Project Sdk="WixToolset.Sdk/5.0.2">
   <PropertyGroup>

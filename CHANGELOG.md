@@ -5,6 +5,8 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 
 ## [Sin publicar]
 
+## [0.4.0] — 2026-11-21
+
 ### Agregado
 - **Firma de co-diseño** «Co-designed with AI coding assistants (Claude & Gemini)»:
   - **oculta:** `AssemblyMetadata` «CoDesign» incrustado en `PulsoWin.exe`, `PulsoWin.Core.dll` y `PulsoWin.Presentation.dll`; el huevo de pascua la lee de ahí;

@@ -25,7 +25,7 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.3.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **136 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **136 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
 
 > 🔐 **Para ver las opciones de red por proceso, PulsoWin debe ejecutarse como Administrador.**
 > Al abrir, la app **pide permiso de administrador** (aviso UAC de Windows). Con él, la pestaña **RED** y el Modo Gadget
@@ -202,7 +202,7 @@ dotnet run --project src/PulsoWin.App
 
 # 4. (Opcional) Publicar y generar el instalador MSI
 dotnet publish src/PulsoWin.App -c Release -r win-x64 --self-contained -p:DebugType=none -o artifacts\publish\win-x64
-dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 "-p:PublishDir=$PWD\artifacts\publish\win-x64" -o artifacts\msi
+dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.4.0 "-p:PublishDir=$PWD\artifacts\publish\win-x64" -o artifacts\msi
 ```
 
 ---
@@ -221,7 +221,7 @@ dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 "-
 <a id="code-signing-policy"></a>
 ## 🔏 Code signing policy (política de firma de código)
 
-> **Estado:** solicitud enviada a SignPath Foundation, **en revisión**. Hasta que se apruebe, las versiones publicadas (≤ 0.3.0) **no están firmadas**.
+> **Estado:** solicitud enviada a SignPath Foundation, **en revisión**. Hasta que se apruebe, las versiones publicadas (≤ 0.4.0) **no están firmadas**.
 
 Cuando se apruebe: *Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).*
 
