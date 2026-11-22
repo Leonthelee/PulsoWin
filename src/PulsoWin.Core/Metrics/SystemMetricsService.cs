@@ -131,6 +131,8 @@ public sealed class SystemMetricsService(
                 // ¿Se cayó el auxiliar? Sus cifras ya no son actuales: se vuelve a la vista por interfaz.
                 if (source.IsFaulted)
                 {
+                    // La última foto que alcanzó a llegar se cuenta antes de soltar la fuente.
+                    lastSessionTotal = calculator.Next(source.ReadCounters(), _time.GetElapsedTime(last)).TotalSessionBytes;
                     sessionBase += lastSessionTotal;
                     lastSessionTotal = 0;
                     source.Dispose();

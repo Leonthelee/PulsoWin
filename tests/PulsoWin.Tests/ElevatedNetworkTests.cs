@@ -206,7 +206,7 @@ public class ElevatedNetworkTests
     }
 
     [Fact]
-    public async Task When_the_helper_goes_away_the_source_faults_and_forgets_old_figures()
+    public async Task When_the_helper_goes_away_the_source_faults_and_keeps_its_last_frame_for_the_engine_to_count()
     {
         using var hold = new ManualResetEventSlim();
         Task? helper = null;
@@ -230,8 +230,78 @@ public class ElevatedNetworkTests
         await helper!;
         for (var i = 0; i < 50 && !source.IsFaulted; i++) await Task.Delay(20);
 
+        Assert.True(source.IsFaulted);                // el motor deja la fuente en el siguiente segundo...
+        Assert.Equal(10, Assert.Single(source.ReadCounters()).RxTotal);   // ...pero antes cuenta la última foto
+    }
+
+    [Fact]
+    public void A_helper_that_connects_but_never_opens_ETW_is_a_failed_switch_not_a_success()
+    {
+        // Se conecta y se va sin enviar la primera foto (así termina si ETW no abre): Start no puede dar éxito.
+        Task? helper = null;
+        using var source = new ElevatedTrafficSource(pipe =>
+        {
+            helper = Task.Run(() =>
+            {
+                using var client = new NamedPipeClientStream(".", pipe, PipeDirection.Out);
+                client.Connect(5000);
+            });
+            return Process.GetCurrentProcess();
+        }, TimeSpan.FromSeconds(5));
+
+        Assert.ThrowsAny<Exception>(source.Start);
         Assert.True(source.IsFaulted);
-        Assert.Empty(source.ReadCounters());          // nada de cifras viejas haciéndose pasar por actuales
+    }
+
+    [Fact]
+    public void Over_the_row_cap_the_frame_drops_the_smallest_rows_not_random_ones()
+    {
+        var counters = Enumerable.Range(1, TrafficWire.MaxRowsPerFrame + 10)
+            .Select(i => new TrafficCounter($"k{i}", i, "", i, 0)).Reverse().ToList();   // el más grande, al final
+        var text = new StringWriter();
+        TrafficWire.WriteFrame(text, counters);
+
+        var frame = Assert.Single(TrafficWire.ReadFrames(new StringReader(text.ToString())));
+        Assert.Equal(TrafficWire.MaxRowsPerFrame, frame.Count);
+        Assert.Contains(frame, r => r.Pid == TrafficWire.MaxRowsPerFrame + 10);
+        Assert.DoesNotContain(frame, r => r.Pid <= 10);
+    }
+
+    [Fact]
+    public void Etw_rows_keep_the_name_their_process_had_and_closed_processes_do_not_pile_up()
+    {
+        var alive = new Dictionary<int, string> { [100] = "viejo" };
+        using var etw = new EtwTrafficSource(pid => alive.GetValueOrDefault(pid, "?"));
+        etw.Add(100, 10, 0);
+        alive[100] = "nuevo";                        // el PID ya es de otro proceso
+        Assert.Equal("viejo", Assert.Single(etw.ReadCounters()).Name);
+
+        for (var pid = 1000; pid < 1000 + EtwTrafficSource.MaxExited + 50; pid++)
+        {
+            etw.Add(pid, 1, 1);
+            etw.Exited(pid);
+        }
+        Assert.Equal(EtwTrafficSource.MaxExited + 1, etw.ReadCounters().Count);   // los cerrados más recientes y el 100
+    }
+
+    [Fact]
+    public void Session_total_never_drops_when_rows_stop_arriving()
+    {
+        var calc = new TrafficRateCalculator();
+        calc.Next([new("a", 1, "a", 100, 0), new("b", 2, "b", 50, 0)], TimeSpan.FromSeconds(1));
+        Assert.Equal(160, calc.Next([new("a", 1, "a", 110, 0), new("b", 2, "b", 50, 0)], TimeSpan.FromSeconds(1)).TotalSessionBytes);
+        Assert.Equal(160, calc.Next([], TimeSpan.FromSeconds(1)).TotalSessionBytes);   // foto vacía o filas descartadas
+        Assert.Equal(170, calc.Next([new("a", 1, "a", 120, 0)], TimeSpan.FromSeconds(1)).TotalSessionBytes);
+    }
+
+    [Fact]
+    public void Name_cache_forgets_only_rows_that_stopped_arriving()
+    {
+        var cache = new ProcessNameCache();
+        cache.Get(Environment.ProcessId, 1);
+        cache.Get(Environment.ProcessId, 2);
+        cache.Retain([(Environment.ProcessId, 2)]);
+        Assert.Equal(1, cache.Count);
     }
 
     // ------------------------------------------------------------------ motor: cambio en vivo

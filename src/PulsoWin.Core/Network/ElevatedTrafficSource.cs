@@ -40,41 +40,55 @@ public sealed class ElevatedTrafficSource(Func<string, Process?>? launchHelper =
     public bool IsFaulted => _faulted;
 
     /// <summary>Nombre aceptado por el auxiliar: el prefijo y un GUID sin guiones, nada más.</summary>
-    public static bool IsValidPipeName(string? name) =>
-        name is not null && name.StartsWith(PipePrefix, StringComparison.Ordinal)
-        && Guid.TryParseExact(name[PipePrefix.Length..], "N", out _);
+    public static bool IsValidPipeName(string? name) => PrivatePipe.IsValidName(name, PipePrefix);
 
     public void Start()
     {
-        var name = PipePrefix + Guid.NewGuid().ToString("N");
-        _pipe = NamedPipeServerStreamAcl.Create(name, PipeDirection.In, 1, PipeTransmissionMode.Byte,
-            PipeOptions.Asynchronous, 0, 0, PipeAccess());
+        var name = PrivatePipe.NewName(PipePrefix);
+        _pipe = PrivatePipe.CreateServer(name);
 
         _helper = _launch(name) ?? throw new UnauthorizedAccessException(L.T("Net_HelperDeclined"));
 
-        using (var timeout = new CancellationTokenSource(_connectTimeout))
-        {
-            var connect = _pipe.WaitForConnectionAsync(timeout.Token);
-            var exited = _helper.WaitForExitAsync(timeout.Token);
-            Task.WhenAny(connect, exited).GetAwaiter().GetResult();
-            timeout.Cancel();   // libera la espera que no ganó
+        using var timeout = new CancellationTokenSource(_connectTimeout);
+        var connect = _pipe.WaitForConnectionAsync(timeout.Token);
+        var exited = _helper.WaitForExitAsync(timeout.Token);
+        Task.WhenAny(connect, exited).GetAwaiter().GetResult();
 
-            if (!connect.IsCompletedSuccessfully)
-            {
-                if (HasExited(_helper, out var code))
-                    throw new InvalidOperationException(L.F("Net_HelperExited", code));
-                throw new TimeoutException(L.T("Net_HelperTimeout"));
-            }
+        if (!connect.IsCompletedSuccessfully)
+        {
+            timeout.Cancel();   // libera la espera que no ganó
+            throw HelperGone();
         }
 
         // Solo se aceptan cifras del auxiliar que lanzó ESTA app, no de cualquier proceso que abra la tubería.
         if (!PipePeers.TryGetClientProcessId(_pipe, out var clientPid) || clientPid != _helper.Id)
+        {
+            timeout.Cancel();
             throw new UnauthorizedAccessException(L.T("Net_HelperWrongPeer"));
+        }
 
+        // Conectarse no basta: el auxiliar envía su primera foto solo después de abrir ETW. Si ETW falla, se cierra
+        // sin enviarla y el cambio se informa como fallido, en vez de mostrar un segundo la vista por proceso.
         var pipe = _pipe;
         _reader = new Thread(() => ReadFrames(pipe)) { IsBackground = true, Name = "PulsoWin red elevada" };
         _reader.Start();
+        try
+        {
+            if (_firstFrame.Task.WaitAsync(timeout.Token).GetAwaiter().GetResult()) return;
+        }
+        catch (OperationCanceledException)
+        {
+            throw new TimeoutException(L.T("Net_HelperTimeout"));
+        }
+        throw HelperGone();
     }
+
+    private readonly TaskCompletionSource<bool> _firstFrame = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+    private Exception HelperGone() =>
+        _helper is not null && WaitExit(_helper) && HasExited(_helper, out var code)
+            ? new InvalidOperationException(L.F("Net_HelperExited", code))
+            : new TimeoutException(L.T("Net_HelperTimeout"));
 
     private void ReadFrames(Stream pipe)
     {
@@ -82,20 +96,28 @@ public sealed class ElevatedTrafficSource(Func<string, Process?>? launchHelper =
         {
             using var reader = new StreamReader(pipe);
             foreach (var frame in TrafficWire.ReadFrames(reader))
+            {
                 _latest = frame;
+                _firstFrame.TrySetResult(true);
+            }
         }
         catch (Exception ex) when (ex is IOException or ObjectDisposedException)
         {
             // La tubería se cortó: se trata igual que el fin de la transmisión.
         }
-        _latest = [];
-        _faulted = true;   // el motor lo ve en el siguiente segundo y vuelve a la vista por interfaz
+        // La última foto se conserva: el motor la cuenta antes de volver a la vista por interfaz.
+        _faulted = true;
+        _firstFrame.TrySetResult(false);
     }
 
-    public IReadOnlyList<TrafficCounter> ReadCounters() =>
-        _latest.Select(t => new TrafficCounter(
+    public IReadOnlyList<TrafficCounter> ReadCounters()
+    {
+        var rows = _latest;
+        _names.Retain(rows.Select(t => (t.Pid, t.Generation)));
+        return rows.Select(t => new TrafficCounter(
                 $"pid:{t.Pid}:{t.Generation}", t.Pid, _names.Get(t.Pid, t.Generation), t.Rx, t.Tx, t.Generation))
             .ToList();
+    }
 
     public void Dispose()
     {
@@ -106,15 +128,12 @@ public sealed class ElevatedTrafficSource(Func<string, Process?>? launchHelper =
         _helper = null;
     }
 
-    /// <summary>Usuario actual (control total) y administradores (lectura/escritura). El PID se verifica igual.</summary>
-    private static PipeSecurity PipeAccess()
+    /// <summary>Si la tubería se cortó, el auxiliar suele estar terminando: se le da un momento para leer su código.</summary>
+    private static bool WaitExit(Process process)
     {
-        var security = new PipeSecurity();
-        using var me = WindowsIdentity.GetCurrent();
-        security.AddAccessRule(new PipeAccessRule(me.User!, PipeAccessRights.FullControl, AccessControlType.Allow));
-        security.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
-            PipeAccessRights.ReadWrite, AccessControlType.Allow));
-        return security;
+        try { process.WaitForExit(2000); }
+        catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception) { }
+        return true;
     }
 
     private static bool HasExited(Process process, out string code)
@@ -166,7 +185,9 @@ public static class TrafficWire
 
     public static void WriteFrame(TextWriter writer, IEnumerable<TrafficCounter> counters)
     {
-        foreach (var c in counters.Where(c => c.Pid is >= 0).Take(MaxRowsPerFrame))
+        // Si alguna vez hay más filas que el tope, quedan fuera las de menos tráfico, no unas al azar. El total de la
+        // sesión no baja por eso: el calculador acumula lo ya contado (ver TrafficRateCalculator).
+        foreach (var c in counters.Where(c => c.Pid is >= 0).OrderByDescending(c => c.RxTotal + c.TxTotal).Take(MaxRowsPerFrame))
             writer.Write(string.Create(CultureInfo.InvariantCulture, $"{c.Pid} {c.Generation} {c.RxTotal} {c.TxTotal}\n"));
         writer.Write('\n');
         writer.Flush();
@@ -198,6 +219,45 @@ public static class TrafficWire
                  & long.TryParse(parts[3], NumberStyles.None, CultureInfo.InvariantCulture, out var tx);
         if (ok) row = new WireRow(pid, gen, rx, tx);
         return ok;
+    }
+}
+
+/// <summary>
+/// Tubería privada entre la app (sin administrador) y un auxiliar elevado que ella lanzó.
+/// Nombre: prefijo + GUID sin guiones. Acceso: usuario actual (control total) y administradores (lectura/escritura),
+/// porque el aviso UAC puede aprobarse con otra cuenta de administrador. Cada punta verifica además el PID de la otra.
+/// </summary>
+public static class PrivatePipe
+{
+    public static string NewName(string prefix) => prefix + Guid.NewGuid().ToString("N");
+
+    public static bool IsValidName(string? name, string prefix) =>
+        name is not null && name.StartsWith(prefix, StringComparison.Ordinal)
+        && Guid.TryParseExact(name[prefix.Length..], "N", out _);
+
+    public static NamedPipeServerStream CreateServer(string name) =>
+        NamedPipeServerStreamAcl.Create(name, PipeDirection.In, 1, PipeTransmissionMode.Byte,
+            PipeOptions.Asynchronous, 0, 0, Access());
+
+    private static PipeSecurity Access()
+    {
+        var security = new PipeSecurity();
+        using var me = WindowsIdentity.GetCurrent();
+        security.AddAccessRule(new PipeAccessRule(me.User!, PipeAccessRights.FullControl, AccessControlType.Allow));
+        security.AddAccessRule(new PipeAccessRule(new SecurityIdentifier(WellKnownSidType.BuiltinAdministratorsSid, null),
+            PipeAccessRights.ReadWrite, AccessControlType.Allow));
+        return security;
+    }
+
+    /// <summary>
+    /// Lado elevado: el proceso que lo lanzó debe ser este mismo ejecutable. Si no se puede leer, se rechaza.
+    /// </summary>
+    public static bool ParentIsSameExecutable(Process parent)
+    {
+        var own = Environment.ProcessPath;
+        var theirs = parent.MainModule?.FileName;
+        return own is not null && theirs is not null
+               && string.Equals(Path.GetFullPath(own), Path.GetFullPath(theirs), StringComparison.OrdinalIgnoreCase);
     }
 }
 
@@ -248,7 +308,7 @@ public static class NetworkHelper
         try
         {
             parent = Process.GetProcessById(parentPid);
-            if (!(isSameExecutable ?? IsSameExecutable)(parent)) { parent.Dispose(); return 3; }
+            if (!(isSameExecutable ?? PrivatePipe.ParentIsSameExecutable)(parent)) { parent.Dispose(); return 3; }
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException or System.ComponentModel.Win32Exception)
         {
@@ -284,12 +344,5 @@ public static class NetworkHelper
             return 4;   // la app ya no esperaba la conexión
         }
         return 0;
-    }
-
-    private static bool IsSameExecutable(Process parent)
-    {
-        var own = Environment.ProcessPath;
-        var theirs = parent.MainModule?.FileName;
-        return own is not null && theirs is not null && string.Equals(Path.GetFullPath(own), Path.GetFullPath(theirs), StringComparison.OrdinalIgnoreCase);
     }
 }
