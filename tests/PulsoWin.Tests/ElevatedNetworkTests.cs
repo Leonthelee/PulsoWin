@@ -375,6 +375,19 @@ public class ElevatedNetworkTests
     }
 
     [Fact]
+    public async Task Closing_while_the_engine_is_still_starting_ends_quietly()
+    {
+        var service = Service(admin: false, new SwitchableSource(NetworkMonitorMode.PerInterface),
+            () => new SwitchableSource(NetworkMonitorMode.PerProcess));
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();   // la ventana se cierra antes de la primera lectura (pasaba con el equipo cargado)
+
+        await service.RunAsync(cts.Token);   // no debe lanzar OperationCanceledException
+
+        Assert.False(await service.RequestPerProcessAsync().WaitAsync(TimeSpan.FromSeconds(2)));
+    }
+
+    [Fact]
     public async Task Asking_when_the_engine_is_not_running_answers_no_instead_of_waiting_forever()
     {
         var service = Service(admin: false, new SwitchableSource(NetworkMonitorMode.PerInterface),

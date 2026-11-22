@@ -103,7 +103,16 @@ public sealed class SystemMetricsService(
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var isAdmin = _isAdministrator();
-        var (source, notice) = await Task.Run(() => OpenNetworkSource(isAdmin), cancellationToken);
+        ITrafficSource source;
+        string? notice;
+        try
+        {
+            (source, notice) = await Task.Run(() => OpenNetworkSource(isAdmin), cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return;   // se cerró antes de abrir la red: no hay nada que liberar
+        }
         if (!isAdmin && perProcessFactory is not null) notice = Localization.L.T("Net_StandardNoticeAsk");
         using var gpuSampler = gpu is null ? new GpuSampler() : null;   // NVML se libera al terminar
         var readGpu = gpu ?? gpuSampler!.Sample;
@@ -117,91 +126,89 @@ public sealed class SystemMetricsService(
             await Task.Run(() => { _cpu(); readGpu(); calculator.Next(source.ReadCounters(), _interval); }, cancellationToken); // referencias
 
             using var timer = new PeriodicTimer(_interval, _time);
-            try
+            while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(true))
             {
-                while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(true))
+                // ¿Se cayó el auxiliar? Sus cifras ya no son actuales: se vuelve a la vista por interfaz.
+                if (source.IsFaulted)
                 {
-                    // ¿Se cayó el auxiliar? Sus cifras ya no son actuales: se vuelve a la vista por interfaz.
-                    if (source.IsFaulted)
+                    sessionBase += lastSessionTotal;
+                    lastSessionTotal = 0;
+                    source.Dispose();
+                    source = StartInterfaces();
+                    notice = Localization.L.T("Net_HelperLost");
+                    calculator = new TrafficRateCalculator(top);
+                    calculator.Next(source.ReadCounters(), _interval);
+                    lock (_gate) _perProcessActive = false;
+                }
+
+                // ¿Se pidió la red por proceso? El aviso de administrador se espera aparte, sin frenar las métricas.
+                if (switching is null)
+                {
+                    bool wanted;
+                    lock (_gate) wanted = _request is not null;
+                    if (wanted) switching = Task.Run(() => TryStart(perProcessFactory!));
+                }
+                if (switching is { IsCompleted: true })
+                {
+                    var (elevated, error) = await switching.ConfigureAwait(true);
+                    switching = null;
+                    if (elevated is not null)
                     {
                         sessionBase += lastSessionTotal;
                         lastSessionTotal = 0;
                         source.Dispose();
-                        source = StartInterfaces();
-                        notice = Localization.L.T("Net_HelperLost");
+                        source = elevated;
+                        notice = HelperNotice;
                         calculator = new TrafficRateCalculator(top);
                         calculator.Next(source.ReadCounters(), _interval);
-                        lock (_gate) _perProcessActive = false;
                     }
-
-                    // ¿Se pidió la red por proceso? El aviso de administrador se espera aparte, sin frenar las métricas.
-                    if (switching is null)
+                    else
                     {
-                        bool wanted;
-                        lock (_gate) wanted = _request is not null;
-                        if (wanted) switching = Task.Run(() => TryStart(perProcessFactory!));
+                        notice = Localization.L.F("Net_HelperFailed", error ?? "");
                     }
-                    if (switching is { IsCompleted: true })
+                    TaskCompletionSource<bool>? answered;
+                    lock (_gate)
                     {
-                        var (elevated, error) = await switching.ConfigureAwait(true);
-                        switching = null;
-                        if (elevated is not null)
-                        {
-                            sessionBase += lastSessionTotal;
-                            lastSessionTotal = 0;
-                            source.Dispose();
-                            source = elevated;
-                            notice = HelperNotice;
-                            calculator = new TrafficRateCalculator(top);
-                            calculator.Next(source.ReadCounters(), _interval);
-                        }
-                        else
-                        {
-                            notice = Localization.L.F("Net_HelperFailed", error ?? "");
-                        }
-                        TaskCompletionSource<bool>? answered;
-                        lock (_gate)
-                        {
-                            answered = _request;
-                            _request = null;
-                            _perProcessActive = elevated is not null;
-                        }
-                        answered?.TrySetResult(elevated is not null);
+                        answered = _request;
+                        _request = null;
+                        _perProcessActive = elevated is not null;
                     }
-
-                    var (cpuNow, mem, counters, gpuNow) = await Task.Run(() => (_cpu(), _memory(), source.ReadCounters(), readGpu()),
-                            cancellationToken)
-                        .ConfigureAwait(true);
-                    var now = _time.GetTimestamp();
-                    var net = calculator.Next(counters, _time.GetElapsedTime(last, now));
-                    last = now;
-                    lastSessionTotal = net.TotalSessionBytes;
-
-                    const double GB = 1024d * 1024 * 1024;
-                    var snapshot = new SystemMetricsSnapshot(
-                        _time.GetLocalNow(),
-                        cpuNow ?? Latest?.CpuPercent ?? 0,
-                        mem?.LoadPercent ?? 0,
-                        mem is { } m ? (m.TotalBytes - m.AvailableBytes) / GB : 0,
-                        mem is { } t ? t.TotalBytes / GB : 0,
-                        net.TotalRxBytesPerSecond / 1024,
-                        net.TotalTxBytesPerSecond / 1024,
-                        sessionBase + net.TotalSessionBytes,
-                        net.Top,
-                        isAdmin,
-                        source.Mode,
-                        notice,
-                        gpuNow.UsagePercent,
-                        gpuNow.TemperatureC,
-                        gpuNow.Name);
-                    Latest = snapshot;
-                    SnapshotUpdated?.Invoke(this, snapshot);
+                    answered?.TrySetResult(elevated is not null);
                 }
+
+                var (cpuNow, mem, counters, gpuNow) = await Task.Run(() => (_cpu(), _memory(), source.ReadCounters(), readGpu()),
+                        cancellationToken)
+                    .ConfigureAwait(true);
+                var now = _time.GetTimestamp();
+                var net = calculator.Next(counters, _time.GetElapsedTime(last, now));
+                last = now;
+                lastSessionTotal = net.TotalSessionBytes;
+
+                const double GB = 1024d * 1024 * 1024;
+                var snapshot = new SystemMetricsSnapshot(
+                    _time.GetLocalNow(),
+                    cpuNow ?? Latest?.CpuPercent ?? 0,
+                    mem?.LoadPercent ?? 0,
+                    mem is { } m ? (m.TotalBytes - m.AvailableBytes) / GB : 0,
+                    mem is { } t ? t.TotalBytes / GB : 0,
+                    net.TotalRxBytesPerSecond / 1024,
+                    net.TotalTxBytesPerSecond / 1024,
+                    sessionBase + net.TotalSessionBytes,
+                    net.Top,
+                    isAdmin,
+                    source.Mode,
+                    notice,
+                    gpuNow.UsagePercent,
+                    gpuNow.TemperatureC,
+                    gpuNow.Name);
+                Latest = snapshot;
+                SnapshotUpdated?.Invoke(this, snapshot);
             }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                // Cierre normal: el finally libera la fuente de red (y detiene la sesión ETW o el auxiliar).
-            }
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Cierre normal, también si llega durante la primera lectura: el finally libera la fuente de red
+            // (y detiene la sesión ETW o el auxiliar).
         }
         finally
         {

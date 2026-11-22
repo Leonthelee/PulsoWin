@@ -15,7 +15,7 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   (`--net-helper`) que solo mide la red con ETW y envía números (PID y bytes) por una tubería privada. Si se rechaza
   el aviso, sigue la vista por interfaz. `--sin-admin` y `--elevado` ya no hacen falta.
 - **DPI por monitor** (`PerMonitorV2`) declarado en el manifiesto (requisito 1.3).
-- Pruebas: 162 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar y la validez del manifiesto.
+- Pruebas: 163 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez del manifiesto.
 - **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
   El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
 
