@@ -281,6 +281,8 @@ public class ViewModelTests
                 Path.GetTempPath(), Array.Empty<ISensorSource>()),
             new HardwareViewModel([]),
             CreateUpdates(new FakeRunnerForVm(""), new FakeDialogs(false)), new StatusBar(), []);
+        vm.RegisterLaunch(MainViewModel.ThanksAfterUses + 2);             // ya pasó el uso 21: desbloqueado, sin abrirse solo
+        Assert.False(vm.IsEasterEggOpen);
 
         foreach (var key in "Up Up Down Down Left Right Left Right B".Split(' ')) Assert.False(vm.OnKey(key));
         Assert.True(vm.OnKey("A"));
@@ -294,6 +296,56 @@ public class ViewModelTests
 
         vm.CloseEasterEggCommand.Execute(null);
         Assert.False(vm.IsEasterEggOpen);
+    }
+
+    [Theory]
+    [InlineData(0, false, false)]     // contador ilegible: nunca hay huevo
+    [InlineData(1, false, false)]
+    [InlineData(20, false, false)]    // 20 usos todavía no basta
+    [InlineData(21, true, true)]      // al pasar de 20 aparece solo, una vez
+    [InlineData(22, true, false)]     // después solo con el código Konami
+    public void Easter_egg_only_exists_after_twenty_uses(int uses, bool unlocked, bool opensByItself)
+    {
+        var vm = new MainViewModel(
+            new CleanViewModel([], new FakeProbe(), new FakeDialogs(false), new FakeRecycleBin(), new StatusBar(),
+                Path.GetTempPath(), Array.Empty<ISensorSource>()),
+            new HardwareViewModel([]),
+            CreateUpdates(new FakeRunnerForVm(""), new FakeDialogs(false)), new StatusBar(), []);
+
+        vm.RegisterLaunch(uses);
+
+        Assert.Equal(unlocked, vm.IsEasterEggUnlocked);
+        Assert.Equal(opensByItself, vm.IsEasterEggOpen);
+        if (opensByItself) Assert.StartsWith("¡21 USOS!", vm.EasterEggTitle);
+        Assert.Equal("Gracias por el uso de la APP, espero sea de aporte y ayuda. =)", vm.ThanksText);
+
+        vm.CloseEasterEggCommand.Execute(null);
+        var konami = "Up Up Down Down Left Right Left Right B A".Split(' ').Select(vm.OnKey).ToList().Last();   // ToList: Last() solo evaluaría la última tecla
+        Assert.Equal(unlocked, konami);                                     // antes del uso 21 el código no hace nada
+        Assert.Equal(unlocked, vm.IsEasterEggOpen);
+    }
+
+    [Fact]
+    public void Usage_counter_adds_one_per_launch_and_recovers_from_a_damaged_file()
+    {
+        var dir = Path.Combine(Path.GetTempPath(), "pulsowin-usos-" + Guid.NewGuid().ToString("N"));
+        var file = Path.Combine(dir, "usos.txt");
+        try
+        {
+            var counter = new UsageCounter(file);
+            Assert.Equal(1, counter.RegisterLaunch());                      // sin archivo: primera vez
+            Assert.Equal(2, counter.RegisterLaunch());
+            Assert.Equal("2", File.ReadAllText(file));
+
+            File.WriteAllText(file, "basura");                               // dañado: parte de cero, no se cae
+            Assert.Equal(1, counter.RegisterLaunch());
+            File.WriteAllText(file, "-5");
+            Assert.Equal(1, counter.RegisterLaunch());
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
     }
 
     [Fact]

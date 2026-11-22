@@ -1,4 +1,6 @@
 // PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
+using System.Globalization;
+using System.IO;
 using System.Reflection;
 
 namespace PulsoWin.Presentation.ViewModels;
@@ -58,4 +60,31 @@ public sealed record AuthorSignature(string Author, string Profile, string Hello
     /// <summary>Solo se abren enlaces https: el texto viene del binario, pero no se confía a ciegas.</summary>
     public bool HasSafeProfileLink =>
         Uri.TryCreate(Profile, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps;
+}
+
+/// <summary>
+/// Cuenta cuántas veces se abrió PulsoWin en este usuario. Guarda solo un número en un archivo de texto local
+/// (%LOCALAPPDATA%\PulsoWin\usos.txt): no sale del equipo. Si el archivo falta o está dañado, parte de cero;
+/// si no se puede escribir, devuelve 0 y la app sigue sin huevo de pascua.
+/// </summary>
+public sealed class UsageCounter(string filePath)
+{
+    /// <summary>Suma una apertura y devuelve el total, contando la actual.</summary>
+    public int RegisterLaunch()
+    {
+        try
+        {
+            var current = File.Exists(filePath)
+                          && int.TryParse(File.ReadAllText(filePath).Trim(), NumberStyles.None, CultureInfo.InvariantCulture, out var n)
+                ? n : 0;
+            var next = current == int.MaxValue ? current : current + 1;
+            Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
+            File.WriteAllText(filePath, next.ToString(CultureInfo.InvariantCulture));
+            return next;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return 0;
+        }
+    }
 }

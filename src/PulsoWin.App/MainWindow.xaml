@@ -428,11 +428,14 @@
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,6">
                         <Image Source="Assets/pulsowin.ico" Width="48" Height="48" Margin="0,0,14,0" />
-                        <TextBlock Text="CHEAT CODE DESBLOQUEADO" FontFamily="{StaticResource DisplayFont}" FontSize="24"
+                        <TextBlock Text="{Binding EasterEggTitle}" FontFamily="{StaticResource DisplayFont}" FontSize="24"
                                    FontWeight="Bold" Foreground="{StaticResource Magenta}" VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Text="↑ ↑ ↓ ↓ ← → ← → B A" HorizontalAlignment="Center" FontFamily="{StaticResource MonoFont}"
-                               FontSize="14" Foreground="{StaticResource Cyan}" Margin="0,0,0,18" />
+                               FontSize="14" Foreground="{StaticResource Cyan}" Margin="0,0,0,14" />
+                    <TextBlock Text="{Binding ThanksText, Mode=OneWay}" HorizontalAlignment="Center" TextAlignment="Center"
+                               TextWrapping="Wrap" FontFamily="{StaticResource DisplayFont}" FontSize="17"
+                               Foreground="{StaticResource Text}" Margin="0,0,0,18" />
 
                     <TextBlock Text="HECHO POR" Style="{StaticResource Heading}" Margin="0,0,0,2" />
                     <TextBlock Text="{Binding Signature.Author}" FontFamily="{StaticResource DisplayFont}" FontSize="20"

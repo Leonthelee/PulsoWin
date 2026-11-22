@@ -40,14 +40,40 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public AuthorSignature Signature { get; private set; } = AuthorSignature.FromAssembly(typeof(MainViewModel).Assembly);
 
     [ObservableProperty] private bool _isEasterEggOpen;
+    [ObservableProperty] private string _easterEggTitle = KonamiTitle;
+
+    /// <summary>El huevo de pascua solo existe cuando la app ya se usó más de estas veces.</summary>
+    public const int ThanksAfterUses = 20;
+    public const string ThanksMessage = "Gracias por el uso de la APP, espero sea de aporte y ayuda. =)";
+    private const string KonamiTitle = "CHEAT CODE DESBLOQUEADO";
+
+    /// <summary>Texto del agradecimiento para la vista.</summary>
+    public string ThanksText => ThanksMessage;
+
+    /// <summary>Veces que se abrió la app, contando esta (0 si no se pudo leer el contador).</summary>
+    public int Uses { get; private set; }
+    public bool IsEasterEggUnlocked => Uses > ThanksAfterUses;
+
+    /// <summary>
+    /// La vista avisa una vez al abrir cuántos usos lleva. En el uso 21 el huevo aparece solo, una única vez,
+    /// con el agradecimiento; desde ahí también se puede volver a abrir con el código Konami.
+    /// </summary>
+    public void RegisterLaunch(int uses)
+    {
+        Uses = uses;
+        if (uses != ThanksAfterUses + 1) return;
+        EasterEggTitle = $"¡{uses} USOS! LOGRO DESBLOQUEADO";
+        IsEasterEggOpen = true;
+    }
 
     /// <summary>La vista indica qué ensamblado firma (el .exe), para leer sus metadatos.</summary>
     public void UseSignatureFrom(Assembly assembly) => Signature = AuthorSignature.FromAssembly(assembly);
 
-    /// <summary>Recibe cada tecla ("Up", "B", …). Devuelve true si con ella se completó el código Konami.</summary>
+    /// <summary>Recibe cada tecla ("Up", "B", …). Devuelve true si con ella se completó el código Konami (y el huevo ya está desbloqueado).</summary>
     public bool OnKey(string key)
     {
-        if (!_konami.Push(key)) return false;
+        if (!_konami.Push(key) || !IsEasterEggUnlocked) return false;
+        EasterEggTitle = KonamiTitle;
         IsEasterEggOpen = true;
         return true;
     }

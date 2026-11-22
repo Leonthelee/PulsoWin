@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using PulsoWin.Presentation.Services;
 using PulsoWin.Presentation.ViewModels;
 
 namespace PulsoWin.App;
@@ -21,6 +22,9 @@ public partial class MainWindow : Window
         _vm = MainViewModel.Create(new WpfDialogService(this), ElevatedUpdates.InstallAsync);
         _vm.UseSignatureFrom(typeof(App).Assembly);
         DataContext = _vm;
+
+        // Huevo de pascua: solo existe desde el uso 21 (y ese día aparece solo). El contador es un número local.
+        _vm.RegisterLaunch(new UsageCounter(System.IO.Path.Combine(AppPaths.DataDir, "usos.txt")).RegisterLaunch());
 
         // Huevo de pascua: PreviewKeyDown ve las flechas aunque una tabla tenga el foco (y no las consume).
         PreviewKeyDown += (_, e) =>
