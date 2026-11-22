@@ -156,6 +156,8 @@ public sealed class SystemMetricsService(
                     switching = null;
                     if (elevated is not null)
                     {
+                        // Lo que pasó por la fuente vieja desde el último segundo también cuenta.
+                        lastSessionTotal = calculator.Next(source.ReadCounters(), _time.GetElapsedTime(last)).TotalSessionBytes;
                         sessionBase += lastSessionTotal;
                         lastSessionTotal = 0;
                         source.Dispose();

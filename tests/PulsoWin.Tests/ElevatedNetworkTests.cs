@@ -336,6 +336,31 @@ public class ElevatedNetworkTests
     }
 
     [Fact]
+    public async Task Traffic_on_the_old_source_right_before_the_switch_still_counts()
+    {
+        var interfaces = new FixedSource(NetworkMonitorMode.PerInterface) { Bytes = 1000 };
+        var helper = new FixedSource(NetworkMonitorMode.PerProcess);
+        var service = Service(admin: false, interfaces, () =>
+        {
+            interfaces.Bytes = 6000;   // pasa tráfico justo mientras el auxiliar arranca, entre dos lecturas
+            return helper;
+        });
+        SystemMetricsSnapshot? last = null;
+        service.SnapshotUpdated += (_, s) => last = s;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+        var run = service.RunAsync(cts.Token);
+
+        await Task.Delay(120);
+        Assert.True(await service.RequestPerProcessAsync());
+        await Task.Delay(120);
+        cts.Cancel();
+        await run;
+
+        Assert.Equal(NetworkMonitorMode.PerProcess, last!.NetworkMode);
+        Assert.Equal(6000, last.NetSessionTotalBytes);   // la fuente vieja se lee una última vez antes de soltarla
+    }
+
+    [Fact]
     public async Task A_refused_prompt_keeps_the_interface_view_and_says_why()
     {
         var interfaces = new FakeTrafficSource(NetworkMonitorMode.PerInterface);
@@ -471,6 +496,17 @@ public class ElevatedNetworkTests
         await run;
         Assert.False(await service.RequestPerProcessAsync().WaitAsync(TimeSpan.FromSeconds(2)));   // después de cerrar
     }
+}
+
+/// <summary>Fuente falsa cuyo acumulado fija la prueba.</summary>
+internal sealed class FixedSource(NetworkMonitorMode mode) : ITrafficSource
+{
+    private long _bytes;
+    public long Bytes { get => Interlocked.Read(ref _bytes); set => Interlocked.Exchange(ref _bytes, value); }
+    public NetworkMonitorMode Mode => mode;
+    public void Start() { }
+    public IReadOnlyList<TrafficCounter> ReadCounters() => [new TrafficCounter("a", 10, "steam", Bytes, 0)];
+    public void Dispose() { }
 }
 
 /// <summary>Fuente falsa con tráfico creciente, arranque lento opcional y falla a pedido.</summary>
