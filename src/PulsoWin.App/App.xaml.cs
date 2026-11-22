@@ -40,14 +40,25 @@ public partial class App : Application
             return;
         }
 
-        // Pide administrador al abrir (para ver la red por proceso). Si se acepta, esta instancia se cierra y sigue
-        // la elevada; si se rechaza, la app abre igual en modo estándar. "--sin-admin" se salta la petición.
-        if (ElevationPolicy.ShouldRequestAdmin(Core.Metrics.SystemMetricsService.IsRunningAsAdministrator(), e.Args)
-            && TryRelaunchElevated(e.Args))
+        // Modo auxiliar elevado (red por proceso): sin ventana; mide con ETW y envía cifras a la app hasta que se cierre.
+        if (e.Args.Length > 0 && e.Args[0] == Core.Network.ElevatedTrafficSource.Switch)
         {
-            Shutdown(0);
+            int code;
+            try
+            {
+                code = Core.Network.NetworkHelper.Run(e.Args);
+            }
+            catch (Exception ex)
+            {
+                Log("auxiliar de red", ex);
+                code = 1;
+            }
+            Shutdown(code);
             return;
         }
+
+        // La app abre SIEMPRE sin pedir administrador (requisito 9.2 de Windows): lo que necesita permiso va en
+        // procesos auxiliares acotados, y se pide solo cuando la persona usa esa función.
 
         // Errores en el hilo de la interfaz (incluye comandos async): se registran y la app sigue viva.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -74,26 +85,6 @@ public partial class App : Application
         MessageBox.Show(
             L.F("Err_Unexpected", e.Exception.Message, ErrorLog),
             "PulsoWin", MessageBoxButton.OK, MessageBoxImage.Warning);
-    }
-
-    /// <summary>Relanza este mismo .exe con el aviso de administrador. false si se rechazó o no se pudo.</summary>
-    private static bool TryRelaunchElevated(string[] args)
-    {
-        try
-        {
-            var arguments = string.Join(' ', args.Append(ElevationPolicy.RelaunchedSwitch).Select(a => $"\"{a.Replace("\"", "")}\""));
-            using var elevated = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!)
-            {
-                UseShellExecute = true,
-                Verb = "runas",
-                Arguments = arguments,
-            });
-            return elevated is not null;
-        }
-        catch (System.ComponentModel.Win32Exception)
-        {
-            return false; // 1223 = la persona rechazó el aviso: se sigue sin administrador
-        }
     }
 
     private static void Log(string origin, Exception ex)

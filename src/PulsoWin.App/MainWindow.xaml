@@ -397,9 +397,18 @@
                                        Style="{StaticResource Heading}" FontSize="16" />
                         </DockPanel>
 
-                        <!-- Aviso discreto: modo usuario estándar o motivo del modo por interfaz -->
-                        <TextBlock Grid.Row="1" Text="{Binding Notice}" Style="{StaticResource Muted}" Margin="0,2,0,10"
-                                   AutomationProperties.LiveSetting="Polite" />
+                        <!-- Aviso discreto (modo actual) y, en modo por interfaz, el botón que pide el auxiliar elevado -->
+                        <DockPanel Grid.Row="1" Margin="0,2,0,10">
+                            <Button DockPanel.Dock="Right" Content="{l:Tr Net_PerProcessButton}" Margin="12,0,0,0"
+                                    Style="{StaticResource SecondaryButton}" Padding="12,6" FontSize="13"
+                                    VerticalAlignment="Center"
+                                    Command="{Binding RequestPerProcessCommand}"
+                                    ToolTip="{l:Tr Net_PerProcessHelp}"
+                                    AutomationProperties.HelpText="{l:Tr Net_PerProcessHelp}"
+                                    Visibility="{Binding ShowPerProcessButton, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="{Binding Notice}" Style="{StaticResource Muted}" TextWrapping="Wrap"
+                                       VerticalAlignment="Center" AutomationProperties.LiveSetting="Polite" />
+                        </DockPanel>
 
                         <DataGrid Grid.Row="2" ItemsSource="{Binding TopNetwork}" IsReadOnly="True">
                             <DataGrid.Columns>

@@ -133,6 +133,17 @@ Detalle en: {1}</value></data>
   <data name="Net_Scale" xml:space="preserve"><value>escala 0–{0}</value></data>
   <data name="Net_Session" xml:space="preserve"><value>Sesión {0}</value></data>
   <data name="Net_StandardNotice" xml:space="preserve"><value>Modo usuario estándar: para ver el consumo exacto en MB por proceso, ejecuta la app como Administrador.</value></data>
+  <data name="Net_StandardNoticeAsk" xml:space="preserve"><value>Modo usuario estándar: tráfico por interfaz. Pulsa «Ver por proceso» para ver el consumo exacto de cada programa (pide permiso de administrador solo para medir la red).</value></data>
+  <data name="Net_HelperNotice" xml:space="preserve"><value>Consumo exacto por proceso (ETW del kernel), medido por un proceso auxiliar con permiso de administrador. PulsoWin sigue sin administrador.</value></data>
+  <data name="Net_HelperDeclined" xml:space="preserve"><value>no se concedió el permiso de administrador</value></data>
+  <data name="Net_HelperTimeout" xml:space="preserve"><value>el proceso auxiliar no respondió a tiempo</value></data>
+  <data name="Net_HelperExited" xml:space="preserve"><value>el proceso auxiliar terminó antes de conectarse (código {0})</value></data>
+  <data name="Net_HelperWrongPeer" xml:space="preserve"><value>se conectó un proceso que no es el auxiliar lanzado por PulsoWin</value></data>
+  <data name="Net_HelperLost" xml:space="preserve"><value>Se cortó la medición por proceso (el proceso auxiliar se cerró). Volviendo al tráfico por interfaz.</value></data>
+  <data name="Net_ProcessHidden" xml:space="preserve"><value>(proceso protegido)</value></data>
+  <data name="Net_HelperFailed" xml:space="preserve"><value>No se pudo activar la red por proceso ({0}). Sigue el tráfico por interfaz.</value></data>
+  <data name="Net_PerProcessButton" xml:space="preserve"><value>🔐 Ver por proceso</value></data>
+  <data name="Net_PerProcessHelp" xml:space="preserve"><value>Abre un proceso auxiliar con permiso de administrador que solo mide la red por proceso. PulsoWin sigue sin administrador.</value></data>
   <data name="Net_Starting" xml:space="preserve"><value>Iniciando el monitoreo…</value></data>
   <data name="Net_SystemIdle" xml:space="preserve"><value>Inactivo del sistema</value></data>
   <data name="Recycle_Emptied" xml:space="preserve"><value>Papelera vaciada</value></data>

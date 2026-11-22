@@ -229,17 +229,6 @@ public class NetworkMonitorTests
         Assert.Null(GpuEngineCounters.Total([]));                                           // primera lectura
     }
 
-    [Theory]
-    [InlineData(false, new string[0], true)]                         // usuario estándar al abrir: se pide
-    [InlineData(true, new string[0], false)]                         // ya es administrador
-    [InlineData(false, new[] { "--sin-admin" }, false)]               // la persona no lo quiere
-    [InlineData(false, new[] { "--elevado" }, false)]                 // ya se intentó: no preguntar en bucle
-    [InlineData(false, new[] { "--wu-install", "x" }, false)]         // el auxiliar de Windows Update no se toca
-    public void Admin_is_requested_once_at_startup_and_can_be_skipped(bool isAdmin, string[] args, bool expected)
-    {
-        Assert.Equal(expected, PulsoWin.Presentation.Services.ElevationPolicy.ShouldRequestAdmin(isAdmin, args));
-    }
-
     [Fact]
     public void Gpu_dials_show_not_available_instead_of_zero()
     {

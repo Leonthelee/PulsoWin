@@ -10,6 +10,19 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
 
 ### Cambiado
+- **PulsoWin ya no pide administrador al abrir** (requisito 9.2 de la certificación de apps de escritorio de Windows).
+  La red abre por interfaz, y el botón «🔐 Ver por proceso» de la pestaña RED lanza un auxiliar elevado
+  (`--net-helper`) que solo mide la red con ETW y envía números (PID y bytes) por una tubería privada. Si se rechaza
+  el aviso, sigue la vista por interfaz. `--sin-admin` y `--elevado` ya no hacen falta.
+- **DPI por monitor** (`PerMonitorV2`) declarado en el manifiesto (requisito 1.3).
+- **Windows Update devuelve su resultado por una tubería privada** verificada por PID, no por un archivo en
+  `%LOCALAPPDATA%`. Si el aviso se aprobaba con otra cuenta de administrador, el archivo quedaba en su perfil y la app
+  informaba un error aunque la actualización se hubiera instalado.
+- **Red por proceso más robusta:** el cambio solo cuenta como exitoso cuando el auxiliar envía su primera foto (ETW
+  abierto); la última foto se cuenta antes de volver a la vista por interfaz; el total de la sesión se acumula y no
+  baja si una fila deja de llegar; cada fila guarda el nombre de su proceso desde el primer byte; los procesos
+  cerrados se conservan hasta 256 y luego se descartan los más antiguos.
+- Pruebas: 169 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez del manifiesto.
 - **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
   El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
 

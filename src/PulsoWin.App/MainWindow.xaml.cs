@@ -82,7 +82,7 @@ public partial class MainWindow : Window
 
     /// <summary>
     /// Cambia al otro idioma: lo guarda y ofrece reiniciar (la pregunta va en el idioma nuevo).
-    /// El reinicio conserva el modo actual: si la app ya es administrador, la nueva hereda el permiso sin volver a pedirlo.
+    /// La nueva instancia hereda los permisos de esta (sin pedir nada).
     /// </summary>
     private void Language_Click(object sender, RoutedEventArgs e)
     {
@@ -92,12 +92,9 @@ public partial class MainWindow : Window
         if (MessageBox.Show(this, L.T("Lang_Restart", culture), "PulsoWin", MessageBoxButton.YesNo, MessageBoxImage.Question)
             != MessageBoxResult.Yes) return;
 
-        var keepMode = Core.Metrics.SystemMetricsService.IsRunningAsAdministrator()
-            ? ElevationPolicy.RelaunchedSwitch
-            : ElevationPolicy.SkipSwitch;
         try
         {
-            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!, keepMode)
+            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!)
             {
                 UseShellExecute = false,
             });
