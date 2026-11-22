@@ -53,18 +53,28 @@ public sealed class SystemMetricsService(
     /// </summary>
     public bool CanRequestPerProcess => perProcessFactory is not null && !_isAdministrator();
 
-    private TaskCompletionSource<bool>? _perProcessRequest;
+    // Estado compartido entre la interfaz (pide) y el bucle (atiende). Todo bajo _gate.
+    private readonly object _gate = new();
+    private bool _running;
+    private bool _perProcessActive;
+    private TaskCompletionSource<bool>? _request;   // sigue en pie hasta que el cambio termina: un segundo clic la comparte
 
     /// <summary>
     /// Pide la red por proceso con el auxiliar elevado (Windows muestra el aviso de administrador).
-    /// true si quedó activa; false si se rechazó, falló o no está disponible. Mientras se espera el aviso, las
-    /// métricas siguen llegando con la fuente anterior.
+    /// true si quedó activa (o ya lo estaba); false si se rechazó, falló, no está disponible o el motor no corre.
+    /// Mientras se espera el aviso, las métricas siguen llegando con la fuente anterior, y pedirlo otra vez no lanza
+    /// un segundo auxiliar: devuelve la misma espera.
     /// </summary>
     public Task<bool> RequestPerProcessAsync()
     {
         if (!CanRequestPerProcess) return Task.FromResult(false);
-        var request = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        return (Interlocked.CompareExchange(ref _perProcessRequest, request, null) ?? request).Task;
+        lock (_gate)
+        {
+            if (!_running) return Task.FromResult(false);
+            if (_perProcessActive) return Task.FromResult(true);
+            _request ??= new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+            return _request.Task;
+        }
     }
 
     private readonly Func<bool> _isAdministrator = isAdministrator ?? IsRunningAsAdministrator;
@@ -98,7 +108,8 @@ public sealed class SystemMetricsService(
         using var gpuSampler = gpu is null ? new GpuSampler() : null;   // NVML se libera al terminar
         var readGpu = gpu ?? gpuSampler!.Sample;
         Task<(ITrafficSource? Source, string? Error)>? switching = null;
-        TaskCompletionSource<bool>? pending = null;
+        long sessionBase = 0, lastSessionTotal = 0;   // el total de la sesión no retrocede al cambiar de fuente
+        lock (_gate) _running = true;
         try
         {
             var calculator = new TrafficRateCalculator(top);
@@ -110,11 +121,25 @@ public sealed class SystemMetricsService(
             {
                 while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(true))
                 {
-                    // ¿Se pidió la red por proceso? El aviso de administrador se espera aparte, sin frenar las métricas.
-                    if (switching is null && Interlocked.Exchange(ref _perProcessRequest, null) is { } request)
+                    // ¿Se cayó el auxiliar? Sus cifras ya no son actuales: se vuelve a la vista por interfaz.
+                    if (source.IsFaulted)
                     {
-                        pending = request;
-                        switching = Task.Run(() => TryStart(perProcessFactory!));
+                        sessionBase += lastSessionTotal;
+                        lastSessionTotal = 0;
+                        source.Dispose();
+                        source = StartInterfaces();
+                        notice = Localization.L.T("Net_HelperLost");
+                        calculator = new TrafficRateCalculator(top);
+                        calculator.Next(source.ReadCounters(), _interval);
+                        lock (_gate) _perProcessActive = false;
+                    }
+
+                    // ¿Se pidió la red por proceso? El aviso de administrador se espera aparte, sin frenar las métricas.
+                    if (switching is null)
+                    {
+                        bool wanted;
+                        lock (_gate) wanted = _request is not null;
+                        if (wanted) switching = Task.Run(() => TryStart(perProcessFactory!));
                     }
                     if (switching is { IsCompleted: true })
                     {
@@ -122,6 +147,8 @@ public sealed class SystemMetricsService(
                         switching = null;
                         if (elevated is not null)
                         {
+                            sessionBase += lastSessionTotal;
+                            lastSessionTotal = 0;
                             source.Dispose();
                             source = elevated;
                             notice = HelperNotice;
@@ -132,8 +159,14 @@ public sealed class SystemMetricsService(
                         {
                             notice = Localization.L.F("Net_HelperFailed", error ?? "");
                         }
-                        pending!.TrySetResult(elevated is not null);
-                        pending = null;
+                        TaskCompletionSource<bool>? answered;
+                        lock (_gate)
+                        {
+                            answered = _request;
+                            _request = null;
+                            _perProcessActive = elevated is not null;
+                        }
+                        answered?.TrySetResult(elevated is not null);
                     }
 
                     var (cpuNow, mem, counters, gpuNow) = await Task.Run(() => (_cpu(), _memory(), source.ReadCounters(), readGpu()),
@@ -142,6 +175,7 @@ public sealed class SystemMetricsService(
                     var now = _time.GetTimestamp();
                     var net = calculator.Next(counters, _time.GetElapsedTime(last, now));
                     last = now;
+                    lastSessionTotal = net.TotalSessionBytes;
 
                     const double GB = 1024d * 1024 * 1024;
                     var snapshot = new SystemMetricsSnapshot(
@@ -152,7 +186,7 @@ public sealed class SystemMetricsService(
                         mem is { } t ? t.TotalBytes / GB : 0,
                         net.TotalRxBytesPerSecond / 1024,
                         net.TotalTxBytesPerSecond / 1024,
-                        net.TotalSessionBytes,
+                        sessionBase + net.TotalSessionBytes,
                         net.Top,
                         isAdmin,
                         source.Mode,
@@ -172,8 +206,15 @@ public sealed class SystemMetricsService(
         finally
         {
             source.Dispose();
-            pending?.TrySetResult(false);
-            Interlocked.Exchange(ref _perProcessRequest, null)?.TrySetResult(false);
+            TaskCompletionSource<bool>? unanswered;
+            lock (_gate)
+            {
+                _running = false;
+                _perProcessActive = false;
+                unanswered = _request;
+                _request = null;
+            }
+            unanswered?.TrySetResult(false);   // nadie queda esperando un motor que ya no corre
             // Si el aviso seguía abierto al cerrar, el auxiliar que llegue tarde se libera igual.
             _ = switching?.ContinueWith(t => t.Result.Source?.Dispose(), TaskScheduler.Default);
         }
