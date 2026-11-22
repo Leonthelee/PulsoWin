@@ -8,6 +8,9 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 ### Agregado
 - **Compilación en GitHub Actions** (`.github/workflows/release.yml`): cada push compila sin advertencias, corre las
   pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
+- **Paquete MSIX para la Microsoft Store** (`packaging/msix`): sin firmar, porque la Store lo firma al publicarlo.
+  El workflow lo sube como artefacto aparte (`PulsoWin-X.Y.Z-store`). Pasos y justificación de capacidades en
+  `docs/microsoft-store.md`.
 
 ### Cambiado
 - **PulsoWin ya no pide administrador al abrir** (requisito 9.2 de la certificación de apps de escritorio de Windows).
@@ -22,7 +25,7 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   abierto); la última foto se cuenta antes de volver a la vista por interfaz; el total de la sesión se acumula y no
   baja si una fila deja de llegar; cada fila guarda el nombre de su proceso desde el primer byte; los procesos
   cerrados se conservan hasta 256 y luego se descartan los más antiguos.
-- Pruebas: 169 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez del manifiesto.
+- Pruebas: 170 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez de los manifiestos (app y paquete de la Store).
 - **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
   El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
 
