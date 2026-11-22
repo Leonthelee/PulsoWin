@@ -9,11 +9,32 @@ namespace PulsoWin.Tests;
 /// </summary>
 public class ManifestTests
 {
-    private static XDocument Manifest()
+    private static string Root()
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);
         while (dir is not null && !File.Exists(Path.Combine(dir.FullName, "PulsoWin.slnx"))) dir = dir.Parent;
-        return XDocument.Load(Path.Combine(dir!.FullName, "src", "PulsoWin.App", "app.manifest"));   // lanza si el XML es inválido
+        return dir!.FullName;
+    }
+
+    private static XDocument Manifest() =>
+        XDocument.Load(Path.Combine(Root(), "src", "PulsoWin.App", "app.manifest"));   // lanza si el XML es inválido
+
+    private static XDocument StorePackage() =>
+        XDocument.Load(Path.Combine(Root(), "packaging", "msix", "AppxManifest.xml"));
+
+    [Fact]
+    public void Store_package_runs_the_app_exe_with_only_the_justified_capabilities()
+    {
+        var pkg = StorePackage();
+        var app = pkg.Descendants().Single(e => e.Name.LocalName == "Application");
+        Assert.Equal("PulsoWin.exe", app.Attribute("Executable")!.Value);
+        Assert.Equal("Windows.FullTrustApplication", app.Attribute("EntryPoint")!.Value);
+
+        var caps = pkg.Descendants().Where(e => e.Name.LocalName == "Capability").Select(e => e.Attribute("Name")!.Value);
+        Assert.Equal(["allowElevation", "runFullTrust", "unvirtualizedResources"], caps.Order());
+
+        // Sin esto el limpiador borraría sobre una copia privada del paquete y no liberaría nada.
+        Assert.Equal("disabled", pkg.Descendants().Single(e => e.Name.LocalName == "FileSystemWriteVirtualization").Value);
     }
 
     [Fact]

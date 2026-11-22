@@ -25,7 +25,7 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **163 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **164 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
 
 > 🔐 **PulsoWin abre siempre sin administrador.** La red se ve **por interfaz** (Ethernet, Wi-Fi…).
 > Para ver el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión), pulsa
@@ -227,6 +227,8 @@ dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.4.0 "-
 ## 🔏 Firma de código
 
 > **PulsoWin no tiene firma digital.** Ninguna versión publicada está firmada y, por ahora, no hay un certificado de firma de código en camino.
+>
+> **Camino en preparación: Microsoft Store.** Allí Microsoft firma el paquete al publicarlo. El paquete MSIX y los pasos están en [docs/microsoft-store.md](docs/microsoft-store.md); todavía no está publicado.
 
 Qué significa al descargarlo:
 - **«Windows protegió su PC»:** pulsa **Más información → Ejecutar de todas formas**.

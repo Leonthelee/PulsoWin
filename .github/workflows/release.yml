@@ -75,6 +75,30 @@ jobs:
           "-p:PublishDir=${{ github.workspace }}/artifacts/publish/app"
           -o artifacts/msi
 
+      # Paquete para la Microsoft Store, sin firmar: la Store lo firma al publicarlo. No va al release de GitHub
+      # (fuera de la Store no se instala sin firma). La identidad sale de las variables del repositorio
+      # STORE_NAME, STORE_PUBLISHER y STORE_PUBLISHER_DISPLAY (Partner Center); sin ellas, identidad de prueba.
+      - name: Armar MSIX (Microsoft Store)
+        shell: powershell
+        env:
+          STORE_NAME: ${{ vars.STORE_NAME }}
+          STORE_PUBLISHER: ${{ vars.STORE_PUBLISHER }}
+          STORE_PUBLISHER_DISPLAY: ${{ vars.STORE_PUBLISHER_DISPLAY }}
+        run: |
+          $id = @{}
+          if ($env:STORE_NAME) {
+            $id = @{ Name = $env:STORE_NAME; Publisher = $env:STORE_PUBLISHER; PublisherDisplayName = $env:STORE_PUBLISHER_DISPLAY }
+          }
+          ./packaging/msix/pack.ps1 -PublishDir artifacts/publish/app -Version "${{ steps.version.outputs.version }}" -Out artifacts/msix @id
+
+      - name: Subir paquete de la Store
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: PulsoWin-${{ steps.version.outputs.version }}-store
+          path: artifacts/msix/*.msix
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Zip portable y SHA-256
         env:
           VERSION: ${{ steps.version.outputs.version }}

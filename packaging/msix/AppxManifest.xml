@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plantilla del paquete MSIX para la Microsoft Store. pack.ps1 reemplaza los marcadores entre llaves dobles.
+     La Store firma el paquete con su propio certificado al publicarlo: aquí no hay firma ni certificado.
+     Nombre y Publisher salen de Partner Center (Identidad del producto); con los de prueba solo sirve para validar. -->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
+  IgnorableNamespaces="uap rescap desktop6">
+
+  <Identity Name="{{NAME}}" Publisher="{{PUBLISHER}}" Version="{{VERSION}}" ProcessorArchitecture="x64" />
+
+  <Properties>
+    <DisplayName>PulsoWin</DisplayName>
+    <PublisherDisplayName>{{PUBLISHER_DISPLAY}}</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <!-- El limpiador borra cachés reales en AppData: sin esto Windows lo haría sobre una copia privada del paquete
+         y nada se liberaría. Requiere la capacidad unvirtualizedResources. -->
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
+  </Properties>
+
+  <Dependencies>
+    <!-- 1903: primera versión que respeta FileSystemWriteVirtualization. -->
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.18362.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <Resources>
+    <Resource Language="es-CL" />
+    <Resource Language="en-US" />
+  </Resources>
+
+  <Applications>
+    <Application Id="PulsoWin" Executable="PulsoWin.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="PulsoWin"
+        Description="Limpiador y visor de hardware para Windows"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png" />
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust" />
+    <!-- La app abre como usuario normal. Solo pide administrador, con aviso UAC, al pulsar «Ver por proceso» (RED)
+         o al instalar una actualización de Windows. Justificación en docs/microsoft-store.md. -->
+    <rescap:Capability Name="allowElevation" />
+    <rescap:Capability Name="unvirtualizedResources" />
+  </Capabilities>
+</Package>
