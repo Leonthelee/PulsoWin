@@ -236,7 +236,7 @@ PulsoWin **no tiene telemetría** ni envía datos de uso, del equipo o de la red
 - **Buscar o instalar actualizaciones:** usa `winget` y el Agente de Windows Update, que hablan con los servidores de Microsoft según la política de privacidad de Microsoft.
 - **Perfil del autor en el huevo de pascua:** solo se abre si haces clic en él.
 
-El monitor de red y el visor de hardware leen datos del propio equipo y no los guardan ni los envían.
+El monitor de red y el visor de hardware leen datos del propio equipo y no los guardan ni los envían. PulsoWin solo guarda localmente cuántas veces se abrió (un número en `%LOCALAPPDATA%\PulsoWin\usos.txt`), para su huevo de pascua.
 
 ---
 

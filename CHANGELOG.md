@@ -11,6 +11,11 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   - **visible:** encabezado en cada archivo `.cs` de `src/`, [AUTHORS.md](AUTHORS.md) y créditos del README.
 - README: secciones «Code signing policy» y «Privacidad».
 
+### Cambiado
+- **Huevo de pascua:** ahora solo existe cuando la app se usó **más de 20 veces**. En el uso 21 aparece solo, una vez,
+  con «Gracias por el uso de la APP, espero sea de aporte y ayuda. =)»; desde ahí el código Konami lo vuelve a abrir.
+  El conteo es un número local en `%LOCALAPPDATA%\PulsoWin\usos.txt` (no sale del equipo).
+
 ## [0.3.0] — 2026-11-21
 
 > 🔐 **Para ver la red por proceso, PulsoWin debe ejecutarse como Administrador.** Desde esta versión la app

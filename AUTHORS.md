@@ -9,6 +9,6 @@
 
 Cada cambio hecho con un asistente queda registrado en el historial de git con su línea `Co-Authored-By`.
 La misma firma va incrustada en los binarios (`AssemblyMetadata` «CoDesign» en `Directory.Build.props`)
-y se ve en el huevo de pascua de la app (código Konami).
+y se ve en el huevo de pascua de la app, que se desbloquea al pasar los 20 usos.
 
 ¿Vas a contribuir? Bienvenido: agrega tu nombre aquí en tu pull request.
