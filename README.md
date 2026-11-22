@@ -225,7 +225,7 @@ dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.4.0 "-
 
 Cuando se apruebe: *Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).*
 
-- **Qué se firma:** solo `PulsoWin.exe`, las bibliotecas propias de PulsoWin y el instalador MSI, compilados desde este repositorio en GitHub Actions.
+- **Qué se firma:** solo `PulsoWin.exe`, las bibliotecas propias de PulsoWin y el instalador MSI, compilados desde este repositorio en GitHub Actions ([workflow](.github/workflows/release.yml)). Los binarios se firman antes de armar el MSI, para que Smart App Control no bloquee las DLL instaladas. Detalle en [docs/firma-signpath.md](docs/firma-signpath.md).
 - **Qué no se firma:** las bibliotecas de terceros incluidas en el paquete, que se distribuyen tal como las publica su autor.
 - **Roles:**
   - *Autor y revisor:* [@Leonthelee](https://github.com/Leonthelee). Todo cambio propuesto por otra persona (pull request) lo revisa él antes de integrarse.
