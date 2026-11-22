@@ -5,6 +5,14 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 
 ## [Sin publicar]
 
+### Agregado
+- **Compilación en GitHub Actions** (`.github/workflows/release.yml`): cada push compila sin advertencias, corre las
+  pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
+
+### Cambiado
+- **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
+  El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
+
 ## [0.4.0] — 2026-11-21
 
 ### Agregado

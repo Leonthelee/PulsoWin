@@ -1,0 +1,156 @@
+# PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
+#
+# Compila, prueba y empaqueta PulsoWin en un runner de GitHub: el paquete sale del código público, no de un equipo local.
+#
+#   - Cualquier push o pull request: compila sin advertencias, corre las pruebas y deja el zip y el MSI como
+#     artefactos del workflow.
+#   - Etiqueta vX.Y.Z: además crea un BORRADOR de release con los archivos. Publicarlo es siempre una decisión manual.
+#
+# Los binarios NO tienen firma digital (sin certificado de firma de código). Cada archivo lleva su .sha256.
+
+name: Build y release
+
+on:
+  push:
+    branches: ['**']
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    env:
+      DOTNET_NOLOGO: 'true'
+      DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          global-json-file: global.json
+
+      - name: Versión (Directory.Build.props; la etiqueta debe coincidir)
+        id: version
+        run: |
+          $version = ([xml](Get-Content Directory.Build.props -Raw)).Project.PropertyGroup.Version | Where-Object { $_ } | Select-Object -First 1
+          if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "La versión '$version' no es X.Y.Z numérica (el MSI la exige)." }
+          if ($env:GITHUB_REF_TYPE -eq 'tag' -and $env:GITHUB_REF_NAME -ne "v$version") {
+            throw "La etiqueta $env:GITHUB_REF_NAME no coincide con <Version>$version</Version> de Directory.Build.props."
+          }
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "Versión $version"
+
+      - name: Compilar sin advertencias
+        run: dotnet build PulsoWin.slnx -c Release --no-incremental -warnaserror
+
+      - name: Pruebas
+        run: dotnet test PulsoWin.slnx -c Release --no-build --logger "console;verbosity=normal"
+
+      - name: Publicar (autocontenido, win-x64)
+        run: >
+          dotnet publish src/PulsoWin.App -c Release -r win-x64 --self-contained true
+          -p:DebugType=none -o artifacts/publish/app
+
+      - name: Armar MSI
+        run: >
+          dotnet build installer/PulsoWin.Installer.wixproj -c Release
+          "-p:Version=${{ steps.version.outputs.version }}"
+          "-p:PublishDir=${{ github.workspace }}/artifacts/publish/app"
+          -o artifacts/msi
+
+      - name: Zip portable y SHA-256
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          BIN: artifacts/publish/app
+        run: |
+          $out = New-Item -ItemType Directory -Force artifacts/release
+          Copy-Item "artifacts/msi/PulsoWin-$env:VERSION-x64.msi" $out
+
+          $stage = Join-Path $env:RUNNER_TEMP "PulsoWin-$env:VERSION"
+          Copy-Item $env:BIN $stage -Recurse
+          Copy-Item README.md, LICENSE, AUTHORS.md, CHANGELOG.md $stage
+          (Get-Content installer/LEEME.txt -Raw).Replace('{{VERSION}}', $env:VERSION) |
+            Set-Content (Join-Path $stage 'LEEME.txt') -Encoding utf8BOM -NoNewline
+          Compress-Archive -Path $stage -DestinationPath (Join-Path $out "PulsoWin-$env:VERSION-win-x64.zip") -CompressionLevel Optimal
+
+          Get-ChildItem $out -File | ForEach-Object {
+            $hash = (Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            [IO.File]::WriteAllText("$($_.FullName).sha256", "$hash  $($_.Name)`n")   # LF: sirve para sha256sum -c
+            "{0}  {1}  ({2:N1} MB)" -f $hash, $_.Name, ($_.Length / 1MB)
+          }
+
+      - name: Subir paquete
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: PulsoWin-${{ steps.version.outputs.version }}
+          path: artifacts/release/
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-release:
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # solo este job puede crear el borrador
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: PulsoWin-${{ needs.build.outputs.version }}
+          path: release
+
+      - name: Verificar hashes
+        working-directory: release
+        run: sha256sum -c *.sha256
+
+      - name: La etiqueta sigue apuntando a este commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Si la etiqueta se movió durante la compilación, estos binarios ya no le corresponden.
+          actual=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_REF_NAME" --jq .sha)
+          if [ "$actual" != "$GITHUB_SHA" ]; then
+            echo "::error::$GITHUB_REF_NAME ahora apunta a $actual, no a $GITHUB_SHA (compilado aquí). No se crea el borrador."
+            exit 1
+          fi
+
+      - name: Crear o completar el borrador de release (se publica a mano)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          # Las 0.x son versiones preliminares del proyecto; desde la 1.0.0 se publican como estables.
+          case "$VERSION" in 0.*) pre="--prerelease" ;; *) pre="" ;; esac
+
+          # Si una ejecución anterior dejó el borrador a medias, se completa en vez de fallar.
+          if draft=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$draft" != "true" ]; then
+              echo "::error::La release $GITHUB_REF_NAME ya está publicada: no se reemplazan sus archivos."
+              exit 1
+            fi
+            gh release upload "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --clobber
+            exit 0
+          fi
+
+          firma="⚠️ Compilación SIN firma digital: verifica los .sha256."
+          printf 'Borrador generado por GitHub Actions (%s). %s\n\nCompleta las notas antes de publicar. Historial: [CHANGELOG](https://github.com/%s/blob/main/CHANGELOG.md).\n' \
+            "$GITHUB_SHA" "$firma" "$GITHUB_REPOSITORY" > notas.md
+          gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" \
+            --draft $pre --verify-tag --title "PulsoWin $VERSION" --notes-file notas.md

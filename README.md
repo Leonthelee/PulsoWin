@@ -219,18 +219,17 @@ dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.4.0 "-
 ---
 
 <a id="code-signing-policy"></a>
-## 🔏 Code signing policy (política de firma de código)
+## 🔏 Firma de código
 
-> **Estado:** solicitud enviada a SignPath Foundation, **en revisión**. Hasta que se apruebe, las versiones publicadas (≤ 0.4.0) **no están firmadas**.
+> **PulsoWin no tiene firma digital.** Ninguna versión publicada está firmada y, por ahora, no hay un certificado de firma de código en camino.
 
-Cuando se apruebe: *Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).*
-
-- **Qué se firma:** solo `PulsoWin.exe`, las bibliotecas propias de PulsoWin y el instalador MSI, compilados desde este repositorio en GitHub Actions.
-- **Qué no se firma:** las bibliotecas de terceros incluidas en el paquete, que se distribuyen tal como las publica su autor.
-- **Roles:**
-  - *Autor y revisor:* [@Leonthelee](https://github.com/Leonthelee). Todo cambio propuesto por otra persona (pull request) lo revisa él antes de integrarse.
-  - *Aprobador de firmas:* [@Leonthelee](https://github.com/Leonthelee), que aprueba cada solicitud de firma de una versión.
-- **Seguridad:** las cuentas de GitHub y SignPath del equipo usan autenticación en dos pasos.
+Qué significa al descargarlo:
+- **«Windows protegió su PC»:** pulsa **Más información → Ejecutar de todas formas**.
+- **Smart App Control activado:** Windows puede bloquear la app sin ofrecer esa opción (error `0x800711C7`). En ese caso, compílala tú mismo con los comandos de arriba.
+- **Cómo saber que el archivo es el original:**
+  - Cada versión se compila en GitHub Actions desde este repositorio ([workflow](.github/workflows/release.yml)), no en un equipo personal.
+  - Cada archivo publicado trae su `.sha256`: compara el resultado de `Get-FileHash <archivo> -Algorithm SHA256` con ese valor.
+- **Revisión:** todo cambio propuesto por otra persona (pull request) lo revisa [@Leonthelee](https://github.com/Leonthelee) antes de integrarse.
 
 <a id="privacidad"></a>
 ## 🔒 Privacidad
