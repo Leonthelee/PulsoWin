@@ -1,0 +1,42 @@
+<!--
+  PulsoWin: instalación por equipo en Program Files, acceso en el menú Inicio y desinstalación desde
+  Configuración > Aplicaciones. Una versión nueva reemplaza la anterior (MajorUpgrade).
+  El UpgradeCode NO debe cambiar nunca: es lo que identifica a PulsoWin entre versiones.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="PulsoWin"
+           Manufacturer="LeonThelee"
+           Version="$(ProductVersion)"
+           UpgradeCode="77EC0D18-C566-4FEB-B70E-BD5CC31F7306"
+           Scope="perMachine"
+           Compressed="yes"
+           Language="1034">
+
+    <SummaryInformation Description="PulsoWin $(ProductVersion): limpiador, visor de hardware y monitor de red" />
+
+    <MajorUpgrade DowngradeErrorMessage="Ya hay instalada una versión más nueva de PulsoWin." />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Ícono y datos en "Configuración > Aplicaciones" -->
+    <Icon Id="PulsoWinIcon" SourceFile="..\src\PulsoWin.App\Assets\pulsowin.ico" />
+    <Property Id="ARPPRODUCTICON" Value="PulsoWinIcon" />
+    <Property Id="ARPURLINFOABOUT" Value="https://github.com/Leonthelee/PulsoWin" />
+    <Property Id="ARPHELPLINK" Value="https://github.com/Leonthelee/PulsoWin/issues" />
+    <Property Id="ARPCOMMENTS" Value="Limpiador, visor de hardware y monitor de red. Código abierto (MIT)." />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="PulsoWin">
+        <!-- Toda la publicación autocontenida (incluye el runtime de .NET: no hace falta instalarlo aparte) -->
+        <Files Include="$(PublishDir)\**" />
+      </Directory>
+    </StandardDirectory>
+
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Component Id="StartMenuShortcut" Guid="6B2C3E90-1F4A-4C1B-9D2E-5A7F0C3B8E41">
+        <Shortcut Id="PulsoWinShortcut" Name="PulsoWin" Description="Limpiador, visor de hardware y monitor de red"
+                  Target="[INSTALLFOLDER]PulsoWin.exe" WorkingDirectory="INSTALLFOLDER" Icon="PulsoWinIcon" />
+        <RegistryValue Root="HKMU" Key="Software\PulsoWin" Name="MenuInicio" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </StandardDirectory>
+  </Package>
+</Wix>

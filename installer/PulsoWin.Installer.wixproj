@@ -1,0 +1,20 @@
+<!--
+  Instalador MSI de PulsoWin (WiX Toolset 5, licencia MS-RL; WiX 6 no se usa porque exige aceptar un EULA aparte).
+  No está en PulsoWin.slnx: se construye solo al publicar una versión.
+
+  Uso (desde la raíz del repo, después de "dotnet publish ... -o artifacts\publish\<versión>-win-x64"):
+    dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 -p:PublishDir=<ruta absoluta de la publicación>
+-->
+<Project Sdk="WixToolset.Sdk/5.0.2">
+  <PropertyGroup>
+    <Version Condition="'$(Version)' == ''">0.0.0</Version>
+    <OutputName>PulsoWin-$(Version)-x64</OutputName>
+    <InstallerPlatform>x64</InstallerPlatform>
+    <DefineConstants>PublishDir=$(PublishDir);ProductVersion=$(Version)</DefineConstants>
+    <!-- Este proyecto no hereda las opciones de .NET de Directory.Build.props que no aplican a WiX. -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <!-- La validación ICE de Windows Installer exige administrador por la política del equipo de compilación.
+         Se omite aquí y el MSI se verifica aparte (tablas y extracción administrativa) antes de publicarlo. -->
+    <SuppressValidation>true</SuppressValidation>
+  </PropertyGroup>
+</Project>

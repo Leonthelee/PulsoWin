@@ -74,6 +74,24 @@ Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para q
 
 ---
 
+## 🧰 Drivers y BIOS: usa siempre los sitios oficiales de tu marca
+
+PulsoWin **no instala drivers ni actualiza la BIOS**. Para eso, te aconsejamos usar únicamente el soporte oficial del
+fabricante de tu equipo: ahí identificas tu modelo y descargas drivers, BIOS y herramientas verificados.
+
+| Marca | Soporte oficial |
+|---|---|
+| **Dell** | [dell.com/support/home/es-cl](https://www.dell.com/support/home/es-cl) |
+| **Lenovo** | [pcsupport.lenovo.com/es/es](https://pcsupport.lenovo.com/es/es) |
+| **HP** | [HP Support Assistant](https://support.hp.com/cl-es/help/hp-support-assistant) |
+| **ASUS** | [asus.com/latin/support/download-center](https://www.asus.com/latin/support/download-center/) |
+
+> ⚠️ Evita los sitios de «descarga de drivers» de terceros y los «actualizadores automáticos» que no sean del fabricante:
+> son una vía habitual de malware y de drivers incorrectos. Ante la duda, entra a la web de tu marca escribiendo la
+> dirección tú mismo.
+
+---
+
 ## 🏛️ Arquitectura y Flujos de Ejecución
 
 PulsoWin separa de forma estricta **motor determinista** (`PulsoWin.Core`), **lógica de pantalla testeable** (`PulsoWin.Presentation`) y **capa visual** (`PulsoWin.App`), manteniendo un flujo de dependencias unidireccional (`Core → Presentation → App`).
@@ -156,6 +174,9 @@ tests/
 └── PulsoWin.Tests/               suite xUnit (119 pruebas unitarias y de ViewModels)
 tools/
 └── icon.cs                       generador reproducible del ícono multi-resolución
+installer/
+├── PulsoWin.Installer.wixproj    instalador MSI (WiX Toolset 5, MS-RL)
+└── Package.wxs                   Program Files, acceso en el menú Inicio y actualización mayor
 ```
 
 ---
@@ -173,6 +194,10 @@ dotnet build -c Release --no-incremental -warnaserror --nologo
 
 # 3. Ejecutar la aplicación de escritorio
 dotnet run --project src/PulsoWin.App
+
+# 4. (Opcional) Publicar y generar el instalador MSI
+dotnet publish src/PulsoWin.App -c Release -r win-x64 --self-contained -p:DebugType=none -o artifacts\publish\win-x64
+dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 "-p:PublishDir=$PWD\artifacts\publish\win-x64" -o artifacts\msi
 ```
 
 ---
