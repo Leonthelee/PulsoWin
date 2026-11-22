@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 10.0 LTS](https://img.shields.io/badge/.NET-10.0%20LTS-512BD4.svg?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![WPF · MVVM](https://img.shields.io/badge/UI-WPF%20%C2%B7%20MVVM%20Ne%C3%B3n%20Retro-00E5FF.svg)](#-arquitectura-y-flujos-de-ejecución)
-[![Tests 168/168](https://img.shields.io/badge/Tests-168%2F168%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
+[![Tests 169/169](https://img.shields.io/badge/Tests-169%2F169%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
 [![Zero Kernel Drivers](https://img.shields.io/badge/Drivers-Zero%20Kernel%20Drivers-success.svg)](#-decisiones-de-diseño)
 [![Deterministic & AOT-Ready](https://img.shields.io/badge/Build-Deterministic%20%C2%B7%20AOT--Safe-orange.svg)](#-estándares-de-ingeniería-y-trazabilidad)
 
@@ -25,7 +25,7 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **168 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **169 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
 
 > 🔐 **PulsoWin abre siempre sin administrador.** La red se ve **por interfaz** (Ethernet, Wi-Fi…).
 > Para ver el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión), pulsa
@@ -181,7 +181,7 @@ src/
 ├── PulsoWin.Presentation/        ViewModels MVVM y servicios desacoplados de WPF
 └── PulsoWin.App/                 front WPF, tema Neón retro, Assets/pulsowin.ico y auxiliar elevado
 tests/
-└── PulsoWin.Tests/               suite xUnit (168 pruebas: motor, ViewModels e idiomas)
+└── PulsoWin.Tests/               suite xUnit (169 pruebas: motor, ViewModels e idiomas)
 tools/
 └── icon.cs                       generador reproducible del ícono multi-resolución
 installer/
@@ -196,7 +196,7 @@ installer/
 Requisito: [SDK de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) (LTS). .NET 8 dejó de tener soporte en noviembre de 2026.
 
 ```powershell
-# 1. Ejecutar toda la suite de pruebas (168/168 en verde)
+# 1. Ejecutar toda la suite de pruebas (169/169 en verde)
 dotnet test --nologo
 
 # 2. Compilar en Release tratando advertencias como errores (sin rutas locales en RSDS)

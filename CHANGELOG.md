@@ -22,7 +22,7 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   abierto); la última foto se cuenta antes de volver a la vista por interfaz; el total de la sesión se acumula y no
   baja si una fila deja de llegar; cada fila guarda el nombre de su proceso desde el primer byte; los procesos
   cerrados se conservan hasta 256 y luego se descartan los más antiguos.
-- Pruebas: 168 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez del manifiesto.
+- Pruebas: 169 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez del manifiesto.
 - **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
   El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
 
