@@ -85,8 +85,13 @@ jobs:
           STORE_PUBLISHER: ${{ vars.STORE_PUBLISHER }}
           STORE_PUBLISHER_DISPLAY: ${{ vars.STORE_PUBLISHER_DISPLAY }}
         run: |
+          # Las tres o ninguna: una identidad a medias daría un paquete que la Store rechaza.
+          $set = @($env:STORE_NAME, $env:STORE_PUBLISHER, $env:STORE_PUBLISHER_DISPLAY | Where-Object { $_ }).Count
+          if ($set -ne 0 -and $set -ne 3) {
+            throw "Identidad de la Store incompleta: define STORE_NAME, STORE_PUBLISHER y STORE_PUBLISHER_DISPLAY, o ninguna."
+          }
           $id = @{}
-          if ($env:STORE_NAME) {
+          if ($set -eq 3) {
             $id = @{ Name = $env:STORE_NAME; Publisher = $env:STORE_PUBLISHER; PublisherDisplayName = $env:STORE_PUBLISHER_DISPLAY }
           }
           ./packaging/msix/pack.ps1 -PublishDir artifacts/publish/app -Version "${{ steps.version.outputs.version }}" -Out artifacts/msix @id

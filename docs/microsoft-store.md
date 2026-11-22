@@ -21,7 +21,8 @@ un certificado.
    | `Package/Properties/PublisherDisplayName` | `STORE_PUBLISHER_DISPLAY` |
 
 4. Guardarlos en GitHub → Settings → Secrets and variables → Actions → **Variables**. No son secretos:
-   aparecen en el paquete publicado.
+   aparecen en el paquete publicado. Van las tres o ninguna: con una identidad a medias, el workflow falla
+   con un aviso en vez de armar un paquete que la Store rechazaría.
 
 ## 2. Armar el paquete
 
