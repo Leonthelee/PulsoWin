@@ -13,18 +13,18 @@ public static class SystemSummary
     {
         var rows = new List<SummaryRow>();
 
-        Query(rows, "Sistema operativo", "SELECT Caption, Version, OSArchitecture FROM Win32_OperatingSystem",
+        Query(rows, Localization.L.T("Sum_OS"), "SELECT Caption, Version, OSArchitecture FROM Win32_OperatingSystem",
             mo => $"{mo["Caption"]} {mo["Version"]} ({mo["OSArchitecture"]})");
 
         Query(rows, "CPU", "SELECT Name, NumberOfCores, NumberOfLogicalProcessors FROM Win32_Processor",
-            mo => $"{mo["Name"]?.ToString()?.Trim()} · {mo["NumberOfCores"]} núcleos / {mo["NumberOfLogicalProcessors"]} hilos");
+            mo => Localization.L.F("Sum_Cpu", mo["Name"]?.ToString()?.Trim(), mo["NumberOfCores"], mo["NumberOfLogicalProcessors"]));
 
         if (MemoryInfo.Current() is { } ram)
-            rows.Add(new SummaryRow("RAM", $"{Bytes.Format((long)ram.TotalBytes)} en total"));
+            rows.Add(new SummaryRow("RAM", Localization.L.F("Sum_RamTotal", Bytes.Format((long)ram.TotalBytes))));
         Query(rows, "RAM", "SELECT Manufacturer, Capacity, Speed, DeviceLocator FROM Win32_PhysicalMemory",
             mo => $"{mo["DeviceLocator"]}: {FormatBytes(mo["Capacity"])} · {mo["Speed"]} MT/s · {mo["Manufacturer"]?.ToString()?.Trim()}");
 
-        Query(rows, "Placa base", "SELECT Manufacturer, Product FROM Win32_BaseBoard",
+        Query(rows, Localization.L.T("Sum_Board"), "SELECT Manufacturer, Product FROM Win32_BaseBoard",
             mo => $"{mo["Manufacturer"]} {mo["Product"]}");
 
         Query(rows, "BIOS", "SELECT Manufacturer, SMBIOSBIOSVersion FROM Win32_BIOS",
@@ -34,7 +34,7 @@ public static class SystemSummary
         Query(rows, "GPU", "SELECT Name, DriverVersion FROM Win32_VideoController",
             mo => $"{mo["Name"]} (driver {mo["DriverVersion"]})");
 
-        Query(rows, "Almacenamiento", "SELECT Model, Size, InterfaceType FROM Win32_DiskDrive",
+        Query(rows, Localization.L.T("Sum_Storage"), "SELECT Model, Size, InterfaceType FROM Win32_DiskDrive",
             mo => $"{mo["Model"]} · {FormatBytes(mo["Size"])} · {mo["InterfaceType"]}");
 
         return rows;
@@ -52,7 +52,7 @@ public static class SystemSummary
         }
         catch (Exception ex) when (Wmi.IsFailure(ex))
         {
-            rows.Add(new SummaryRow(section, "no disponible"));
+            rows.Add(new SummaryRow(section, Localization.L.T("Common_NotAvailable")));
         }
     }
 

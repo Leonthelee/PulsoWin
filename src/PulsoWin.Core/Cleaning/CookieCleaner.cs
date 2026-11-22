@@ -76,7 +76,7 @@ public sealed class CookieCleaner(IProcessProbe probe, TimeProvider? time = null
     public CookieDeleteResult Delete(CookieStore store, KeepList keep, string backupRoot)
     {
         if (probe.IsRunning(store.Process))
-            return new CookieDeleteResult(0, null, $"«{store.Process}» está abierto");
+            return new CookieDeleteResult(0, null, Localization.L.F("Cookies_ProcessOpen", store.Process));
 
         string backup;
         try
@@ -85,7 +85,7 @@ public sealed class CookieCleaner(IProcessProbe probe, TimeProvider? time = null
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            return new CookieDeleteResult(0, null, "no se pudo crear la copia de respaldo: " + ex.Message);
+            return new CookieDeleteResult(0, null, Localization.L.F("Cookies_BackupFailed", ex.Message));
         }
 
         try

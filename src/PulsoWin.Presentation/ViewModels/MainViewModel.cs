@@ -9,6 +9,7 @@ using PulsoWin.Core.Metrics;
 using PulsoWin.Core.Sensors;
 using PulsoWin.Core.Updates;
 using PulsoWin.Presentation.Services;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.ViewModels;
 
@@ -31,7 +32,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     /// <summary>START sirve en Limpiar (analiza) y Hardware (lleva a Limpiar); en Actualizar y Red no aporta nada.</summary>
     public bool IsStartAvailable => SelectedTab is CleanTab or HardwareTab;
     [ObservableProperty] private bool _isBusy;
-    [ObservableProperty] private string _heroCaption = "PULSA START";
+    [ObservableProperty] private string _heroCaption = L.T("Hero_PressStart");
 
     // ------------------------------------------------------------------ huevo de pascua
     private readonly KonamiCode _konami = new();
@@ -44,8 +45,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     /// <summary>El huevo de pascua solo existe cuando la app ya se usó más de estas veces.</summary>
     public const int ThanksAfterUses = 20;
-    public const string ThanksMessage = "Gracias por el uso de la APP, espero sea de aporte y ayuda. =)";
-    private const string KonamiTitle = "CHEAT CODE DESBLOQUEADO";
+    public static string ThanksMessage => L.T("Egg_Thanks");
+    private static string KonamiTitle => L.T("Egg_KonamiTitle");
 
     /// <summary>Texto del agradecimiento para la vista.</summary>
     public string ThanksText => ThanksMessage;
@@ -62,7 +63,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         Uses = uses;
         if (uses != ThanksAfterUses + 1) return;
-        EasterEggTitle = $"¡{uses} USOS! LOGRO DESBLOQUEADO";
+        EasterEggTitle = L.F("Egg_UsesTitle", uses);
         IsEasterEggOpen = true;
     }
 
@@ -144,7 +145,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         IsBusy = Clean.IsBusy || Updates.IsBusy;
         HeroCaption = Clean.IsBusy ? Clean.BusyLabel
             : Updates.IsBusy ? Updates.BusyLabel
-            : "PULSA START";
+            : L.T("Hero_PressStart");
     }
 
     public void Dispose()

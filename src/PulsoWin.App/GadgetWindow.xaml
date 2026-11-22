@@ -6,7 +6,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:PulsoWin.App.Controls"
-        Title="PulsoWin · Modo Gadget"
+        xmlns:l="clr-namespace:PulsoWin.App.Localization"
+        Title="{l:Tr Gadget_Title}"
         Icon="Assets/pulsowin.ico"
         WindowStyle="None" AllowsTransparency="True" Background="Transparent"
         ShowInTaskbar="False" ResizeMode="NoResize" SizeToContent="WidthAndHeight"
@@ -46,7 +47,7 @@
 
     <Border x:Name="Shell" Margin="10" CornerRadius="18" Padding="14,8,14,10" Background="#F2100C1F"
             BorderThickness="1.5" MouseLeftButtonDown="Shell_MouseLeftButtonDown"
-            ToolTip="Arrastra para mover · doble clic para volver a la app completa">
+            ToolTip="{l:Tr Gadget_DragTip}">
         <Border.BorderBrush>
             <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
                 <GradientStop Color="#FF3EA5" Offset="0" />
@@ -66,9 +67,9 @@
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
                     <ToggleButton x:Name="PinButton" Style="{StaticResource PinButton}" Content="📌"
                                   IsChecked="{Binding Topmost, RelativeSource={RelativeSource AncestorType=Window}}"
-                                  ToolTip="Siempre visible" AutomationProperties.Name="Siempre visible" />
+                                  ToolTip="{l:Tr Gadget_Pin}" AutomationProperties.Name="{l:Tr Gadget_Pin}" />
                     <Button Style="{StaticResource ChromeButton}" Content="⤢" Click="Return_Click"
-                            ToolTip="Volver a la app completa" AutomationProperties.Name="Volver a la app completa" />
+                            ToolTip="{l:Tr Gadget_Back}" AutomationProperties.Name="{l:Tr Gadget_Back}" />
                 </StackPanel>
                 <TextBlock VerticalAlignment="Center" FontFamily="{StaticResource DisplayFont}" FontSize="12" FontWeight="Bold">
                     <Run Text="PULSO" Foreground="{StaticResource Text}" /><Run Text="WIN" Foreground="{StaticResource Magenta}" />
@@ -77,18 +78,18 @@
             </DockPanel>
 
             <StackPanel Orientation="Horizontal">
-                <controls:Gauge Width="180" Height="180" Title="RED" UseThresholdColors="False"
+                <controls:Gauge Width="180" Height="180" Title="{l:Tr Gauge_Network}" UseThresholdColors="False"
                                 Value="{Binding NetBytesPerSecond}" Maximum="{Binding NetScaleMax}"
                                 ValueText="{Binding NetRateText}" SubText="{Binding NetSessionText}"
                                 ScaleText="{Binding NetScaleText}" />
                 <controls:Gauge Width="180" Height="180" Title="CPU" Value="{Binding CpuPercent}" Maximum="100"
-                                ValueText="{Binding CpuText}" SubText="uso total" />
+                                ValueText="{Binding CpuText}" SubText="{l:Tr Gauge_TotalUse}" />
                 <controls:Gauge Width="180" Height="180" Title="RAM" Value="{Binding RamPercent}" Maximum="100"
                                 ValueText="{Binding RamPercentText}" SubText="{Binding RamGbText}" />
                 <controls:Gauge Width="180" Height="180" Title="GPU" Value="{Binding GpuPercent}" Maximum="100"
                                 ValueText="{Binding GpuText}" SubText="{Binding GpuSubText}" />
                 <!-- Temperatura de la GPU en °C (0–100): verde, amarillo desde 70 °C y rojo desde 85 °C -->
-                <controls:Gauge Width="180" Height="180" Title="TEMP GPU" Value="{Binding GpuTempC}" Maximum="100"
+                <controls:Gauge Width="180" Height="180" Title="{l:Tr Gauge_GpuTemp}" Value="{Binding GpuTempC}" Maximum="100"
                                 ValueText="{Binding GpuTempText}" SubText="{Binding GpuTempSubText}" ScaleText="0–100 °C" />
             </StackPanel>
         </StackPanel>

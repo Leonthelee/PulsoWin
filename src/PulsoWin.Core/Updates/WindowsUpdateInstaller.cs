@@ -17,7 +17,7 @@ public sealed record WindowsUpdateInstallResult(
     bool Cancelled = false)
 {
     public static WindowsUpdateInstallResult Fail(string error) => new([], false, error);
-    public static WindowsUpdateInstallResult UserCancelled() => new([], false, "No se dio permiso de administrador.", Cancelled: true);
+    public static WindowsUpdateInstallResult UserCancelled() => new([], false, Localization.L.T("Wu_NoAdmin"), Cancelled: true);
 }
 
 [JsonSerializable(typeof(WindowsUpdateInstallResult))]
@@ -35,14 +35,14 @@ public static class WindowsUpdateInstaller
     public static WindowsUpdateInstallResult Install(IReadOnlyCollection<string> updateIds)
     {
         var wanted = new HashSet<string>(updateIds.Where(IsValidUpdateId), StringComparer.OrdinalIgnoreCase);
-        if (wanted.Count == 0) return WindowsUpdateInstallResult.Fail("No hay actualizaciones válidas que instalar.");
+        if (wanted.Count == 0) return WindowsUpdateInstallResult.Fail(Localization.L.T("Wu_NoValid"));
 
         try
         {
             var sessionType = Type.GetTypeFromProgID("Microsoft.Update.Session");
             var collType = Type.GetTypeFromProgID("Microsoft.Update.UpdateColl");
             if (sessionType is null || collType is null)
-                return WindowsUpdateInstallResult.Fail("Windows Update Agent no está disponible.");
+                return WindowsUpdateInstallResult.Fail(Localization.L.T("Wu_AgentUnavailable"));
 
             dynamic session = Activator.CreateInstance(sessionType)!;
             session.ClientApplicationID = "PulsoWin";
@@ -63,7 +63,7 @@ public static class WindowsUpdateInstaller
             }
 
             if (titles.Count == 0)
-                return WindowsUpdateInstallResult.Fail("Las actualizaciones marcadas ya no están pendientes.");
+                return WindowsUpdateInstallResult.Fail(Localization.L.T("Wu_NoLongerPending"));
 
             dynamic downloader = session.CreateUpdateDownloader();
             downloader.Updates = toInstall;

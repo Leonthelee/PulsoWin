@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using PulsoWin.Core.Common;
 using PulsoWin.Core.Metrics;
 using PulsoWin.Core.Network;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.ViewModels;
 
@@ -14,7 +15,7 @@ namespace PulsoWin.Presentation.ViewModels;
 /// </summary>
 public sealed partial class MetricsViewModel(SystemMetricsService service) : ObservableObject
 {
-    public const string NetworkHeader = "Aquí te muestro tu tráfico de red actual (los primeros 10)";
+    public static string NetworkHeader => L.T("Net_Header");
 
     private readonly NetworkScale _scale = new();
 
@@ -48,7 +49,7 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
     [ObservableProperty] private bool _isAdminMode;
     [ObservableProperty] private bool _isPerProcess;
     [ObservableProperty] private string _modeText = "";
-    [ObservableProperty] private string _notice = "Iniciando el monitoreo…";
+    [ObservableProperty] private string _notice = L.T("Net_Starting");
 
     /// <summary>Aguja del dial de red, 0..1 sobre la escala dinámica actual.</summary>
     public double NetNeedle => NetScaleMax <= 0 ? 0 : Math.Clamp(NetBytesPerSecond / NetScaleMax, 0, 1);
@@ -80,22 +81,22 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
 
         GpuPercent = s.GpuPercent ?? 0;
         GpuText = s.GpuPercent is { } g ? $"{g:0} %" : "—";
-        GpuSubText = s.GpuPercent is null ? "no disponible" : Shorten(s.GpuName) ?? "uso total";
+        GpuSubText = s.GpuPercent is null ? L.T("Common_NotAvailable") : Shorten(s.GpuName) ?? L.T("Gauge_TotalUse");
         GpuTempC = s.GpuTempC ?? 0;
         GpuTempText = s.GpuTempC is { } t ? $"{t:0} °C" : "—";
-        GpuTempSubText = s.GpuTempC is null ? "no disponible" : "GPU";
+        GpuTempSubText = s.GpuTempC is null ? L.T("Common_NotAvailable") : "GPU";
 
         var bytesPerSecond = (s.NetRxKBps + s.NetTxKBps) * 1024;
         NetScaleMax = _scale.Next(bytesPerSecond);
         NetBytesPerSecond = bytesPerSecond;
         NetRateText = Rates.Format(bytesPerSecond);
-        NetSessionText = "Sesión " + Bytes.Format(s.NetSessionTotalBytes);
-        NetScaleText = "escala 0–" + Rates.Format(NetScaleMax).Replace(",0 ", " ").Replace(".0 ", " ");
+        NetSessionText = L.F("Net_Session", Bytes.Format(s.NetSessionTotalBytes));
+        NetScaleText = L.F("Net_Scale", Rates.Format(NetScaleMax).Replace(",0 ", " ").Replace(".0 ", " "));
         OnPropertyChanged(nameof(NetNeedle));
 
         IsAdminMode = s.IsAdminMode;
         IsPerProcess = s.NetworkMode == NetworkMonitorMode.PerProcess;
-        ModeText = IsPerProcess ? "POR PROCESO · ETW" : "POR INTERFAZ";
+        ModeText = IsPerProcess ? L.T("Net_ModePerProcess") : L.T("Net_ModeInterface");
         Notice = s.NetworkNotice;
 
         // Fila por fila: la tabla no parpadea ni pierde el scroll cada 2 s.

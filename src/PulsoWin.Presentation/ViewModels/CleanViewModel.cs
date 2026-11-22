@@ -7,6 +7,7 @@ using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
 using PulsoWin.Core.Sensors;
 using PulsoWin.Presentation.Services;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.ViewModels;
 
@@ -25,7 +26,7 @@ public sealed partial class CleanViewModel : ObservableObject
     [ObservableProperty] private bool _deleteCookies;
     [ObservableProperty] private string _keepText = "";
     [ObservableProperty] private string _cookieInfo = "";
-    [ObservableProperty] private string _beforeAfter = "Todavía no has limpiado en esta sesión.";
+    [ObservableProperty] private string _beforeAfter = L.T("Clean_NotYet");
 
     /// <summary>Total liberable del último análisis, para el marcador grande de la cabecera.</summary>
     [ObservableProperty] private string _freeableText = "—";
@@ -85,8 +86,8 @@ public sealed partial class CleanViewModel : ObservableObject
     private async Task ScanAsync()
     {
         IsBusy = true;
-        BusyLabel = "ANALIZANDO…";
-        _status.Message = "Analizando… (no se borra nada todavía)";
+        BusyLabel = L.T("Busy_Analyzing");
+        _status.Message = L.T("Clean_Analyzing");
         try
         {
             var selected = Rules.Where(r => r.IsSelected).ToList();
@@ -123,12 +124,13 @@ public sealed partial class CleanViewModel : ObservableObject
                 .Select(r => new UsageItem(r.Name, r.PendingBytes, Bytes.Format(r.PendingBytes), r.PendingFiles))
                 .ToList();
             HasPendingWork = selected.Any(x => x.HasWork) || cookies > 0;
-            _status.Message = $"Análisis listo: {Bytes.Format(totalBytes)} se pueden liberar" +
-                              (wantCookies ? $" y {cookies:N0} cookies se pueden borrar." : ".");
+            _status.Message = wantCookies
+                ? L.F("Clean_ScanDoneCookies", Bytes.Format(totalBytes), cookies)
+                : L.F("Clean_ScanDone", Bytes.Format(totalBytes));
         }
         catch (Exception ex)
         {
-            _status.Message = "El análisis falló: " + ex.Message;
+            _status.Message = L.F("Clean_ScanFailed", ex.Message);
         }
         finally
         {
@@ -139,11 +141,11 @@ public sealed partial class CleanViewModel : ObservableObject
 
     private static string DescribeCookiePlans(List<CookiePlan> plans)
     {
-        if (plans.Count == 0) return "No se encontraron perfiles de Chrome, Edge ni Firefox.";
+        if (plans.Count == 0) return L.T("Cookies_NoProfiles");
         return string.Join(Environment.NewLine, plans.Select(p =>
-            p.BlockedBy is not null ? $"{p.Store.Browser} ({p.Store.Profile}): ciérralo para borrar sus cookies."
-            : p.Error is not null ? $"{p.Store.Browser} ({p.Store.Profile}): no se pudo leer ({p.Error})."
-            : $"{p.Store.Browser} ({p.Store.Profile}): {p.ToDelete:N0} a borrar, {p.Kept:N0} se conservan."));
+            p.BlockedBy is not null ? L.F("Cookies_CloseBrowser", p.Store.Browser, p.Store.Profile)
+            : p.Error is not null ? L.F("Cookies_ReadError", p.Store.Browser, p.Store.Profile, p.Error)
+            : L.F("Cookies_Plan", p.Store.Browser, p.Store.Profile, p.ToDelete, p.Kept)));
     }
 
     // ------------------------------------------------------------------ limpieza
@@ -159,26 +161,26 @@ public sealed partial class CleanViewModel : ObservableObject
             : [];
         if (work.Count == 0 && cookiePlans.Count == 0)
         {
-            _status.Message = "No hay nada que limpiar. Pulsa START para analizar primero.";
+            _status.Message = L.T("Clean_NothingToClean");
             return;
         }
 
         var files = work.Sum(r => r.PendingFiles);
         var bytes = work.Sum(r => r.PendingBytes);
         var cookies = cookiePlans.Sum(p => p.ToDelete);
-        var message = $"Se borrarán {files:N0} archivos ({Bytes.Format(bytes)})"
-                      + (work.Any(r => r.IsRecycleBin) ? " y se vaciará la papelera" : "")
-                      + (cookies > 0 ? $", además de {cookies:N0} cookies (con copia de respaldo)" : "")
-                      + ".\n\nLos archivos en uso se omiten. ¿Continuar?";
-        if (!_dialogs.Confirm("Confirmar limpieza", message))
+        var message = L.F("Clean_Confirm_Files", files, Bytes.Format(bytes))
+                      + (work.Any(r => r.IsRecycleBin) ? L.T("Clean_Confirm_Recycle") : "")
+                      + (cookies > 0 ? L.F("Clean_Confirm_Cookies", cookies) : "")
+                      + L.T("Clean_Confirm_End");
+        if (!_dialogs.Confirm(L.T("Clean_ConfirmTitle"), message))
         {
-            _status.Message = "Limpieza cancelada. No se borró nada.";
+            _status.Message = L.T("Clean_Cancelled");
             return;
         }
 
         IsBusy = true;
-        BusyLabel = "LIMPIANDO…";
-        _status.Message = "Limpiando…";
+        BusyLabel = L.T("Busy_Cleaning");
+        _status.Message = L.T("Clean_Cleaning");
         try
         {
             // Se usa la lista con la que se analizó (y que se confirmó), no lo que haya en el cuadro ahora.
@@ -193,11 +195,11 @@ public sealed partial class CleanViewModel : ObservableObject
             FreeableText = "+" + Bytes.Format(run.BytesFreed);
             TopFreeable = [];
             BeforeAfter = DescribeBeforeAfter(run);
-            _status.Message = $"Limpieza terminada. Registro: {run.LogPath}";
+            _status.Message = L.F("Clean_Done", run.LogPath);
         }
         catch (Exception ex)
         {
-            _status.Message = "La limpieza falló: " + ex.Message;
+            _status.Message = L.F("Clean_Failed", ex.Message);
         }
         finally
         {
@@ -219,7 +221,7 @@ public sealed partial class CleanViewModel : ObservableObject
     private CleaningRun RunCleaning(List<RuleRow> work, List<CookiePlan> cookiePlans, KeepList keep)
     {
         var before = Snapshot.Take(_sources);
-        var log = new List<string> { $"PulsoWin · limpieza del {DateTime.Now.ToString("F", CultureInfo.CurrentCulture)}", "" };
+        var log = new List<string> { L.F("Log_CleanHeader", DateTime.Now.ToString("F", CultureInfo.CurrentCulture)), "" };
         var statuses = new List<(RuleRow Row, string Status)>();
         var cleaner = new Cleaner(_probe);
         long freed = 0;
@@ -231,7 +233,7 @@ public sealed partial class CleanViewModel : ObservableObject
             {
                 var emptied = _recycleBin.Empty();
                 if (emptied) freed += row.RecycleBytes;
-                statuses.Add((row, emptied ? "Papelera vaciada" : "No se pudo vaciar la papelera"));
+                statuses.Add((row, emptied ? L.T("Recycle_Emptied") : L.T("Recycle_EmptyFailed")));
                 log.Add($"[papelera] {(emptied ? "vaciada" : "error al vaciar")} · {Bytes.Format(row.RecycleBytes)}");
                 continue;
             }
@@ -239,8 +241,8 @@ public sealed partial class CleanViewModel : ObservableObject
             var result = cleaner.Clean(row.LastScan!);
             freed += result.BytesFreed;
             deletedFiles += result.Deleted.Count;
-            statuses.Add((row, $"{result.Deleted.Count:N0} borrados · {Bytes.Format(result.BytesFreed)}"
-                               + (result.Skipped > 0 ? $" · {result.Skipped:N0} en uso, omitidos" : "")));
+            statuses.Add((row, L.F("Clean_RowDone", result.Deleted.Count, Bytes.Format(result.BytesFreed))
+                               + (result.Skipped > 0 ? L.F("Clean_RowSkipped", result.Skipped) : "")));
             log.Add($"[{result.RuleId}] {result.Deleted.Count} borrados, {result.Skipped} omitidos, {Bytes.Format(result.BytesFreed)}");
             log.AddRange(result.Deleted.Select(p => "  - " + p));
         }
@@ -254,8 +256,8 @@ public sealed partial class CleanViewModel : ObservableObject
             var r = cookieCleaner.Delete(plan.Store, keep, backupRoot);
             cookiesDeleted += r.Deleted;
             var line = r.Error is null
-                ? $"{plan.Store.Browser} ({plan.Store.Profile}): {r.Deleted:N0} cookies borradas. Respaldo en {r.BackupPath}"
-                : $"{plan.Store.Browser} ({plan.Store.Profile}): no se borró nada ({r.Error}).";
+                ? L.F("Cookies_Deleted", plan.Store.Browser, plan.Store.Profile, r.Deleted, r.BackupPath)
+                : L.F("Cookies_NotDeleted", plan.Store.Browser, plan.Store.Profile, r.Error);
             cookieLines.Add(line);
             log.Add("[cookies] " + line);
         }
@@ -268,7 +270,7 @@ public sealed partial class CleanViewModel : ObservableObject
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
-            logPath = "(no se pudo escribir el registro: " + ex.Message + ")";
+            logPath = L.F("Log_WriteFailed", ex.Message);
         }
         return new CleaningRun(before, after, freed, deletedFiles, cookiesDeleted, statuses,
             string.Join(Environment.NewLine, cookieLines), logPath);
@@ -278,16 +280,16 @@ public sealed partial class CleanViewModel : ObservableObject
     {
         var (b, a) = (run.Before, run.After);
         return string.Join(Environment.NewLine,
-            $"Borrado: {Bytes.Format(run.BytesFreed)} en {run.FilesDeleted:N0} archivos" +
-            (run.CookiesDeleted > 0 ? $" y {run.CookiesDeleted:N0} cookies." : "."),
-            $"Espacio libre en {b.Drive}: {Bytes.Format(b.DriveFreeBytes)} → {Bytes.Format(a.DriveFreeBytes)} " +
-            $"({Signed(a.DriveFreeBytes - b.DriveFreeBytes)})",
-            $"RAM en uso: {Percent(b.RamUsedPercent)} → {Percent(a.RamUsedPercent)}",
-            $"Temperatura máxima leída: {Celsius(b.MaxTempC)} → {Celsius(a.MaxTempC)}");
+            run.CookiesDeleted > 0
+                ? L.F("BA_DeletedCookies", Bytes.Format(run.BytesFreed), run.FilesDeleted, run.CookiesDeleted)
+                : L.F("BA_Deleted", Bytes.Format(run.BytesFreed), run.FilesDeleted),
+            L.F("BA_FreeSpace", b.Drive, Bytes.Format(b.DriveFreeBytes), Bytes.Format(a.DriveFreeBytes), Signed(a.DriveFreeBytes - b.DriveFreeBytes)),
+            L.F("BA_Ram", Percent(b.RamUsedPercent), Percent(a.RamUsedPercent)),
+            L.F("BA_MaxTemp", Celsius(b.MaxTempC), Celsius(a.MaxTempC)));
 
         static string Signed(long v) => (v >= 0 ? "+" : "") + Bytes.Format(v);
-        static string Percent(double? v) => v is { } x ? $"{x:0.#} %" : "no disponible";
-        static string Celsius(double? v) => v is { } x ? $"{x:0.#} °C" : "no disponible";
+        static string Percent(double? v) => v is { } x ? $"{x:0.#} %" : L.T("Common_NotAvailable");
+        static string Celsius(double? v) => v is { } x ? $"{x:0.#} °C" : L.T("Common_NotAvailable");
     }
 
     // ------------------------------------------------------------------ lista de cookies a conservar

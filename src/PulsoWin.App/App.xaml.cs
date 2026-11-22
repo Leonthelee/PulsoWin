@@ -1,8 +1,10 @@
 // PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
+using System.Globalization;
 using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using PulsoWin.Presentation.Services;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.App;
 
@@ -16,6 +18,11 @@ public partial class App : Application
 
     protected override void OnStartup(StartupEventArgs e)
     {
+        // Idioma antes de cualquier texto (también en el instalador elevado, cuyos mensajes llegan a la app).
+        L.Culture = LanguagePreference.Resolve(LanguagePreference.Load(), CultureInfo.CurrentUICulture);
+        CultureInfo.DefaultThreadCurrentUICulture = L.Culture;
+        Thread.CurrentThread.CurrentUICulture = L.Culture;
+
         // Modo auxiliar elevado (instalar Windows Update): sin ventana, en un hilo MTA para COM, y termina.
         if (e.Args.Length > 0 && e.Args[0] == ElevatedUpdates.Switch)
         {
@@ -65,7 +72,7 @@ public partial class App : Application
         e.Handled = true;
         Log("interfaz", e.Exception);
         MessageBox.Show(
-            $"Algo salió mal, pero PulsoWin sigue abierto y no se borró nada a medias sin avisar.\n\n{e.Exception.Message}\n\nDetalle en: {ErrorLog}",
+            L.F("Err_Unexpected", e.Exception.Message, ErrorLog),
             "PulsoWin", MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 

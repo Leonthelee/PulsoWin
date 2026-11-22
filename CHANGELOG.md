@@ -10,6 +10,10 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   - **oculta:** `AssemblyMetadata` «CoDesign» incrustado en `PulsoWin.exe`, `PulsoWin.Core.dll` y `PulsoWin.Presentation.dll`; el huevo de pascua la lee de ahí;
   - **visible:** encabezado en cada archivo `.cs` de `src/`, [AUTHORS.md](AUTHORS.md) y créditos del README.
 - README: secciones «Code signing policy» y «Privacidad».
+- **Idiomas: español e inglés.** Todos los textos de la app (vistas, mensajes, sensores, reglas de limpieza y errores
+  visibles) salen de `Texts.resx` / `Texts.en.resx` en `PulsoWin.Core/Localization`. Arranca en el idioma de Windows
+  (español o, si no, inglés) y el botón «🌐 EN / ES» lo cambia y reinicia la app conservando el modo administrador.
+  Pruebas que exigen las mismas claves y marcadores en cada idioma.
 
 ### Cambiado
 - **Huevo de pascua:** ahora solo existe cuando la app se usó **más de 20 veces**. En el uso 21 aparece solo, una vez,

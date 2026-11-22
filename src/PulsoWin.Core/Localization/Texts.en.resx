@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="A11y_Hero" xml:space="preserve"><value>Retro gamepad pointing at a laptop</value></data>
+  <data name="A11y_KeepDomains" xml:space="preserve"><value>Domains whose cookies are kept</value></data>
+  <data name="A11y_SelectAll" xml:space="preserve"><value>Select all</value></data>
+  <data name="A11y_Start" xml:space="preserve"><value>Start: analyze</value></data>
+  <data name="BA_Deleted" xml:space="preserve"><value>Deleted: {0} in {1:N0} files.</value></data>
+  <data name="BA_DeletedCookies" xml:space="preserve"><value>Deleted: {0} in {1:N0} files and {2:N0} cookies.</value></data>
+  <data name="BA_FreeSpace" xml:space="preserve"><value>Free space on {0}: {1} → {2} ({3})</value></data>
+  <data name="BA_MaxTemp" xml:space="preserve"><value>Highest temperature read: {0} → {1}</value></data>
+  <data name="BA_Ram" xml:space="preserve"><value>RAM in use: {0} → {1}</value></data>
+  <data name="Busy_Analyzing" xml:space="preserve"><value>ANALYZING…</value></data>
+  <data name="Busy_Cleaning" xml:space="preserve"><value>CLEANING…</value></data>
+  <data name="Busy_Searching" xml:space="preserve"><value>SEARCHING…</value></data>
+  <data name="Busy_Updating" xml:space="preserve"><value>UPDATING…</value></data>
+  <data name="Category_Navegadores" xml:space="preserve"><value>Browsers</value></data>
+  <data name="Category_Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="Clean_Analyze" xml:space="preserve"><value>Analyze</value></data>
+  <data name="Clean_AnalyzeTip" xml:space="preserve"><value>Only looks; deletes nothing.</value></data>
+  <data name="Clean_Analyzing" xml:space="preserve"><value>Analyzing… (nothing is deleted yet)</value></data>
+  <data name="Clean_BeforeAfter" xml:space="preserve"><value>BEFORE / AFTER</value></data>
+  <data name="Clean_Cancelled" xml:space="preserve"><value>Cleanup cancelled. Nothing was deleted.</value></data>
+  <data name="Clean_Clean" xml:space="preserve"><value>Clean…</value></data>
+  <data name="Clean_CleanTip" xml:space="preserve"><value>Asks for confirmation before deleting.</value></data>
+  <data name="Clean_Cleaning" xml:space="preserve"><value>Cleaning…</value></data>
+  <data name="Clean_ConfirmTitle" xml:space="preserve"><value>Confirm cleanup</value></data>
+  <data name="Clean_Confirm_Cookies" xml:space="preserve"><value>, plus {0:N0} cookies (with a backup copy)</value></data>
+  <data name="Clean_Confirm_End" xml:space="preserve"><value>.
+
+Files in use are skipped. Continue?</value></data>
+  <data name="Clean_Confirm_Files" xml:space="preserve"><value>{0:N0} files ({1}) will be deleted</value></data>
+  <data name="Clean_Confirm_Recycle" xml:space="preserve"><value> and the Recycle Bin will be emptied</value></data>
+  <data name="Clean_CookiesHelp" xml:space="preserve"><value>Only with the browser closed. A backup copy is saved before deleting. Sessions stored in localStorage are not touched.</value></data>
+  <data name="Clean_DeleteCookies" xml:space="preserve"><value>Delete cookies</value></data>
+  <data name="Clean_Done" xml:space="preserve"><value>Cleanup finished. Log: {0}</value></data>
+  <data name="Clean_Failed" xml:space="preserve"><value>Cleanup failed: {0}</value></data>
+  <data name="Clean_KeepDomains" xml:space="preserve"><value>Domains to keep (one per line):</value></data>
+  <data name="Clean_NotYet" xml:space="preserve"><value>You haven't cleaned anything in this session yet.</value></data>
+  <data name="Clean_NothingToClean" xml:space="preserve"><value>Nothing to clean. Press START to analyze first.</value></data>
+  <data name="Clean_RowDone" xml:space="preserve"><value>{0:N0} deleted · {1}</value></data>
+  <data name="Clean_RowSkipped" xml:space="preserve"><value> · {0:N0} in use, skipped</value></data>
+  <data name="Clean_ScanDone" xml:space="preserve"><value>Analysis done: {0} can be freed.</value></data>
+  <data name="Clean_ScanDoneCookies" xml:space="preserve"><value>Analysis done: {0} can be freed and {1:N0} cookies can be deleted.</value></data>
+  <data name="Clean_ScanFailed" xml:space="preserve"><value>Analysis failed: {0}</value></data>
+  <data name="Col_Category" xml:space="preserve"><value>CATEGORY</value></data>
+  <data name="Col_Component" xml:space="preserve"><value>COMPONENT</value></data>
+  <data name="Col_Current" xml:space="preserve"><value>CURRENT</value></data>
+  <data name="Col_Detail" xml:space="preserve"><value>DETAIL</value></data>
+  <data name="Col_Download" xml:space="preserve"><value>DOWNLOAD (RX)</value></data>
+  <data name="Col_Item" xml:space="preserve"><value>ITEM</value></data>
+  <data name="Col_Name" xml:space="preserve"><value>NAME</value></data>
+  <data name="Col_NewKb" xml:space="preserve"><value>NEW / KB</value></data>
+  <data name="Col_Note" xml:space="preserve"><value>NOTE</value></data>
+  <data name="Col_Process" xml:space="preserve"><value>PROCESS</value></data>
+  <data name="Col_SessionTotal" xml:space="preserve"><value>SESSION TOTAL</value></data>
+  <data name="Col_Size" xml:space="preserve"><value>SIZE</value></data>
+  <data name="Col_Status" xml:space="preserve"><value>STATUS</value></data>
+  <data name="Col_Type" xml:space="preserve"><value>TYPE</value></data>
+  <data name="Col_Upload" xml:space="preserve"><value>UPLOAD (TX)</value></data>
+  <data name="Col_Value" xml:space="preserve"><value>VALUE</value></data>
+  <data name="Common_Code" xml:space="preserve"><value>code {0}</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="Common_ErrorLower" xml:space="preserve"><value>error: {0}</value></data>
+  <data name="Common_NeedsAdmin" xml:space="preserve"><value>requires administrator</value></data>
+  <data name="Common_NotAvailable" xml:space="preserve"><value>not available</value></data>
+  <data name="Common_Timeout" xml:space="preserve"><value>Timed out.</value></data>
+  <data name="Common_XofY" xml:space="preserve"><value>{0} of {1}</value></data>
+  <data name="Cookies_BackupFailed" xml:space="preserve"><value>could not create the backup copy: {0}</value></data>
+  <data name="Cookies_CloseBrowser" xml:space="preserve"><value>{0} ({1}): close it to delete its cookies.</value></data>
+  <data name="Cookies_Deleted" xml:space="preserve"><value>{0} ({1}): {2:N0} cookies deleted. Backup in {3}</value></data>
+  <data name="Cookies_NoProfiles" xml:space="preserve"><value>No Chrome, Edge or Firefox profiles were found.</value></data>
+  <data name="Cookies_NotDeleted" xml:space="preserve"><value>{0} ({1}): nothing was deleted ({2}).</value></data>
+  <data name="Cookies_Plan" xml:space="preserve"><value>{0} ({1}): {2:N0} to delete, {3:N0} kept.</value></data>
+  <data name="Cookies_ProcessOpen" xml:space="preserve"><value>“{0}” is open</value></data>
+  <data name="Cookies_ReadError" xml:space="preserve"><value>{0} ({1}): could not be read ({2}).</value></data>
+  <data name="Egg_Back" xml:space="preserve"><value>Back to the game  (Esc)</value></data>
+  <data name="Egg_KonamiTitle" xml:space="preserve"><value>CHEAT CODE UNLOCKED</value></data>
+  <data name="Egg_MadeBy" xml:space="preserve"><value>MADE BY</value></data>
+  <data name="Egg_ProfileTip" xml:space="preserve"><value>Open the profile in the browser</value></data>
+  <data name="Egg_Thanks" xml:space="preserve"><value>Thanks for using the APP, I hope it's useful and helpful. =)</value></data>
+  <data name="Egg_UsesTitle" xml:space="preserve"><value>{0} USES! ACHIEVEMENT UNLOCKED</value></data>
+  <data name="Err_Unexpected" xml:space="preserve"><value>Something went wrong, but PulsoWin is still open and nothing was half-deleted without warning.
+
+{0}
+
+Details in: {1}</value></data>
+  <data name="Gadget_Back" xml:space="preserve"><value>Back to the full app</value></data>
+  <data name="Gadget_DragTip" xml:space="preserve"><value>Drag to move · double-click to return to the full app</value></data>
+  <data name="Gadget_Exit" xml:space="preserve"><value>Exit PulsoWin</value></data>
+  <data name="Gadget_Pin" xml:space="preserve"><value>Always on top</value></data>
+  <data name="Gadget_Title" xml:space="preserve"><value>PulsoWin · Gadget mode</value></data>
+  <data name="Gauge_GpuTemp" xml:space="preserve"><value>GPU TEMP</value></data>
+  <data name="Gauge_Network" xml:space="preserve"><value>NET</value></data>
+  <data name="Gauge_TotalUse" xml:space="preserve"><value>total use</value></data>
+  <data name="Gpu_WindowsCounters" xml:space="preserve"><value>Windows counters</value></data>
+  <data name="Grid_CheckAll" xml:space="preserve"><value>Check all</value></data>
+  <data name="Grid_CheckChosen" xml:space="preserve"><value>Check highlighted rows</value></data>
+  <data name="Grid_SelectAllTip" xml:space="preserve"><value>Select all / none</value></data>
+  <data name="Grid_UncheckAll" xml:space="preserve"><value>Uncheck all</value></data>
+  <data name="Grid_UncheckChosen" xml:space="preserve"><value>Uncheck highlighted rows</value></data>
+  <data name="Health_Healthy" xml:space="preserve"><value>Healthy</value></data>
+  <data name="Health_Unhealthy" xml:space="preserve"><value>Unhealthy</value></data>
+  <data name="Health_Unknown" xml:space="preserve"><value>Unknown</value></data>
+  <data name="Health_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Hero_PressStart" xml:space="preserve"><value>PRESS START</value></data>
+  <data name="Hw_GpuIdle" xml:space="preserve"><value>GPU idle</value></data>
+  <data name="Hw_KernelNote" xml:space="preserve"><value>CPU temperatures, voltages and motherboard fans need a kernel driver; PulsoWin installs none and shows them as “not available” instead of making up a value.</value></data>
+  <data name="Hw_LiveSensors" xml:space="preserve"><value>LIVE SENSORS · EVERY 2 S</value></data>
+  <data name="Hw_Measuring" xml:space="preserve"><value>measuring…</value></data>
+  <data name="Hw_NoGpuCounters" xml:space="preserve"><value>no GPU counters</value></data>
+  <data name="Hw_Summary" xml:space="preserve"><value>SYSTEM SUMMARY</value></data>
+  <data name="Lang_Button" xml:space="preserve"><value>🌐 ES</value></data>
+  <data name="Lang_ButtonTip" xml:space="preserve"><value>Cambiar el idioma a español</value></data>
+  <data name="Lang_Restart" xml:space="preserve"><value>Language changed to English. Restart PulsoWin now to apply it?</value></data>
+  <data name="Log_CleanHeader" xml:space="preserve"><value>PulsoWin · cleanup on {0}</value></data>
+  <data name="Log_UpdatesHeader" xml:space="preserve"><value>PulsoWin · updates on {0}</value></data>
+  <data name="Log_WriteFailed" xml:space="preserve"><value>(the log could not be written: {0})</value></data>
+  <data name="Main_Freeable" xml:space="preserve"><value>FREEABLE</value></data>
+  <data name="Main_GadgetButton" xml:space="preserve"><value>◔  Gadget mode</value></data>
+  <data name="Main_GadgetTip" xml:space="preserve"><value>Floating window with Network, CPU, RAM and GPU gauges</value></data>
+  <data name="Main_StartTip" xml:space="preserve"><value>Finds what can be freed. Nothing is deleted yet.</value></data>
+  <data name="Main_Tagline" xml:space="preserve"><value>Clean what you don't need. See what matters.</value></data>
+  <data name="Net_AdminNotice" xml:space="preserve"><value>Administrator mode: exact per-process usage (kernel ETW).</value></data>
+  <data name="Net_EtwFailed" xml:space="preserve"><value>Per-process monitoring could not start ({0}). Showing traffic per interface.</value></data>
+  <data name="Net_Header" xml:space="preserve"><value>Here's your current network traffic (top 10)</value></data>
+  <data name="Net_ModeInterface" xml:space="preserve"><value>PER INTERFACE</value></data>
+  <data name="Net_ModePerProcess" xml:space="preserve"><value>PER PROCESS · ETW</value></data>
+  <data name="Net_ProcessExited" xml:space="preserve"><value>(process exited)</value></data>
+  <data name="Net_Scale" xml:space="preserve"><value>scale 0–{0}</value></data>
+  <data name="Net_Session" xml:space="preserve"><value>Session {0}</value></data>
+  <data name="Net_StandardNotice" xml:space="preserve"><value>Standard user mode: to see exact per-process usage in MB, run the app as Administrator.</value></data>
+  <data name="Net_Starting" xml:space="preserve"><value>Starting monitoring…</value></data>
+  <data name="Net_SystemIdle" xml:space="preserve"><value>System Idle</value></data>
+  <data name="Recycle_Emptied" xml:space="preserve"><value>Recycle Bin emptied</value></data>
+  <data name="Recycle_EmptyFailed" xml:space="preserve"><value>Could not empty the Recycle Bin</value></data>
+  <data name="Recycle_Name" xml:space="preserve"><value>Recycle Bin</value></data>
+  <data name="Recycle_Note" xml:space="preserve"><value>Emptied on all drives.</value></data>
+  <data name="Row_CloseToClean" xml:space="preserve"><value>Close “{0}” to clean</value></data>
+  <data name="Row_Empty" xml:space="preserve"><value>Empty</value></data>
+  <data name="Row_Files" xml:space="preserve"><value>{0:N0} files</value></data>
+  <data name="Row_Items" xml:space="preserve"><value>{0:N0} items</value></data>
+  <data name="Row_NothingToClean" xml:space="preserve"><value>Nothing to clean</value></data>
+  <data name="Rule_chrome-cache_Name" xml:space="preserve"><value>Chrome · cache</value></data>
+  <data name="Rule_edge-cache_Name" xml:space="preserve"><value>Edge · cache</value></data>
+  <data name="Rule_firefox-cache_Name" xml:space="preserve"><value>Firefox · cache</value></data>
+  <data name="Rule_win-crashdumps_Name" xml:space="preserve"><value>Application crash dumps</value></data>
+  <data name="Rule_win-dx-shader_Name" xml:space="preserve"><value>DirectX shader cache</value></data>
+  <data name="Rule_win-dx-shader_Note" xml:space="preserve"><value>Path not confirmed in official documentation; off by default.</value></data>
+  <data name="Rule_win-temp_Name" xml:space="preserve"><value>User temporary files</value></data>
+  <data name="Rule_win-temp_Note" xml:space="preserve"><value>Only files unchanged for more than 24 hours.</value></data>
+  <data name="Rule_win-thumbs_Name" xml:space="preserve"><value>Thumbnail cache</value></data>
+  <data name="Rule_win-thumbs_Note" xml:space="preserve"><value>File Explorer usually keeps some open; those are skipped.</value></data>
+  <data name="Sensor_AcpiNote" xml:space="preserve"><value>ACPI: not the same as CPU temperature</value></data>
+  <data name="Sensor_CpuSecondReading" xml:space="preserve"><value>calculated from the second reading</value></data>
+  <data name="Sensor_DiskN" xml:space="preserve"><value>Disk {0}</value></data>
+  <data name="Sensor_DiskNoTemp" xml:space="preserve"><value>the disk does not report temperature</value></data>
+  <data name="Sensor_Disks" xml:space="preserve"><value>Disks</value></data>
+  <data name="Sensor_Fan" xml:space="preserve"><value>{0} · fan</value></data>
+  <data name="Sensor_Health" xml:space="preserve"><value>{0} · health</value></data>
+  <data name="Sensor_NoFan" xml:space="preserve"><value>no fan or not exposed</value></data>
+  <data name="Sensor_NotExposedPlural" xml:space="preserve"><value>not exposed by this computer</value></data>
+  <data name="Sensor_RamInUse" xml:space="preserve"><value>RAM · in use</value></data>
+  <data name="Sensor_StorageNoResponse" xml:space="preserve"><value>the storage API did not respond</value></data>
+  <data name="Sensor_System" xml:space="preserve"><value>System</value></data>
+  <data name="Sensor_Temp" xml:space="preserve"><value>{0} · temperature</value></data>
+  <data name="Sensor_TempNeedsAdmin" xml:space="preserve"><value>temperature: requires administrator</value></data>
+  <data name="Sensor_ThermalZone" xml:space="preserve"><value>Thermal zone {0}</value></data>
+  <data name="Sensor_ThermalZones" xml:space="preserve"><value>Thermal zones</value></data>
+  <data name="Sensor_Usage" xml:space="preserve"><value>{0} · usage</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Ready. Press START to see what can be freed.</value></data>
+  <data name="Sum_Board" xml:space="preserve"><value>Motherboard</value></data>
+  <data name="Sum_Cpu" xml:space="preserve"><value>{0} · {1} cores / {2} threads</value></data>
+  <data name="Sum_OS" xml:space="preserve"><value>Operating system</value></data>
+  <data name="Sum_RamTotal" xml:space="preserve"><value>{0} total</value></data>
+  <data name="Sum_Storage" xml:space="preserve"><value>Storage</value></data>
+  <data name="Tab_Clean" xml:space="preserve"><value>CLEAN</value></data>
+  <data name="Tab_Network" xml:space="preserve"><value>NETWORK</value></data>
+  <data name="Tab_Update" xml:space="preserve"><value>UPDATE</value></data>
+  <data name="Upd_AllUpToDate" xml:space="preserve"><value>All up to date: no pending updates.</value></data>
+  <data name="Upd_AndMore" xml:space="preserve"><value>… and {0} more.</value></data>
+  <data name="Upd_Cancelled" xml:space="preserve"><value>Update cancelled. Nothing was installed.</value></data>
+  <data name="Upd_ConfirmTitle" xml:space="preserve"><value>Confirm updates</value></data>
+  <data name="Upd_Confirm_End" xml:space="preserve"><value>This may take several minutes. Continue?</value></data>
+  <data name="Upd_Confirm_Head" xml:space="preserve"><value>{0} update(s) will be installed, accepting their license terms:
+
+{1}
+
+</value></data>
+  <data name="Upd_Confirm_Programs" xml:space="preserve"><value>Some apps may ask for their own permission.
+</value></data>
+  <data name="Upd_Confirm_Windows" xml:space="preserve"><value>Windows will ask ONCE for administrator permission for the Windows updates.
+</value></data>
+  <data name="Upd_Done" xml:space="preserve"><value>Done: {0} installed, {1} failed.</value></data>
+  <data name="Upd_DoneReboot" xml:space="preserve"><value> Restart the computer to finish applying the Windows updates.</value></data>
+  <data name="Upd_Downloaded" xml:space="preserve"><value>Downloaded, ready to install</value></data>
+  <data name="Upd_Finished" xml:space="preserve"><value>Update finished. Log: {0}</value></data>
+  <data name="Upd_Found" xml:space="preserve"><value>{0} Windows and {1} app updates pending. Check the ones you want and press “Proceed”.</value></data>
+  <data name="Upd_Header" xml:space="preserve"><value>PENDING UPDATES · WINDOWS AND APPS</value></data>
+  <data name="Upd_InstallingWindows" xml:space="preserve"><value>Installing {0} Windows update(s)… accept the administrator prompt if it appears.</value></data>
+  <data name="Upd_Interrupted" xml:space="preserve"><value>The update was interrupted ({0} OK and {1} failed so far): {2}</value></data>
+  <data name="Upd_Intro" xml:space="preserve"><value>Press “Check for updates”. PulsoWin checks apps and Windows in the background, without installing anything yet. To check several: Ctrl or Shift + click and the space bar, or right-click.</value></data>
+  <data name="Upd_KindProgram" xml:space="preserve"><value>App</value></data>
+  <data name="Upd_Pending" xml:space="preserve"><value>Pending</value></data>
+  <data name="Upd_Proceed" xml:space="preserve"><value>Proceed with updates…</value></data>
+  <data name="Upd_ProceedTip" xml:space="preserve"><value>Asks for confirmation and, for Windows updates, administrator permission.</value></data>
+  <data name="Upd_RowCancelled" xml:space="preserve"><value>Cancelled (no permission)</value></data>
+  <data name="Upd_RowInstalled" xml:space="preserve"><value>Installed</value></data>
+  <data name="Upd_RowInstalledReboot" xml:space="preserve"><value>Installed · restart required</value></data>
+  <data name="Upd_RowInstalling" xml:space="preserve"><value>Downloading and installing…</value></data>
+  <data name="Upd_RowInterrupted" xml:space="preserve"><value>Interrupted</value></data>
+  <data name="Upd_RowNotInstalled" xml:space="preserve"><value>Not installed (code {0})</value></data>
+  <data name="Upd_RowUpdated" xml:space="preserve"><value>Updated</value></data>
+  <data name="Upd_RowUpdating" xml:space="preserve"><value>Updating…</value></data>
+  <data name="Upd_Search" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Upd_SearchDone" xml:space="preserve"><value>Check finished.</value></data>
+  <data name="Upd_SearchFailed" xml:space="preserve"><value>The update check failed: {0}</value></data>
+  <data name="Upd_SearchTip" xml:space="preserve"><value>Checks in the background; installs nothing.</value></data>
+  <data name="Upd_Searching" xml:space="preserve"><value>Checking for app and Windows updates… (read-only; this may take a minute)</value></data>
+  <data name="Upd_SelectOne" xml:space="preserve"><value>Check at least one update (or use “Check all”).</value></data>
+  <data name="Upd_Updating" xml:space="preserve"><value>Updating {0}…</value></data>
+  <data name="Wg_BadId" xml:space="preserve"><value>Package ID rejected by validation.</value></data>
+  <data name="Wg_NotInstalled" xml:space="preserve"><value>winget is not installed.</value></data>
+  <data name="Wg_NotInstalledStore" xml:space="preserve"><value>winget is not installed (App Installer from the Microsoft Store is missing).</value></data>
+  <data name="Wg_RunFailed" xml:space="preserve"><value>Could not run winget.</value></data>
+  <data name="Wg_ScanTimeout" xml:space="preserve"><value>winget took too long checking for updates.</value></data>
+  <data name="Wg_Unavailable" xml:space="preserve"><value>winget is not available.</value></data>
+  <data name="Wg_Updated" xml:space="preserve"><value>Updated successfully.</value></data>
+  <data name="Win_Title" xml:space="preserve"><value>PulsoWin · cleaner and hardware viewer</value></data>
+  <data name="Wu_AgentUnavailable" xml:space="preserve"><value>Windows Update Agent is not available.</value></data>
+  <data name="Wu_HelperBadResult" xml:space="preserve"><value>Unreadable installer result.</value></data>
+  <data name="Wu_HelperFailed" xml:space="preserve"><value>The installer could not be started.</value></data>
+  <data name="Wu_HelperNoResult" xml:space="preserve"><value>The installer finished without reporting a result (code {0}).</value></data>
+  <data name="Wu_NoAdmin" xml:space="preserve"><value>Administrator permission was not granted.</value></data>
+  <data name="Wu_NoLongerPending" xml:space="preserve"><value>The selected updates are no longer pending.</value></data>
+  <data name="Wu_NoTitle" xml:space="preserve"><value>(untitled)</value></data>
+  <data name="Wu_NoValid" xml:space="preserve"><value>There are no valid updates to install.</value></data>
+  <data name="Wu_NotAvailableEx" xml:space="preserve"><value>Not available ({0})</value></data>
+  <data name="Wu_OnlyWindows" xml:space="preserve"><value>Only available on Windows.</value></data>
+  <data name="Wu_SessionFailed" xml:space="preserve"><value>Could not start the Windows Update session.</value></data>
+  <data name="Wu_UpTo" xml:space="preserve"><value>up to {0}</value></data>
+  <data name="Wu_Variable" xml:space="preserve"><value>variable</value></data>
+</root>

@@ -1,6 +1,7 @@
 // PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using CommunityToolkit.Mvvm.ComponentModel;
 using PulsoWin.Core.Cleaning;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.Services;
 
@@ -28,7 +29,56 @@ public sealed class WindowsRecycleBin : IRecycleBin
 public sealed partial class StatusBar : ObservableObject
 {
     [ObservableProperty]
-    private string _message = "Listo. Pulsa START para ver qué se puede liberar.";
+    private string _message = L.T("Status_Ready");
+}
+
+/// <summary>
+/// Idioma elegido por la persona ("es" o "en"), guardado como texto en %LOCALAPPDATA%\PulsoWin\idioma.txt.
+/// Sin elección guardada se usa el idioma de Windows (español si Windows está en español; si no, inglés).
+/// </summary>
+public static class LanguagePreference
+{
+    public static string DefaultPath => Path.Combine(AppPaths.DataDir, "idioma.txt");
+
+    public static string? Load(string? path = null)
+    {
+        try
+        {
+            var file = path ?? DefaultPath;
+            return File.Exists(file) ? File.ReadAllText(file).Trim() : null;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>Guarda la elección. Devuelve false si no se pudo escribir (la app sigue en el idioma actual).</summary>
+    public static bool Save(string code, string? path = null)
+    {
+        try
+        {
+            var file = path ?? DefaultPath;
+            Directory.CreateDirectory(Path.GetDirectoryName(file)!);
+            File.WriteAllText(file, L.Pick(code).TwoLetterISOLanguageName);
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
+
+    /// <summary>Idioma con que arranca la app: el guardado o, si no hay, el de Windows.</summary>
+    public static System.Globalization.CultureInfo Resolve(string? saved, System.Globalization.CultureInfo windowsUi) =>
+        L.Pick(string.IsNullOrWhiteSpace(saved) ? windowsUi.TwoLetterISOLanguageName : saved);
+
+    /// <summary>El otro idioma disponible (lo que ofrece el botón de idioma).</summary>
+    public static string Next(System.Globalization.CultureInfo current)
+    {
+        var i = L.Supported.ToList().IndexOf(current.TwoLetterISOLanguageName);
+        return L.Supported[(i + 1) % L.Supported.Count];
+    }
 }
 
 /// <summary>

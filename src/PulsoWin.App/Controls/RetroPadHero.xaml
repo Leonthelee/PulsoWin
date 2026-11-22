@@ -8,7 +8,8 @@
 <UserControl x:Class="PulsoWin.App.Controls.RetroPadHero"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             AutomationProperties.Name="Mando retro apuntando a un notebook">
+             xmlns:l="clr-namespace:PulsoWin.App.Localization"
+             AutomationProperties.Name="{l:Tr A11y_Hero}">
     <UserControl.Resources>
         <Storyboard x:Key="IdleStory" RepeatBehavior="Forever">
             <DoubleAnimation Storyboard.TargetName="CaptionText" Storyboard.TargetProperty="Opacity"

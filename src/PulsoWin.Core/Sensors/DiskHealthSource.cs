@@ -18,7 +18,7 @@ public sealed class DiskHealthSource(TimeProvider? time = null) : ISensorSource
     private IReadOnlyList<SensorReading> _cached = [];
     private DateTimeOffset _cachedAt = DateTimeOffset.MinValue;
 
-    public string Name => "Discos";
+    public string Name => Localization.L.T("Sensor_Disks");
 
     public IReadOnlyList<SensorReading> Read()
     {
@@ -48,11 +48,11 @@ public sealed class DiskHealthSource(TimeProvider? time = null) : ISensorSource
                     if (id is not null && t > 0) temps[id] = t;
                 }
             }
-            if (temps.Count == 0) tempNote = "el disco no informa temperatura";
+            if (temps.Count == 0) tempNote = Localization.L.T("Sensor_DiskNoTemp");
         }
         catch (Exception ex) when (Wmi.IsFailure(ex))
         {
-            tempNote = "temperatura: requiere administrador";
+            tempNote = Localization.L.T("Sensor_TempNeedsAdmin");
         }
 
         var list = new List<SensorReading>();
@@ -64,25 +64,25 @@ public sealed class DiskHealthSource(TimeProvider? time = null) : ISensorSource
                 using (mo)
                 {
                     var id = mo["DeviceId"]?.ToString() ?? "?";
-                    var name = mo["FriendlyName"]?.ToString() ?? $"Disco {id}";
+                    var name = mo["FriendlyName"]?.ToString() ?? Localization.L.F("Sensor_DiskN", id);
                     var health = (mo["HealthStatus"] is { } h ? Convert.ToInt32(h) : -1) switch
                     {
-                        0 => "Saludable",
-                        1 => "Advertencia",
-                        2 => "En mal estado",
-                        _ => "Desconocido",
+                        0 => Localization.L.T("Health_Healthy"),
+                        1 => Localization.L.T("Health_Warning"),
+                        2 => Localization.L.T("Health_Unhealthy"),
+                        _ => Localization.L.T("Health_Unknown"),
                     };
-                    list.Add(new SensorReading(Name, $"{name} · salud", null, "", null, health));
+                    list.Add(new SensorReading(Name, Localization.L.F("Sensor_Health", name), null, "", null, health));
 
                     double? temperature = temps.TryGetValue(id, out var t) ? t : null;
-                    list.Add(new SensorReading(Name, $"{name} · temperatura", temperature, "°C",
+                    list.Add(new SensorReading(Name, Localization.L.F("Sensor_Temp", name), temperature, "°C",
                         temperature is null ? tempNote : null));
                 }
             }
         }
         catch (Exception ex) when (Wmi.IsFailure(ex))
         {
-            list.Add(new SensorReading(Name, "Discos", null, "", "la API de almacenamiento no respondió"));
+            list.Add(new SensorReading(Name, Name, null, "", Localization.L.T("Sensor_StorageNoResponse")));
         }
         return list;
     }

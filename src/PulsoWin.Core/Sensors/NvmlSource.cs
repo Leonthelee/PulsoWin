@@ -38,14 +38,14 @@ public sealed class NvmlSource : ISensorSource, IDisposable
 
                 double? temperature = Native.nvmlDeviceGetTemperature(device, NVML_TEMPERATURE_GPU, out var t) == NVML_SUCCESS
                     ? t : null;
-                list.Add(new SensorReading(Name, $"{name} · temperatura", temperature, "°C"));
+                list.Add(new SensorReading(Name, Localization.L.F("Sensor_Temp", name), temperature, "°C"));
 
                 double? fan = Native.nvmlDeviceGetFanSpeed(device, out var f) == NVML_SUCCESS ? f : null;
-                list.Add(new SensorReading(Name, $"{name} · ventilador", fan, "%",
-                    fan is null ? "sin ventilador o no expuesto" : null));
+                list.Add(new SensorReading(Name, Localization.L.F("Sensor_Fan", name), fan, "%",
+                    fan is null ? Localization.L.T("Sensor_NoFan") : null));
 
                 double? usage = Native.nvmlDeviceGetUtilizationRates(device, out var u) == NVML_SUCCESS ? u.Gpu : null;
-                list.Add(new SensorReading(Name, $"{name} · uso", usage, "%"));
+                list.Add(new SensorReading(Name, Localization.L.F("Sensor_Usage", name), usage, "%"));
             }
             return list;
         }

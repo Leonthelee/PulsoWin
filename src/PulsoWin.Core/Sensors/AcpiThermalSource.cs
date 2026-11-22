@@ -26,20 +26,20 @@ public sealed class AcpiThermalSource : ISensorSource
                     // Décimas de kelvin.
                     var celsius = Convert.ToDouble(mo["CurrentTemperature"]) / 10.0 - 273.15;
                     double? value = celsius is > -30 and < 150 ? Math.Round(celsius, 1) : null;
-                    list.Add(new SensorReading(Name, $"Zona térmica {ShortName(mo["InstanceName"]?.ToString())}",
-                        value, "°C", "ACPI: no equivale a la temperatura de la CPU"));
+                    list.Add(new SensorReading(Name, Localization.L.F("Sensor_ThermalZone", ShortName(mo["InstanceName"]?.ToString())),
+                        value, "°C", Localization.L.T("Sensor_AcpiNote")));
                 }
             }
             if (list.Count == 0)
-                list.Add(new SensorReading(Name, "Zonas térmicas", null, "°C", "el equipo no las expone"));
+                list.Add(new SensorReading(Name, Localization.L.T("Sensor_ThermalZones"), null, "°C", Localization.L.T("Sensor_NotExposedPlural")));
             return list;
         }
         catch (Exception ex) when (Wmi.IsFailure(ex))
         {
             var note = ex is ManagementException { ErrorCode: ManagementStatus.AccessDenied } or UnauthorizedAccessException
-                ? "requiere administrador"
-                : "el equipo no las expone";
-            return [new SensorReading(Name, "Zonas térmicas", null, "°C", note)];
+                ? Localization.L.T("Common_NeedsAdmin")
+                : Localization.L.T("Sensor_NotExposedPlural");
+            return [new SensorReading(Name, Localization.L.T("Sensor_ThermalZones"), null, "°C", note)];
         }
     }
 

@@ -5,7 +5,8 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:controls="clr-namespace:PulsoWin.App.Controls"
-        Title="PulsoWin · limpiador y visor de hardware"
+        xmlns:l="clr-namespace:PulsoWin.App.Localization"
+        Title="{l:Tr Win_Title}"
         Icon="Assets/pulsowin.ico"
         Width="1240" Height="860" MinWidth="980" MinHeight="680"
         WindowStartupLocation="CenterScreen"
@@ -99,13 +100,13 @@
                                        Foreground="{StaticResource Cyan}" />
                         </Border>
                     </StackPanel>
-                    <TextBlock Text="Limpia lo que sobra. Mira lo que importa." Style="{StaticResource Muted}" Margin="2,0,0,12" />
+                    <TextBlock Text="{l:Tr Main_Tagline}" Style="{StaticResource Muted}" Margin="2,0,0,12" />
 
                     <StackPanel Orientation="Horizontal">
                     <!-- START es de LIMPIAR: en ACTUALIZAR se desvanece (sin mover el diseño) y no responde a clic ni teclado. -->
                     <Button HorizontalAlignment="Left" FontSize="18" Padding="28,10"
-                            Command="{Binding StartCommand}" ToolTip="Analiza qué se puede liberar. No borra nada todavía."
-                            AutomationProperties.Name="Start: analizar">
+                            Command="{Binding StartCommand}" ToolTip="{l:Tr Main_StartTip}"
+                            AutomationProperties.Name="{l:Tr A11y_Start}">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource PrimaryButton}">
                                 <Style.Triggers>
@@ -134,9 +135,15 @@
                     </Button>
                     <!-- Modo Gadget: oculta esta ventana y muestra los diales flotantes; el monitoreo no se detiene. -->
                     <Button Style="{StaticResource SecondaryButton}" Margin="10,0,0,0" Padding="16,10" FontSize="14"
-                            Click="GadgetMode_Click" ToolTip="Ventana flotante con diales de Red, CPU y RAM"
-                            AutomationProperties.Name="Modo Gadget">
-                        <TextBlock Text="◔  Modo Gadget" />
+                            Click="GadgetMode_Click" ToolTip="{l:Tr Main_GadgetTip}"
+                            AutomationProperties.Name="{l:Tr Main_GadgetButton}">
+                        <TextBlock Text="{l:Tr Main_GadgetButton}" />
+                    </Button>
+                    <!-- Idioma: muestra el otro idioma disponible; al cambiarlo se reinicia la app. -->
+                    <Button Style="{StaticResource SecondaryButton}" Margin="10,0,0,0" Padding="12,10" FontSize="14"
+                            Click="Language_Click" ToolTip="{l:Tr Lang_ButtonTip}"
+                            AutomationProperties.Name="{l:Tr Lang_ButtonTip}">
+                        <TextBlock Text="{l:Tr Lang_Button}" />
                     </Button>
                     </StackPanel>
                 </StackPanel>
@@ -205,7 +212,7 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <StackPanel VerticalAlignment="Center">
-                                <TextBlock Text="LIBERABLE" Style="{StaticResource HudLabel}" />
+                                <TextBlock Text="{l:Tr Main_Freeable}" Style="{StaticResource HudLabel}" />
                                 <TextBlock Text="{Binding Clean.FreeableText}" Style="{StaticResource HudValue}" Foreground="{StaticResource Magenta}" />
                             </StackPanel>
                             <ItemsControl Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center"
@@ -220,7 +227,7 @@
         <TabControl Grid.Row="1" Margin="20,4,20,0" SelectedIndex="{Binding SelectedTab}">
 
             <!-- LIMPIAR -->
-            <TabItem Header="LIMPIAR" DataContext="{Binding Clean}">
+            <TabItem Header="{l:Tr Tab_Clean}" DataContext="{Binding Clean}">
                 <Border Style="{StaticResource Card}" CornerRadius="0,12,12,12">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -238,13 +245,13 @@
                                     <DataGridTemplateColumn.Header>
                                         <CheckBox HorizontalAlignment="Center" IsThreeState="False"
                                                   IsChecked="{Binding DataContext.AllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                  ToolTip="Seleccionar todo / nada" AutomationProperties.Name="Seleccionar todo" />
+                                                  ToolTip="{l:Tr Grid_SelectAllTip}" AutomationProperties.Name="{l:Tr A11y_SelectAll}" />
                                     </DataGridTemplateColumn.Header>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="ELEMENTO" Binding="{Binding Name}" IsReadOnly="True" Width="2.6*" MinWidth="230" />
-                                <DataGridTextColumn Header="CATEGORÍA" Binding="{Binding Category}" IsReadOnly="True" Width="*" />
-                                <DataGridTextColumn Header="TAMAÑO" Binding="{Binding SizeText}" IsReadOnly="True" Width="90" />
-                                <DataGridTextColumn Header="ESTADO" Binding="{Binding Status}" IsReadOnly="True" Width="1.8*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Item}" Binding="{Binding Name}" IsReadOnly="True" Width="2.6*" MinWidth="230" />
+                                <DataGridTextColumn Header="{l:Tr Col_Category}" Binding="{Binding Category}" IsReadOnly="True" Width="*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Size}" Binding="{Binding SizeText}" IsReadOnly="True" Width="90" />
+                                <DataGridTextColumn Header="{l:Tr Col_Status}" Binding="{Binding Status}" IsReadOnly="True" Width="1.8*" />
                             </DataGrid.Columns>
                             <DataGrid.RowStyle>
                                 <Style TargetType="DataGridRow">
@@ -256,17 +263,17 @@
                         <ScrollViewer Grid.Column="1" Margin="16,0,0,0" VerticalScrollBarVisibility="Auto" Padding="0,0,4,0">
                             <StackPanel>
                                 <TextBlock Text="COOKIES" Style="{StaticResource Heading}" />
-                                <CheckBox Content="Borrar cookies" IsChecked="{Binding DeleteCookies}" Margin="0,0,0,6" />
+                                <CheckBox Content="{l:Tr Clean_DeleteCookies}" IsChecked="{Binding DeleteCookies}" Margin="0,0,0,6" />
                                 <TextBlock Style="{StaticResource Muted}"
-                                           Text="Solo con el navegador cerrado. Antes de borrar se guarda una copia de respaldo. Las sesiones guardadas en localStorage no se tocan." />
-                                <TextBlock Text="Dominios que se conservan (uno por línea):" Margin="0,12,0,4" TextWrapping="Wrap" />
+                                           Text="{l:Tr Clean_CookiesHelp}" />
+                                <TextBlock Text="{l:Tr Clean_KeepDomains}" Margin="0,12,0,4" TextWrapping="Wrap" />
                                 <TextBox Height="110" AcceptsReturn="True" TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
                                          FontFamily="{StaticResource MonoFont}"
                                          Text="{Binding KeepText, UpdateSourceTrigger=PropertyChanged}"
-                                         AutomationProperties.Name="Dominios cuyas cookies se conservan" />
+                                         AutomationProperties.Name="{l:Tr A11y_KeepDomains}" />
                                 <TextBlock Text="{Binding CookieInfo}" Style="{StaticResource Muted}" Margin="0,6,0,0" />
 
-                                <TextBlock Text="ANTES / DESPUÉS" Style="{StaticResource Heading}" Margin="0,20,0,8" />
+                                <TextBlock Text="{l:Tr Clean_BeforeAfter}" Style="{StaticResource Heading}" Margin="0,20,0,8" />
                                 <Border Background="{StaticResource SurfaceAlt}" CornerRadius="8" Padding="10"
                                         BorderBrush="{StaticResource Line}" BorderThickness="1">
                                     <TextBlock Text="{Binding BeforeAfter}" TextWrapping="Wrap" FontFamily="{StaticResource MonoFont}"
@@ -276,10 +283,10 @@
                         </ScrollViewer>
 
                         <StackPanel Grid.Row="1" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                            <Button Style="{StaticResource SecondaryButton}" Content="Analizar" Margin="0,0,10,0"
-                                    Command="{Binding ScanCommand}" ToolTip="Solo mira; no borra nada." />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Limpiar…" Command="{Binding CleanCommand}"
-                                    ToolTip="Pide confirmación antes de borrar." />
+                            <Button Style="{StaticResource SecondaryButton}" Content="{l:Tr Clean_Analyze}" Margin="0,0,10,0"
+                                    Command="{Binding ScanCommand}" ToolTip="{l:Tr Clean_AnalyzeTip}" />
+                            <Button Style="{StaticResource PrimaryButton}" Content="{l:Tr Clean_Clean}" Command="{Binding CleanCommand}"
+                                    ToolTip="{l:Tr Clean_CleanTip}" />
                         </StackPanel>
                     </Grid>
                 </Border>
@@ -299,31 +306,31 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="RESUMEN DEL EQUIPO" Style="{StaticResource Heading}" />
+                        <TextBlock Text="{l:Tr Hw_Summary}" Style="{StaticResource Heading}" />
                         <DataGrid Grid.Row="1" ItemsSource="{Binding Summary}" IsReadOnly="True">
                             <DataGrid.Columns>
-                                <DataGridTextColumn Header="COMPONENTE" Binding="{Binding Section}" Width="130" />
-                                <DataGridTextColumn Header="DETALLE" Binding="{Binding Value}" Width="*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Component}" Binding="{Binding Section}" Width="130" />
+                                <DataGridTextColumn Header="{l:Tr Col_Detail}" Binding="{Binding Value}" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
 
-                        <TextBlock Grid.Column="1" Text="SENSORES EN VIVO · CADA 2 S" Style="{StaticResource Heading}" Margin="16,0,0,8" />
+                        <TextBlock Grid.Column="1" Text="{l:Tr Hw_LiveSensors}" Style="{StaticResource Heading}" Margin="16,0,0,8" />
                         <DataGrid Grid.Row="1" Grid.Column="1" Margin="16,0,0,0" ItemsSource="{Binding Sensors}" IsReadOnly="True">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="SENSOR" Binding="{Binding Label}" Width="2.4*" MinWidth="200" />
-                                <DataGridTextColumn Header="VALOR" Binding="{Binding Display}" Width="115" />
-                                <DataGridTextColumn Header="NOTA" Binding="{Binding Note}" Width="1.6*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Value}" Binding="{Binding Display}" Width="115" />
+                                <DataGridTextColumn Header="{l:Tr Col_Note}" Binding="{Binding Note}" Width="1.6*" />
                             </DataGrid.Columns>
                         </DataGrid>
 
                         <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Margin="0,10,0,0" Style="{StaticResource Muted}"
-                                   Text="Temperaturas de CPU, voltajes y ventiladores de placa necesitan un driver de kernel; PulsoWin no instala ninguno y los muestra como «no disponible» en vez de inventar un valor." />
+                                   Text="{l:Tr Hw_KernelNote}" />
                     </Grid>
                 </Border>
             </TabItem>
 
             <!-- ACTUALIZAR: buscar en segundo plano -> lista única -> proceder, sin salir de PulsoWin -->
-            <TabItem Header="ACTUALIZAR" DataContext="{Binding Updates}">
+            <TabItem Header="{l:Tr Tab_Update}" DataContext="{Binding Updates}">
                 <Border Style="{StaticResource Card}" CornerRadius="0,12,12,12">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -333,7 +340,7 @@
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <TextBlock Text="ACTUALIZACIONES PENDIENTES · WINDOWS Y PROGRAMAS" Style="{StaticResource Heading}" />
+                        <TextBlock Text="{l:Tr Upd_Header}" Style="{StaticResource Heading}" />
                         <StackPanel Grid.Row="1" Margin="0,0,0,10">
                             <TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" AutomationProperties.LiveSetting="Polite" />
                             <ProgressBar Height="4" Margin="0,8,0,0" IsIndeterminate="{Binding IsBusy}"
@@ -346,32 +353,32 @@
                                     <DataGridTemplateColumn.Header>
                                         <CheckBox HorizontalAlignment="Center" IsThreeState="False"
                                                   IsChecked="{Binding DataContext.AllSelected, RelativeSource={RelativeSource AncestorType=DataGrid}}"
-                                                  ToolTip="Seleccionar todo / nada" AutomationProperties.Name="Seleccionar todo" />
+                                                  ToolTip="{l:Tr Grid_SelectAllTip}" AutomationProperties.Name="{l:Tr A11y_SelectAll}" />
                                     </DataGridTemplateColumn.Header>
                                 </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="TIPO" Binding="{Binding KindText}" IsReadOnly="True" Width="90" />
-                                <DataGridTextColumn Header="NOMBRE" Binding="{Binding Name}" IsReadOnly="True" Width="3*" />
-                                <DataGridTextColumn Header="ACTUAL" Binding="{Binding CurrentVersion}" IsReadOnly="True" Width="95" />
-                                <DataGridTextColumn Header="NUEVA / KB" Binding="{Binding NewVersion}" IsReadOnly="True" Width="110" />
-                                <DataGridTextColumn Header="TAMAÑO" Binding="{Binding SizeText}" IsReadOnly="True" Width="85" />
-                                <DataGridTextColumn Header="ESTADO" Binding="{Binding Status}" IsReadOnly="True" Width="1.6*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Type}" Binding="{Binding KindText}" IsReadOnly="True" Width="90" />
+                                <DataGridTextColumn Header="{l:Tr Col_Name}" Binding="{Binding Name}" IsReadOnly="True" Width="3*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Current}" Binding="{Binding CurrentVersion}" IsReadOnly="True" Width="95" />
+                                <DataGridTextColumn Header="{l:Tr Col_NewKb}" Binding="{Binding NewVersion}" IsReadOnly="True" Width="110" />
+                                <DataGridTextColumn Header="{l:Tr Col_Size}" Binding="{Binding SizeText}" IsReadOnly="True" Width="85" />
+                                <DataGridTextColumn Header="{l:Tr Col_Status}" Binding="{Binding Status}" IsReadOnly="True" Width="1.6*" />
                             </DataGrid.Columns>
                         </DataGrid>
 
                         <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
-                            <Button Style="{StaticResource SecondaryButton}" Content="Buscar actualizaciones" Margin="0,0,10,0"
-                                    Command="{Binding SearchCommand}" ToolTip="Revisa en segundo plano; no instala nada."
-                                    AutomationProperties.Name="Buscar actualizaciones" />
-                            <Button Style="{StaticResource PrimaryButton}" Content="Proceder con las actualizaciones…"
+                            <Button Style="{StaticResource SecondaryButton}" Content="{l:Tr Upd_Search}" Margin="0,0,10,0"
+                                    Command="{Binding SearchCommand}" ToolTip="{l:Tr Upd_SearchTip}"
+                                    AutomationProperties.Name="{l:Tr Upd_Search}" />
+                            <Button Style="{StaticResource PrimaryButton}" Content="{l:Tr Upd_Proceed}"
                                     Command="{Binding ProceedCommand}"
-                                    ToolTip="Pide confirmación y, para las de Windows, un permiso de administrador." />
+                                    ToolTip="{l:Tr Upd_ProceedTip}" />
                         </StackPanel>
                     </Grid>
                 </Border>
             </TabItem>
 
             <!-- RED: top 10 de tráfico en vivo. Arranca con la ventana, aunque la pestaña no esté abierta. -->
-            <TabItem Header="RED" DataContext="{Binding Metrics}">
+            <TabItem Header="{l:Tr Tab_Network}" DataContext="{Binding Metrics}">
                 <Border Style="{StaticResource Card}" CornerRadius="0,12,12,12">
                     <Grid>
                         <Grid.RowDefinitions>
@@ -386,7 +393,7 @@
                                 <TextBlock Text="{Binding ModeText}" FontFamily="{StaticResource MonoFont}" FontSize="11"
                                            Foreground="{StaticResource Cyan}" />
                             </Border>
-                            <TextBlock Text="Aquí te muestro tu tráfico de red actual (los primeros 10)"
+                            <TextBlock Text="{l:Tr Net_Header}"
                                        Style="{StaticResource Heading}" FontSize="16" />
                         </DockPanel>
 
@@ -397,10 +404,10 @@
                         <DataGrid Grid.Row="2" ItemsSource="{Binding TopNetwork}" IsReadOnly="True">
                             <DataGrid.Columns>
                                 <DataGridTextColumn Header="PID" Binding="{Binding PidText}" Width="80" />
-                                <DataGridTextColumn Header="PROCESO" Binding="{Binding Process}" Width="2*" />
-                                <DataGridTextColumn Header="DESCARGA (RX)" Binding="{Binding RxText}" Width="*" />
-                                <DataGridTextColumn Header="SUBIDA (TX)" Binding="{Binding TxText}" Width="*" />
-                                <DataGridTextColumn Header="TOTAL SESIÓN" Binding="{Binding SessionTotalText}" Width="*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Process}" Binding="{Binding Process}" Width="2*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Download}" Binding="{Binding RxText}" Width="*" />
+                                <DataGridTextColumn Header="{l:Tr Col_Upload}" Binding="{Binding TxText}" Width="*" />
+                                <DataGridTextColumn Header="{l:Tr Col_SessionTotal}" Binding="{Binding SessionTotalText}" Width="*" />
                             </DataGrid.Columns>
                         </DataGrid>
                     </Grid>
@@ -437,12 +444,12 @@
                                TextWrapping="Wrap" FontFamily="{StaticResource DisplayFont}" FontSize="17"
                                Foreground="{StaticResource Text}" Margin="0,0,0,18" />
 
-                    <TextBlock Text="HECHO POR" Style="{StaticResource Heading}" Margin="0,0,0,2" />
+                    <TextBlock Text="{l:Tr Egg_MadeBy}" Style="{StaticResource Heading}" Margin="0,0,0,2" />
                     <TextBlock Text="{Binding Signature.Author}" FontFamily="{StaticResource DisplayFont}" FontSize="20"
                                FontWeight="SemiBold" Foreground="{StaticResource Text}" TextWrapping="Wrap" />
                     <TextBlock Margin="0,4,0,16">
                         <Hyperlink x:Name="ProfileLink" Click="ProfileLink_Click" Foreground="{StaticResource Cyan}"
-                                   ToolTip="Abrir el perfil en el navegador">
+                                   ToolTip="{l:Tr Egg_ProfileTip}">
                             <Run Text="{Binding Signature.Profile, Mode=OneWay}" />
                         </Hyperlink>
                     </TextBlock>
@@ -455,7 +462,7 @@
 
                     <TextBlock Text="{Binding Signature.CoDesign}" Style="{StaticResource Muted}" TextWrapping="Wrap"
                                Margin="0,14,0,18" />
-                    <Button Style="{StaticResource PrimaryButton}" Content="Volver al juego  (Esc)" HorizontalAlignment="Center"
+                    <Button Style="{StaticResource PrimaryButton}" Content="{l:Tr Egg_Back}" HorizontalAlignment="Center"
                             Command="{Binding CloseEasterEggCommand}" />
                 </StackPanel>
             </Border>

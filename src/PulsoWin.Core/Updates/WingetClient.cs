@@ -37,7 +37,7 @@ public sealed class WingetClient
     public async Task<WingetScanResult> ListUpgradesAsync(CancellationToken cancellationToken = default)
     {
         if (_wingetPath is null)
-            return new WingetScanResult([], "winget no está instalado (falta App Installer de Microsoft Store).");
+            return new WingetScanResult([], Localization.L.T("Wg_NotInstalledStore"));
 
         ProcessResult result;
         try
@@ -50,11 +50,11 @@ public sealed class WingetClient
         }
         catch (Win32Exception)
         {
-            return new WingetScanResult([], "No se pudo ejecutar winget.");
+            return new WingetScanResult([], Localization.L.T("Wg_RunFailed"));
         }
 
         if (result.TimedOut)
-            return new WingetScanResult([], "winget tardó demasiado al consultar actualizaciones.");
+            return new WingetScanResult([], Localization.L.T("Wg_ScanTimeout"));
 
         var packages = WingetParser.ParseUpgradeOutput(result.StdOut);
         if (packages.Count == 0 && result.ExitCode != 0 && !string.IsNullOrWhiteSpace(result.StdErr))
@@ -66,10 +66,10 @@ public sealed class WingetClient
     public async Task<WingetUpgradeResult> UpgradeAsync(string packageId, CancellationToken cancellationToken = default)
     {
         if (!WingetParser.IsValidPackageId(packageId))
-            return new WingetUpgradeResult(packageId, false, -1, "ID de paquete rechazado por validación.");
+            return new WingetUpgradeResult(packageId, false, -1, Localization.L.T("Wg_BadId"));
 
         if (_wingetPath is null)
-            return new WingetUpgradeResult(packageId, false, -1, "winget no está instalado.");
+            return new WingetUpgradeResult(packageId, false, -1, Localization.L.T("Wg_NotInstalled"));
 
         ProcessResult result;
         try
@@ -89,16 +89,16 @@ public sealed class WingetClient
         }
         catch (Win32Exception)
         {
-            return new WingetUpgradeResult(packageId, false, -1, "winget no está disponible.");
+            return new WingetUpgradeResult(packageId, false, -1, Localization.L.T("Wg_Unavailable"));
         }
 
         if (result.TimedOut)
-            return new WingetUpgradeResult(packageId, false, -1, "Tiempo de espera agotado.");
+            return new WingetUpgradeResult(packageId, false, -1, Localization.L.T("Common_Timeout"));
 
         if (result.ExitCode == 0)
-            return new WingetUpgradeResult(packageId, true, 0, "Actualizado correctamente.");
+            return new WingetUpgradeResult(packageId, true, 0, Localization.L.T("Wg_Updated"));
 
-        var detail = ExtractLastLine(result.StdErr) ?? ExtractLastLine(result.StdOut) ?? $"código {result.ExitCode}";
+        var detail = ExtractLastLine(result.StdErr) ?? ExtractLastLine(result.StdOut) ?? Localization.L.F("Common_Code", result.ExitCode);
         return new WingetUpgradeResult(packageId, false, result.ExitCode, detail);
     }
 

@@ -91,7 +91,7 @@ public sealed class ProcessNameCache(TimeProvider? time = null)
 
         var name = pid switch
         {
-            0 => "Inactivo del sistema",
+            0 => Localization.L.T("Net_SystemIdle"),
             4 => "System",
             _ => Lookup(pid),
         };
@@ -108,7 +108,7 @@ public sealed class ProcessNameCache(TimeProvider? time = null)
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
-            return "(proceso terminado)";
+            return Localization.L.T("Net_ProcessExited");
         }
     }
 }

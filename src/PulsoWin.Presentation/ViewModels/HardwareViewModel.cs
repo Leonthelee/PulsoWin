@@ -2,6 +2,7 @@
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using PulsoWin.Core.Sensors;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.ViewModels;
 
@@ -15,7 +16,7 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
     [ObservableProperty] private IReadOnlyList<UsageItem> _topCpu = [];
     [ObservableProperty] private IReadOnlyList<UsageItem> _topRam = [];
     [ObservableProperty] private IReadOnlyList<UsageItem> _topGpu = [];
-    [ObservableProperty] private string _gpuTopNote = "midiendo…";
+    [ObservableProperty] private string _gpuTopNote = L.T("Hw_Measuring");
 
     public ObservableCollection<SummaryRow> Summary { get; } = [];
     public ObservableCollection<SensorReading> Sensors { get; } = [];
@@ -50,7 +51,7 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
             TopCpu = top.Cpu;
             TopRam = top.Ram;
             TopGpu = top.Gpu;
-            GpuTopNote = !top.GpuAvailable ? "sin contadores de GPU" : top.Gpu.Count == 0 ? "GPU en reposo" : "";
+            GpuTopNote = !top.GpuAvailable ? L.T("Hw_NoGpuCounters") : top.Gpu.Count == 0 ? L.T("Hw_GpuIdle") : "";
             // Actualiza fila por fila en vez de vaciar y rellenar: la tabla no salta ni pierde el scroll cada 2 s.
             if (Sensors.Count == readings.Count)
             {
@@ -63,7 +64,7 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
                 foreach (var reading in readings) Sensors.Add(reading);
             }
 
-            GpuTempText = Find(readings, r => r.Unit == "°C" && r.Label.EndsWith("· temperatura") && r.Source.StartsWith("GPU"));
+            GpuTempText = Find(readings, r => r.Unit == "°C" && r.Label.EndsWith(L.F("Sensor_Temp", "")) && r.Source.StartsWith("GPU"));
         }
         finally
         {
@@ -94,7 +95,7 @@ public sealed partial class HardwareViewModel(IReadOnlyList<ISensorSource> sourc
         }
         catch (Exception ex)
         {
-            return [new SensorReading(source.Name, source.Name, null, "", "error: " + ex.Message)];
+            return [new SensorReading(source.Name, source.Name, null, "", L.F("Common_ErrorLower", ex.Message))];
         }
     }
 }

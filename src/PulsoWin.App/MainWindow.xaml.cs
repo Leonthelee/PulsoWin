@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using PulsoWin.Core.Localization;
 using PulsoWin.Presentation.Services;
 using PulsoWin.Presentation.ViewModels;
 
@@ -78,6 +79,35 @@ public partial class MainWindow : Window
     private readonly GadgetMode _gadget;
 
     private void GadgetMode_Click(object sender, RoutedEventArgs e) => _gadget.Enter();
+
+    /// <summary>
+    /// Cambia al otro idioma: lo guarda y ofrece reiniciar (la pregunta va en el idioma nuevo).
+    /// El reinicio conserva el modo actual: si la app ya es administrador, la nueva hereda el permiso sin volver a pedirlo.
+    /// </summary>
+    private void Language_Click(object sender, RoutedEventArgs e)
+    {
+        var next = LanguagePreference.Next(L.Culture);
+        if (!LanguagePreference.Save(next)) return;
+        var culture = L.Pick(next);
+        if (MessageBox.Show(this, L.T("Lang_Restart", culture), "PulsoWin", MessageBoxButton.YesNo, MessageBoxImage.Question)
+            != MessageBoxResult.Yes) return;
+
+        var keepMode = Core.Metrics.SystemMetricsService.IsRunningAsAdministrator()
+            ? ElevationPolicy.RelaunchedSwitch
+            : ElevationPolicy.SkipSwitch;
+        try
+        {
+            using var _ = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Environment.ProcessPath!, keepMode)
+            {
+                UseShellExecute = false,
+            });
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            return; // no se pudo abrir la nueva: esta sigue abierta y el idioma cambia la próxima vez
+        }
+        Close();
+    }
 
     private void ProfileLink_Click(object sender, RoutedEventArgs e)
     {

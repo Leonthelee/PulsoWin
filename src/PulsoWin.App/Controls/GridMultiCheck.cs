@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using PulsoWin.Presentation.ViewModels;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.App.Controls;
 
@@ -65,11 +66,11 @@ public static class GridMultiCheck
         }
 
         var menu = new ContextMenu();
-        menu.Items.Add(Item("Marcar las filas elegidas", () => MultiCheck.Set(Highlighted(grid), true)));
-        menu.Items.Add(Item("Desmarcar las filas elegidas", () => MultiCheck.Set(Highlighted(grid), false)));
+        menu.Items.Add(Item(L.T("Grid_CheckChosen"), () => MultiCheck.Set(Highlighted(grid), true)));
+        menu.Items.Add(Item(L.T("Grid_UncheckChosen"), () => MultiCheck.Set(Highlighted(grid), false)));
         menu.Items.Add(new Separator());
-        menu.Items.Add(Item("Marcar todo", () => MultiCheck.Set(All(grid), true)));
-        menu.Items.Add(Item("Desmarcar todo", () => MultiCheck.Set(All(grid), false)));
+        menu.Items.Add(Item(L.T("Grid_CheckAll"), () => MultiCheck.Set(All(grid), true)));
+        menu.Items.Add(Item(L.T("Grid_UncheckAll"), () => MultiCheck.Set(All(grid), false)));
         menu.Opened += (_, _) =>
         {
             var any = Highlighted(grid).Count > 0;

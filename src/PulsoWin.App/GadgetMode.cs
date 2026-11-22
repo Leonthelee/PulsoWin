@@ -2,6 +2,7 @@
 using System.Windows;
 using PulsoWin.Presentation.ViewModels;
 using Forms = System.Windows.Forms;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.App;
 
@@ -62,18 +63,18 @@ public sealed class GadgetMode : IDisposable
         if (_tray is null)
         {
             var menu = new Forms.ContextMenuStrip();
-            menu.Items.Add("Volver a la app completa", null, (_, _) => Exit());
-            _pinItem = new Forms.ToolStripMenuItem("Siempre visible") { CheckOnClick = true, Checked = true };
+            menu.Items.Add(L.T("Gadget_Back"), null, (_, _) => Exit());
+            _pinItem = new Forms.ToolStripMenuItem(L.T("Gadget_Pin")) { CheckOnClick = true, Checked = true };
             _pinItem.CheckedChanged += (_, _) => { if (_gadget is not null) _gadget.Topmost = _pinItem.Checked; };
             menu.Items.Add(_pinItem);
             menu.Items.Add(new Forms.ToolStripSeparator());
-            menu.Items.Add("Salir de PulsoWin", null, (_, _) => _main.Close());
+            menu.Items.Add(L.T("Gadget_Exit"), null, (_, _) => _main.Close());
             menu.Opening += (_, _) => { if (_gadget is not null && _pinItem is not null) _pinItem.Checked = _gadget.Topmost; };
 
             _tray = new Forms.NotifyIcon
             {
                 Icon = LoadIcon(),
-                Text = "PulsoWin · Modo Gadget",
+                Text = L.T("Gadget_Title"),
                 ContextMenuStrip = menu,
             };
             _tray.DoubleClick += (_, _) => Exit();

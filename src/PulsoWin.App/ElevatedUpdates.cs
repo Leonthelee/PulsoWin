@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using PulsoWin.Core.Updates;
 using PulsoWin.Presentation.Services;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.App;
 
@@ -25,7 +26,7 @@ public static class ElevatedUpdates
     public static async Task<WindowsUpdateInstallResult> InstallAsync(IReadOnlyList<string> updateIds)
     {
         var ids = updateIds.Where(WindowsUpdateInstaller.IsValidUpdateId).ToList();
-        if (ids.Count == 0) return WindowsUpdateInstallResult.Fail("No hay actualizaciones válidas que instalar.");
+        if (ids.Count == 0) return WindowsUpdateInstallResult.Fail(L.T("Wu_NoValid"));
 
         var token = Guid.NewGuid().ToString("D");
         var resultFile = ResultPath(token);
@@ -46,16 +47,16 @@ public static class ElevatedUpdates
         {
             return WindowsUpdateInstallResult.UserCancelled();
         }
-        if (helper is null) return WindowsUpdateInstallResult.Fail("No se pudo iniciar el instalador.");
+        if (helper is null) return WindowsUpdateInstallResult.Fail(L.T("Wu_HelperFailed"));
 
         using (helper) await helper.WaitForExitAsync();
 
         try
         {
             if (!File.Exists(resultFile))
-                return WindowsUpdateInstallResult.Fail($"El instalador terminó sin informar resultado (código {helper.ExitCode}).");
+                return WindowsUpdateInstallResult.Fail(L.F("Wu_HelperNoResult", helper.ExitCode));
             return WindowsUpdateInstaller.Deserialize(await File.ReadAllTextAsync(resultFile))
-                   ?? WindowsUpdateInstallResult.Fail("Resultado ilegible del instalador.");
+                   ?? WindowsUpdateInstallResult.Fail(L.T("Wu_HelperBadResult"));
         }
         finally
         {

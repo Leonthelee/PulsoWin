@@ -2,6 +2,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media.Animation;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.App.Controls;
 
@@ -12,7 +13,7 @@ public partial class RetroPadHero : UserControl
         nameof(IsActive), typeof(bool), typeof(RetroPadHero), new PropertyMetadata(false, OnIsActiveChanged));
 
     public static readonly DependencyProperty CaptionProperty = DependencyProperty.Register(
-        nameof(Caption), typeof(string), typeof(RetroPadHero), new PropertyMetadata("PULSA START"));
+        nameof(Caption), typeof(string), typeof(RetroPadHero), new PropertyMetadata(L.T("Hero_PressStart")));
 
     public RetroPadHero()
     {

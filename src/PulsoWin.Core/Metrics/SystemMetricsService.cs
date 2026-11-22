@@ -43,9 +43,8 @@ public sealed class SystemMetricsService(
     /// <summary>Cada cuánto se publica una foto: 1 s para que las agujas se vean casi en vivo.</summary>
     public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(1);
 
-    public const string StandardUserNotice =
-        "Modo usuario estándar: para ver el consumo exacto en MB por proceso, ejecuta la app como Administrador.";
-    public const string AdministratorNotice = "Modo administrador: consumo exacto por proceso (ETW del kernel).";
+    public static string StandardUserNotice => Localization.L.T("Net_StandardNotice");
+    public static string AdministratorNotice => Localization.L.T("Net_AdminNotice");
 
     private readonly Func<bool> _isAdministrator = isAdministrator ?? IsRunningAsAdministrator;
     private readonly Func<ITrafficSource> _etwFactory = etwFactory ?? (() => new EtwTrafficSource());
@@ -137,7 +136,7 @@ public sealed class SystemMetricsService(
             {
                 etw?.Dispose();
                 return (StartInterfaces(),
-                    $"No se pudo iniciar el monitoreo por proceso ({ex.Message}). Mostrando el tráfico por interfaz.");
+                    Localization.L.F("Net_EtwFailed", ex.Message));
             }
         }
         return (StartInterfaces(), StandardUserNotice);

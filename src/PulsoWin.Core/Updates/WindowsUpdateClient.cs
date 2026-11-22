@@ -21,8 +21,8 @@ public sealed record WindowsUpdateItem(
     public string SizeText =>
         SizeBytes <= 0 ? ""
         : MinSizeBytes > 0 && SizeBytes <= MinSizeBytes * 2 ? Common.Bytes.Format(SizeBytes)
-        : SizeBytes <= 4L * 1024 * 1024 * 1024 ? "hasta " + Common.Bytes.Format(SizeBytes)
-        : "variable";
+        : SizeBytes <= 4L * 1024 * 1024 * 1024 ? Localization.L.F("Wu_UpTo", Common.Bytes.Format(SizeBytes))
+        : Localization.L.T("Wu_Variable");
 }
 
 public sealed record WindowsUpdateScanResult(
@@ -42,7 +42,7 @@ public sealed class WindowsUpdateClient
     public WindowsUpdateScanResult QueryPending()
     {
         if (!OperatingSystem.IsWindows())
-            return new WindowsUpdateScanResult([], "Solo disponible en Windows.");
+            return new WindowsUpdateScanResult([], Localization.L.T("Wu_OnlyWindows"));
 
         object? session = null;
         object? searcher = null;
@@ -51,11 +51,11 @@ public sealed class WindowsUpdateClient
         {
             var sessionType = Type.GetTypeFromProgID("Microsoft.Update.Session");
             if (sessionType is null)
-                return new WindowsUpdateScanResult([], "Windows Update Agent no disponible.");
+                return new WindowsUpdateScanResult([], Localization.L.T("Wu_AgentUnavailable"));
 
             session = Activator.CreateInstance(sessionType);
             if (session is null)
-                return new WindowsUpdateScanResult([], "No se pudo iniciar la sesión de Windows Update.");
+                return new WindowsUpdateScanResult([], Localization.L.T("Wu_SessionFailed"));
 
             dynamic dynSession = session;
             searcher = dynSession.CreateUpdateSearcher();
@@ -68,7 +68,7 @@ public sealed class WindowsUpdateClient
             for (var i = 0; i < count; i++)
             {
                 dynamic u = dynResult.Updates.Item(i);
-                string title = u.Title ?? "(sin título)";
+                string title = u.Title ?? Localization.L.T("Wu_NoTitle");
                 var kb = "";
                 try
                 {
@@ -98,7 +98,7 @@ public sealed class WindowsUpdateClient
         catch (Exception ex) when (ex is COMException or InvalidOperationException or UnauthorizedAccessException
                                        or Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
         {
-            return new WindowsUpdateScanResult([], $"No disponible ({ex.Message})");
+            return new WindowsUpdateScanResult([], Localization.L.F("Wu_NotAvailableEx", ex.Message));
         }
         finally
         {

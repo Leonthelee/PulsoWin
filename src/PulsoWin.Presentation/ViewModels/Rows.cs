@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
 using PulsoWin.Core.Updates;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.ViewModels;
 
@@ -94,9 +95,10 @@ public sealed partial class RuleRow : ObservableObject, ISelectableRow
     public RuleRow(CleanRule rule)
     {
         Rule = rule;
-        Name = rule.Name;
-        Category = rule.Category;
-        Note = rule.Note;
+        // Las reglas vienen del catálogo en español; si hay traducción por id, se usa (si no, el texto original).
+        Name = L.TOr($"Rule_{rule.Id}_Name", rule.Name);
+        Category = L.TOr($"Category_{rule.Category}", rule.Category);
+        Note = rule.Note is null ? null : L.TOr($"Rule_{rule.Id}_Note", rule.Note);
         _isSelected = rule.DefaultOn;
     }
 
@@ -109,7 +111,7 @@ public sealed partial class RuleRow : ObservableObject, ISelectableRow
     }
 
     public static RuleRow CreateRecycleBin() =>
-        new("Papelera de reciclaje", "Windows", "Se vacía en todas las unidades.");
+        new(L.T("Recycle_Name"), "Windows", L.T("Recycle_Note"));
 
     public CleanRule? Rule { get; }
     public bool IsRecycleBin => Rule is null;
@@ -130,8 +132,8 @@ public sealed partial class RuleRow : ObservableObject, ISelectableRow
         LastScan = item;
         SizeText = Bytes.Format(item.Bytes);
         Status = item.BlockedBy is { } process
-            ? $"Cierra «{process}» para limpiar"
-            : item.Files.Count == 0 ? "Nada que limpiar" : $"{item.Files.Count:N0} archivos";
+            ? L.F("Row_CloseToClean", process)
+            : item.Files.Count == 0 ? L.T("Row_NothingToClean") : L.F("Row_Files", item.Files.Count);
     }
 
     public void ApplyRecycleBin(long bytes, long items)
@@ -139,7 +141,7 @@ public sealed partial class RuleRow : ObservableObject, ISelectableRow
         RecycleBytes = bytes;
         RecycleItems = items;
         SizeText = Bytes.Format(bytes);
-        Status = items == 0 ? "Vacía" : $"{items:N0} elementos";
+        Status = items == 0 ? L.T("Row_Empty") : L.F("Row_Items", items);
     }
 
     public void ApplyCleaned(string status)
@@ -167,7 +169,7 @@ public enum UpdateKind { Program, Windows }
 public sealed partial class UpdateRow : ObservableObject, ISelectableRow
 {
     [ObservableProperty] private bool _isSelected;
-    [ObservableProperty] private string _status = "Pendiente";
+    [ObservableProperty] private string _status = L.T("Upd_Pending");
 
     private UpdateRow(UpdateKind kind, string name, string id, string current, string next, string size)
     {
@@ -185,11 +187,11 @@ public sealed partial class UpdateRow : ObservableObject, ISelectableRow
     public static UpdateRow FromWindows(WindowsUpdateItem u) =>
         new(UpdateKind.Windows, u.Title, u.UpdateId, "", u.KbId.Length > 0 ? u.KbId : "—", u.SizeText)
         {
-            Status = u.IsDownloaded ? "Descargada, lista para instalar" : "Pendiente",
+            Status = u.IsDownloaded ? L.T("Upd_Downloaded") : L.T("Upd_Pending"),
         };
 
     public UpdateKind Kind { get; }
-    public string KindText => Kind == UpdateKind.Program ? "Programa" : "Windows";
+    public string KindText => Kind == UpdateKind.Program ? L.T("Upd_KindProgram") : "Windows";
     public string Name { get; }
     /// <summary>ID de winget o UpdateID de Windows Update (lo que se instala de verdad).</summary>
     public string Id { get; }

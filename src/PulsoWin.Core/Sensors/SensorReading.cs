@@ -13,7 +13,7 @@ public sealed record SensorReading(
     string? Note = null,
     string? Text = null)
 {
-    public string Display => Text ?? (Value is { } v ? $"{v:0.#} {Unit}".TrimEnd() : "no disponible");
+    public string Display => Text ?? (Value is { } v ? $"{v:0.#} {Unit}".TrimEnd() : Localization.L.T("Common_NotAvailable"));
 }
 
 public interface ISensorSource

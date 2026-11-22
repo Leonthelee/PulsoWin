@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="A11y_Hero" xml:space="preserve"><value>Mando retro apuntando a un notebook</value></data>
+  <data name="A11y_KeepDomains" xml:space="preserve"><value>Dominios cuyas cookies se conservan</value></data>
+  <data name="A11y_SelectAll" xml:space="preserve"><value>Seleccionar todo</value></data>
+  <data name="A11y_Start" xml:space="preserve"><value>Start: analizar</value></data>
+  <data name="BA_Deleted" xml:space="preserve"><value>Borrado: {0} en {1:N0} archivos.</value></data>
+  <data name="BA_DeletedCookies" xml:space="preserve"><value>Borrado: {0} en {1:N0} archivos y {2:N0} cookies.</value></data>
+  <data name="BA_FreeSpace" xml:space="preserve"><value>Espacio libre en {0}: {1} → {2} ({3})</value></data>
+  <data name="BA_MaxTemp" xml:space="preserve"><value>Temperatura máxima leída: {0} → {1}</value></data>
+  <data name="BA_Ram" xml:space="preserve"><value>RAM en uso: {0} → {1}</value></data>
+  <data name="Busy_Analyzing" xml:space="preserve"><value>ANALIZANDO…</value></data>
+  <data name="Busy_Cleaning" xml:space="preserve"><value>LIMPIANDO…</value></data>
+  <data name="Busy_Searching" xml:space="preserve"><value>BUSCANDO…</value></data>
+  <data name="Busy_Updating" xml:space="preserve"><value>ACTUALIZANDO…</value></data>
+  <data name="Category_Navegadores" xml:space="preserve"><value>Navegadores</value></data>
+  <data name="Category_Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="Clean_Analyze" xml:space="preserve"><value>Analizar</value></data>
+  <data name="Clean_AnalyzeTip" xml:space="preserve"><value>Solo mira; no borra nada.</value></data>
+  <data name="Clean_Analyzing" xml:space="preserve"><value>Analizando… (no se borra nada todavía)</value></data>
+  <data name="Clean_BeforeAfter" xml:space="preserve"><value>ANTES / DESPUÉS</value></data>
+  <data name="Clean_Cancelled" xml:space="preserve"><value>Limpieza cancelada. No se borró nada.</value></data>
+  <data name="Clean_Clean" xml:space="preserve"><value>Limpiar…</value></data>
+  <data name="Clean_CleanTip" xml:space="preserve"><value>Pide confirmación antes de borrar.</value></data>
+  <data name="Clean_Cleaning" xml:space="preserve"><value>Limpiando…</value></data>
+  <data name="Clean_ConfirmTitle" xml:space="preserve"><value>Confirmar limpieza</value></data>
+  <data name="Clean_Confirm_Cookies" xml:space="preserve"><value>, además de {0:N0} cookies (con copia de respaldo)</value></data>
+  <data name="Clean_Confirm_End" xml:space="preserve"><value>.
+
+Los archivos en uso se omiten. ¿Continuar?</value></data>
+  <data name="Clean_Confirm_Files" xml:space="preserve"><value>Se borrarán {0:N0} archivos ({1})</value></data>
+  <data name="Clean_Confirm_Recycle" xml:space="preserve"><value> y se vaciará la papelera</value></data>
+  <data name="Clean_CookiesHelp" xml:space="preserve"><value>Solo con el navegador cerrado. Antes de borrar se guarda una copia de respaldo. Las sesiones guardadas en localStorage no se tocan.</value></data>
+  <data name="Clean_DeleteCookies" xml:space="preserve"><value>Borrar cookies</value></data>
+  <data name="Clean_Done" xml:space="preserve"><value>Limpieza terminada. Registro: {0}</value></data>
+  <data name="Clean_Failed" xml:space="preserve"><value>La limpieza falló: {0}</value></data>
+  <data name="Clean_KeepDomains" xml:space="preserve"><value>Dominios que se conservan (uno por línea):</value></data>
+  <data name="Clean_NotYet" xml:space="preserve"><value>Todavía no has limpiado en esta sesión.</value></data>
+  <data name="Clean_NothingToClean" xml:space="preserve"><value>No hay nada que limpiar. Pulsa START para analizar primero.</value></data>
+  <data name="Clean_RowDone" xml:space="preserve"><value>{0:N0} borrados · {1}</value></data>
+  <data name="Clean_RowSkipped" xml:space="preserve"><value> · {0:N0} en uso, omitidos</value></data>
+  <data name="Clean_ScanDone" xml:space="preserve"><value>Análisis listo: {0} se pueden liberar.</value></data>
+  <data name="Clean_ScanDoneCookies" xml:space="preserve"><value>Análisis listo: {0} se pueden liberar y {1:N0} cookies se pueden borrar.</value></data>
+  <data name="Clean_ScanFailed" xml:space="preserve"><value>El análisis falló: {0}</value></data>
+  <data name="Col_Category" xml:space="preserve"><value>CATEGORÍA</value></data>
+  <data name="Col_Component" xml:space="preserve"><value>COMPONENTE</value></data>
+  <data name="Col_Current" xml:space="preserve"><value>ACTUAL</value></data>
+  <data name="Col_Detail" xml:space="preserve"><value>DETALLE</value></data>
+  <data name="Col_Download" xml:space="preserve"><value>DESCARGA (RX)</value></data>
+  <data name="Col_Item" xml:space="preserve"><value>ELEMENTO</value></data>
+  <data name="Col_Name" xml:space="preserve"><value>NOMBRE</value></data>
+  <data name="Col_NewKb" xml:space="preserve"><value>NUEVA / KB</value></data>
+  <data name="Col_Note" xml:space="preserve"><value>NOTA</value></data>
+  <data name="Col_Process" xml:space="preserve"><value>PROCESO</value></data>
+  <data name="Col_SessionTotal" xml:space="preserve"><value>TOTAL SESIÓN</value></data>
+  <data name="Col_Size" xml:space="preserve"><value>TAMAÑO</value></data>
+  <data name="Col_Status" xml:space="preserve"><value>ESTADO</value></data>
+  <data name="Col_Type" xml:space="preserve"><value>TIPO</value></data>
+  <data name="Col_Upload" xml:space="preserve"><value>SUBIDA (TX)</value></data>
+  <data name="Col_Value" xml:space="preserve"><value>VALOR</value></data>
+  <data name="Common_Code" xml:space="preserve"><value>código {0}</value></data>
+  <data name="Common_Error" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="Common_ErrorLower" xml:space="preserve"><value>error: {0}</value></data>
+  <data name="Common_NeedsAdmin" xml:space="preserve"><value>requiere administrador</value></data>
+  <data name="Common_NotAvailable" xml:space="preserve"><value>no disponible</value></data>
+  <data name="Common_Timeout" xml:space="preserve"><value>Tiempo de espera agotado.</value></data>
+  <data name="Common_XofY" xml:space="preserve"><value>{0} de {1}</value></data>
+  <data name="Cookies_BackupFailed" xml:space="preserve"><value>no se pudo crear la copia de respaldo: {0}</value></data>
+  <data name="Cookies_CloseBrowser" xml:space="preserve"><value>{0} ({1}): ciérralo para borrar sus cookies.</value></data>
+  <data name="Cookies_Deleted" xml:space="preserve"><value>{0} ({1}): {2:N0} cookies borradas. Respaldo en {3}</value></data>
+  <data name="Cookies_NoProfiles" xml:space="preserve"><value>No se encontraron perfiles de Chrome, Edge ni Firefox.</value></data>
+  <data name="Cookies_NotDeleted" xml:space="preserve"><value>{0} ({1}): no se borró nada ({2}).</value></data>
+  <data name="Cookies_Plan" xml:space="preserve"><value>{0} ({1}): {2:N0} a borrar, {3:N0} se conservan.</value></data>
+  <data name="Cookies_ProcessOpen" xml:space="preserve"><value>«{0}» está abierto</value></data>
+  <data name="Cookies_ReadError" xml:space="preserve"><value>{0} ({1}): no se pudo leer ({2}).</value></data>
+  <data name="Egg_Back" xml:space="preserve"><value>Volver al juego  (Esc)</value></data>
+  <data name="Egg_KonamiTitle" xml:space="preserve"><value>CHEAT CODE DESBLOQUEADO</value></data>
+  <data name="Egg_MadeBy" xml:space="preserve"><value>HECHO POR</value></data>
+  <data name="Egg_ProfileTip" xml:space="preserve"><value>Abrir el perfil en el navegador</value></data>
+  <data name="Egg_Thanks" xml:space="preserve"><value>Gracias por el uso de la APP, espero sea de aporte y ayuda. =)</value></data>
+  <data name="Egg_UsesTitle" xml:space="preserve"><value>¡{0} USOS! LOGRO DESBLOQUEADO</value></data>
+  <data name="Err_Unexpected" xml:space="preserve"><value>Algo salió mal, pero PulsoWin sigue abierto y no se borró nada a medias sin avisar.
+
+{0}
+
+Detalle en: {1}</value></data>
+  <data name="Gadget_Back" xml:space="preserve"><value>Volver a la app completa</value></data>
+  <data name="Gadget_DragTip" xml:space="preserve"><value>Arrastra para mover · doble clic para volver a la app completa</value></data>
+  <data name="Gadget_Exit" xml:space="preserve"><value>Salir de PulsoWin</value></data>
+  <data name="Gadget_Pin" xml:space="preserve"><value>Siempre visible</value></data>
+  <data name="Gadget_Title" xml:space="preserve"><value>PulsoWin · Modo Gadget</value></data>
+  <data name="Gauge_GpuTemp" xml:space="preserve"><value>TEMP GPU</value></data>
+  <data name="Gauge_Network" xml:space="preserve"><value>RED</value></data>
+  <data name="Gauge_TotalUse" xml:space="preserve"><value>uso total</value></data>
+  <data name="Gpu_WindowsCounters" xml:space="preserve"><value>Contadores de Windows</value></data>
+  <data name="Grid_CheckAll" xml:space="preserve"><value>Marcar todo</value></data>
+  <data name="Grid_CheckChosen" xml:space="preserve"><value>Marcar las filas elegidas</value></data>
+  <data name="Grid_SelectAllTip" xml:space="preserve"><value>Seleccionar todo / nada</value></data>
+  <data name="Grid_UncheckAll" xml:space="preserve"><value>Desmarcar todo</value></data>
+  <data name="Grid_UncheckChosen" xml:space="preserve"><value>Desmarcar las filas elegidas</value></data>
+  <data name="Health_Healthy" xml:space="preserve"><value>Saludable</value></data>
+  <data name="Health_Unhealthy" xml:space="preserve"><value>En mal estado</value></data>
+  <data name="Health_Unknown" xml:space="preserve"><value>Desconocido</value></data>
+  <data name="Health_Warning" xml:space="preserve"><value>Advertencia</value></data>
+  <data name="Hero_PressStart" xml:space="preserve"><value>PULSA START</value></data>
+  <data name="Hw_GpuIdle" xml:space="preserve"><value>GPU en reposo</value></data>
+  <data name="Hw_KernelNote" xml:space="preserve"><value>Temperaturas de CPU, voltajes y ventiladores de placa necesitan un driver de kernel; PulsoWin no instala ninguno y los muestra como «no disponible» en vez de inventar un valor.</value></data>
+  <data name="Hw_LiveSensors" xml:space="preserve"><value>SENSORES EN VIVO · CADA 2 S</value></data>
+  <data name="Hw_Measuring" xml:space="preserve"><value>midiendo…</value></data>
+  <data name="Hw_NoGpuCounters" xml:space="preserve"><value>sin contadores de GPU</value></data>
+  <data name="Hw_Summary" xml:space="preserve"><value>RESUMEN DEL EQUIPO</value></data>
+  <data name="Lang_Button" xml:space="preserve"><value>🌐 EN</value></data>
+  <data name="Lang_ButtonTip" xml:space="preserve"><value>Change language to English</value></data>
+  <data name="Lang_Restart" xml:space="preserve"><value>El idioma cambió a español. ¿Reiniciar PulsoWin ahora para aplicarlo?</value></data>
+  <data name="Log_CleanHeader" xml:space="preserve"><value>PulsoWin · limpieza del {0}</value></data>
+  <data name="Log_UpdatesHeader" xml:space="preserve"><value>PulsoWin · actualizaciones del {0}</value></data>
+  <data name="Log_WriteFailed" xml:space="preserve"><value>(no se pudo escribir el registro: {0})</value></data>
+  <data name="Main_Freeable" xml:space="preserve"><value>LIBERABLE</value></data>
+  <data name="Main_GadgetButton" xml:space="preserve"><value>◔  Modo Gadget</value></data>
+  <data name="Main_GadgetTip" xml:space="preserve"><value>Ventana flotante con diales de Red, CPU, RAM y GPU</value></data>
+  <data name="Main_StartTip" xml:space="preserve"><value>Analiza qué se puede liberar. No borra nada todavía.</value></data>
+  <data name="Main_Tagline" xml:space="preserve"><value>Limpia lo que sobra. Mira lo que importa.</value></data>
+  <data name="Net_AdminNotice" xml:space="preserve"><value>Modo administrador: consumo exacto por proceso (ETW del kernel).</value></data>
+  <data name="Net_EtwFailed" xml:space="preserve"><value>No se pudo iniciar el monitoreo por proceso ({0}). Mostrando el tráfico por interfaz.</value></data>
+  <data name="Net_Header" xml:space="preserve"><value>Aquí te muestro tu tráfico de red actual (los primeros 10)</value></data>
+  <data name="Net_ModeInterface" xml:space="preserve"><value>POR INTERFAZ</value></data>
+  <data name="Net_ModePerProcess" xml:space="preserve"><value>POR PROCESO · ETW</value></data>
+  <data name="Net_ProcessExited" xml:space="preserve"><value>(proceso terminado)</value></data>
+  <data name="Net_Scale" xml:space="preserve"><value>escala 0–{0}</value></data>
+  <data name="Net_Session" xml:space="preserve"><value>Sesión {0}</value></data>
+  <data name="Net_StandardNotice" xml:space="preserve"><value>Modo usuario estándar: para ver el consumo exacto en MB por proceso, ejecuta la app como Administrador.</value></data>
+  <data name="Net_Starting" xml:space="preserve"><value>Iniciando el monitoreo…</value></data>
+  <data name="Net_SystemIdle" xml:space="preserve"><value>Inactivo del sistema</value></data>
+  <data name="Recycle_Emptied" xml:space="preserve"><value>Papelera vaciada</value></data>
+  <data name="Recycle_EmptyFailed" xml:space="preserve"><value>No se pudo vaciar la papelera</value></data>
+  <data name="Recycle_Name" xml:space="preserve"><value>Papelera de reciclaje</value></data>
+  <data name="Recycle_Note" xml:space="preserve"><value>Se vacía en todas las unidades.</value></data>
+  <data name="Row_CloseToClean" xml:space="preserve"><value>Cierra «{0}» para limpiar</value></data>
+  <data name="Row_Empty" xml:space="preserve"><value>Vacía</value></data>
+  <data name="Row_Files" xml:space="preserve"><value>{0:N0} archivos</value></data>
+  <data name="Row_Items" xml:space="preserve"><value>{0:N0} elementos</value></data>
+  <data name="Row_NothingToClean" xml:space="preserve"><value>Nada que limpiar</value></data>
+  <data name="Rule_chrome-cache_Name" xml:space="preserve"><value>Chrome · caché</value></data>
+  <data name="Rule_edge-cache_Name" xml:space="preserve"><value>Edge · caché</value></data>
+  <data name="Rule_firefox-cache_Name" xml:space="preserve"><value>Firefox · caché</value></data>
+  <data name="Rule_win-crashdumps_Name" xml:space="preserve"><value>Volcados de errores de aplicaciones</value></data>
+  <data name="Rule_win-dx-shader_Name" xml:space="preserve"><value>Caché de shaders DirectX</value></data>
+  <data name="Rule_win-dx-shader_Note" xml:space="preserve"><value>Ruta sin confirmar en documentación oficial; desactivada por defecto.</value></data>
+  <data name="Rule_win-temp_Name" xml:space="preserve"><value>Temporales del usuario</value></data>
+  <data name="Rule_win-temp_Note" xml:space="preserve"><value>Solo archivos con más de 24 horas sin cambios.</value></data>
+  <data name="Rule_win-thumbs_Name" xml:space="preserve"><value>Caché de miniaturas</value></data>
+  <data name="Rule_win-thumbs_Note" xml:space="preserve"><value>El Explorador suele tener algunos abiertos; esos se omiten.</value></data>
+  <data name="Sensor_AcpiNote" xml:space="preserve"><value>ACPI: no equivale a la temperatura de la CPU</value></data>
+  <data name="Sensor_CpuSecondReading" xml:space="preserve"><value>se calcula a partir de la segunda lectura</value></data>
+  <data name="Sensor_DiskN" xml:space="preserve"><value>Disco {0}</value></data>
+  <data name="Sensor_DiskNoTemp" xml:space="preserve"><value>el disco no informa temperatura</value></data>
+  <data name="Sensor_Disks" xml:space="preserve"><value>Discos</value></data>
+  <data name="Sensor_Fan" xml:space="preserve"><value>{0} · ventilador</value></data>
+  <data name="Sensor_Health" xml:space="preserve"><value>{0} · salud</value></data>
+  <data name="Sensor_NoFan" xml:space="preserve"><value>sin ventilador o no expuesto</value></data>
+  <data name="Sensor_NotExposedPlural" xml:space="preserve"><value>el equipo no las expone</value></data>
+  <data name="Sensor_RamInUse" xml:space="preserve"><value>RAM · en uso</value></data>
+  <data name="Sensor_StorageNoResponse" xml:space="preserve"><value>la API de almacenamiento no respondió</value></data>
+  <data name="Sensor_System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Sensor_Temp" xml:space="preserve"><value>{0} · temperatura</value></data>
+  <data name="Sensor_TempNeedsAdmin" xml:space="preserve"><value>temperatura: requiere administrador</value></data>
+  <data name="Sensor_ThermalZone" xml:space="preserve"><value>Zona térmica {0}</value></data>
+  <data name="Sensor_ThermalZones" xml:space="preserve"><value>Zonas térmicas</value></data>
+  <data name="Sensor_Usage" xml:space="preserve"><value>{0} · uso</value></data>
+  <data name="Status_Ready" xml:space="preserve"><value>Listo. Pulsa START para ver qué se puede liberar.</value></data>
+  <data name="Sum_Board" xml:space="preserve"><value>Placa base</value></data>
+  <data name="Sum_Cpu" xml:space="preserve"><value>{0} · {1} núcleos / {2} hilos</value></data>
+  <data name="Sum_OS" xml:space="preserve"><value>Sistema operativo</value></data>
+  <data name="Sum_RamTotal" xml:space="preserve"><value>{0} en total</value></data>
+  <data name="Sum_Storage" xml:space="preserve"><value>Almacenamiento</value></data>
+  <data name="Tab_Clean" xml:space="preserve"><value>LIMPIAR</value></data>
+  <data name="Tab_Network" xml:space="preserve"><value>RED</value></data>
+  <data name="Tab_Update" xml:space="preserve"><value>ACTUALIZAR</value></data>
+  <data name="Upd_AllUpToDate" xml:space="preserve"><value>Todo al día: no hay actualizaciones pendientes.</value></data>
+  <data name="Upd_AndMore" xml:space="preserve"><value>… y {0} más.</value></data>
+  <data name="Upd_Cancelled" xml:space="preserve"><value>Actualización cancelada. No se instaló nada.</value></data>
+  <data name="Upd_ConfirmTitle" xml:space="preserve"><value>Confirmar actualizaciones</value></data>
+  <data name="Upd_Confirm_End" xml:space="preserve"><value>Puede tardar varios minutos. ¿Continuar?</value></data>
+  <data name="Upd_Confirm_Head" xml:space="preserve"><value>Se instalarán {0} actualización(es), aceptando sus términos de licencia:
+
+{1}
+
+</value></data>
+  <data name="Upd_Confirm_Programs" xml:space="preserve"><value>Algunos programas pueden pedir su propio permiso.
+</value></data>
+  <data name="Upd_Confirm_Windows" xml:space="preserve"><value>Windows pedirá UNA vez permiso de administrador para las de Windows.
+</value></data>
+  <data name="Upd_Done" xml:space="preserve"><value>Listo: {0} instalada(s), {1} con error.</value></data>
+  <data name="Upd_DoneReboot" xml:space="preserve"><value> Reinicia el equipo para terminar de aplicar las de Windows.</value></data>
+  <data name="Upd_Downloaded" xml:space="preserve"><value>Descargada, lista para instalar</value></data>
+  <data name="Upd_Finished" xml:space="preserve"><value>Actualización terminada. Registro: {0}</value></data>
+  <data name="Upd_Found" xml:space="preserve"><value>{0} de Windows y {1} de programas pendientes. Marca las que quieras y pulsa «Proceder».</value></data>
+  <data name="Upd_Header" xml:space="preserve"><value>ACTUALIZACIONES PENDIENTES · WINDOWS Y PROGRAMAS</value></data>
+  <data name="Upd_InstallingWindows" xml:space="preserve"><value>Instalando {0} actualización(es) de Windows… acepta el permiso de administrador si aparece.</value></data>
+  <data name="Upd_Interrupted" xml:space="preserve"><value>La actualización se interrumpió ({0} OK y {1} con error hasta ese momento): {2}</value></data>
+  <data name="Upd_Intro" xml:space="preserve"><value>Pulsa «Buscar actualizaciones». PulsoWin revisa programas y Windows en segundo plano, sin instalar nada todavía. Para marcar varias: Ctrl o Shift + clic y barra espaciadora, o clic derecho.</value></data>
+  <data name="Upd_KindProgram" xml:space="preserve"><value>Programa</value></data>
+  <data name="Upd_Pending" xml:space="preserve"><value>Pendiente</value></data>
+  <data name="Upd_Proceed" xml:space="preserve"><value>Proceder con las actualizaciones…</value></data>
+  <data name="Upd_ProceedTip" xml:space="preserve"><value>Pide confirmación y, para las de Windows, un permiso de administrador.</value></data>
+  <data name="Upd_RowCancelled" xml:space="preserve"><value>Cancelado (sin permiso)</value></data>
+  <data name="Upd_RowInstalled" xml:space="preserve"><value>Instalada</value></data>
+  <data name="Upd_RowInstalledReboot" xml:space="preserve"><value>Instalada · requiere reiniciar</value></data>
+  <data name="Upd_RowInstalling" xml:space="preserve"><value>Descargando e instalando…</value></data>
+  <data name="Upd_RowInterrupted" xml:space="preserve"><value>Interrumpido</value></data>
+  <data name="Upd_RowNotInstalled" xml:space="preserve"><value>No se instaló (código {0})</value></data>
+  <data name="Upd_RowUpdated" xml:space="preserve"><value>Actualizado</value></data>
+  <data name="Upd_RowUpdating" xml:space="preserve"><value>Actualizando…</value></data>
+  <data name="Upd_Search" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Upd_SearchDone" xml:space="preserve"><value>Búsqueda terminada.</value></data>
+  <data name="Upd_SearchFailed" xml:space="preserve"><value>La búsqueda de actualizaciones falló: {0}</value></data>
+  <data name="Upd_SearchTip" xml:space="preserve"><value>Revisa en segundo plano; no instala nada.</value></data>
+  <data name="Upd_Searching" xml:space="preserve"><value>Buscando actualizaciones de programas y de Windows… (solo lectura; puede tardar un minuto)</value></data>
+  <data name="Upd_SelectOne" xml:space="preserve"><value>Marca al menos una actualización (o usa «Marcar todo»).</value></data>
+  <data name="Upd_Updating" xml:space="preserve"><value>Actualizando {0}…</value></data>
+  <data name="Wg_BadId" xml:space="preserve"><value>ID de paquete rechazado por validación.</value></data>
+  <data name="Wg_NotInstalled" xml:space="preserve"><value>winget no está instalado.</value></data>
+  <data name="Wg_NotInstalledStore" xml:space="preserve"><value>winget no está instalado (falta App Installer de Microsoft Store).</value></data>
+  <data name="Wg_RunFailed" xml:space="preserve"><value>No se pudo ejecutar winget.</value></data>
+  <data name="Wg_ScanTimeout" xml:space="preserve"><value>winget tardó demasiado al consultar actualizaciones.</value></data>
+  <data name="Wg_Unavailable" xml:space="preserve"><value>winget no está disponible.</value></data>
+  <data name="Wg_Updated" xml:space="preserve"><value>Actualizado correctamente.</value></data>
+  <data name="Win_Title" xml:space="preserve"><value>PulsoWin · limpiador y visor de hardware</value></data>
+  <data name="Wu_AgentUnavailable" xml:space="preserve"><value>Windows Update Agent no está disponible.</value></data>
+  <data name="Wu_HelperBadResult" xml:space="preserve"><value>Resultado ilegible del instalador.</value></data>
+  <data name="Wu_HelperFailed" xml:space="preserve"><value>No se pudo iniciar el instalador.</value></data>
+  <data name="Wu_HelperNoResult" xml:space="preserve"><value>El instalador terminó sin informar resultado (código {0}).</value></data>
+  <data name="Wu_NoAdmin" xml:space="preserve"><value>No se dio permiso de administrador.</value></data>
+  <data name="Wu_NoLongerPending" xml:space="preserve"><value>Las actualizaciones marcadas ya no están pendientes.</value></data>
+  <data name="Wu_NoTitle" xml:space="preserve"><value>(sin título)</value></data>
+  <data name="Wu_NoValid" xml:space="preserve"><value>No hay actualizaciones válidas que instalar.</value></data>
+  <data name="Wu_NotAvailableEx" xml:space="preserve"><value>No disponible ({0})</value></data>
+  <data name="Wu_OnlyWindows" xml:space="preserve"><value>Solo disponible en Windows.</value></data>
+  <data name="Wu_SessionFailed" xml:space="preserve"><value>No se pudo iniciar la sesión de Windows Update.</value></data>
+  <data name="Wu_UpTo" xml:space="preserve"><value>hasta {0}</value></data>
+  <data name="Wu_Variable" xml:space="preserve"><value>variable</value></data>
+</root>

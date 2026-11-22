@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Updates;
 using PulsoWin.Presentation.Services;
+using PulsoWin.Core.Localization;
 
 namespace PulsoWin.Presentation.ViewModels;
 
@@ -37,7 +38,7 @@ public sealed partial class UpdatesViewModel(
     }
 
     [ObservableProperty]
-    private string _summary = "Pulsa «Buscar actualizaciones». PulsoWin revisa programas y Windows en segundo plano, sin instalar nada todavía. Para marcar varias: Ctrl o Shift + clic y barra espaciadora, o clic derecho.";
+    private string _summary = L.T("Upd_Intro");
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SearchCommand), nameof(ProceedCommand), nameof(SelectAllCommand))]
@@ -53,8 +54,8 @@ public sealed partial class UpdatesViewModel(
     private async Task SearchAsync()
     {
         IsBusy = true;
-        BusyLabel = "BUSCANDO…";
-        status.Message = "Buscando actualizaciones de programas y de Windows… (solo lectura; puede tardar un minuto)";
+        BusyLabel = L.T("Busy_Searching");
+        status.Message = L.T("Upd_Searching");
         try
         {
             var wingetTask = winget.ListUpgradesAsync();
@@ -72,17 +73,17 @@ public sealed partial class UpdatesViewModel(
             var programCount = Items.Count(i => i.Kind == UpdateKind.Program);
             var windowsCount = Items.Count(i => i.Kind == UpdateKind.Windows);
             Summary = Items.Count == 0
-                ? "Todo al día: no hay actualizaciones pendientes."
-                : $"{windowsCount} de Windows y {programCount} de programas pendientes. Marca las que quieras y pulsa «Proceder».";
+                ? L.T("Upd_AllUpToDate")
+                : L.F("Upd_Found", windowsCount, programCount);
             var notes = new List<string>();
             if (!programs.IsAvailable) notes.Add("winget: " + programs.Error);
             if (!windows.IsAvailable) notes.Add("Windows Update: " + windows.Error);
             if (notes.Count > 0) Summary += "  (" + string.Join(" · ", notes) + ")";
-            status.Message = "Búsqueda terminada.";
+            status.Message = L.T("Upd_SearchDone");
         }
         catch (Exception ex)
         {
-            status.Message = "La búsqueda de actualizaciones falló: " + ex.Message;
+            status.Message = L.F("Upd_SearchFailed", ex.Message);
         }
         finally
         {
@@ -110,7 +111,7 @@ public sealed partial class UpdatesViewModel(
         var selected = Items.Where(i => i.IsSelected).ToList();
         if (selected.Count == 0)
         {
-            status.Message = "Marca al menos una actualización (o usa «Marcar todo»).";
+            status.Message = L.T("Upd_SelectOne");
             return;
         }
 
@@ -118,20 +119,20 @@ public sealed partial class UpdatesViewModel(
         var programs = selected.Where(i => i.Kind == UpdateKind.Program).ToList();
         var preview = string.Join(Environment.NewLine, selected.Take(10).Select(i =>
             i.Kind == UpdateKind.Windows ? $"• Windows: {i.Name}" : $"• {i.Name}: {i.CurrentVersion} → {i.NewVersion}"));
-        if (selected.Count > 10) preview += $"{Environment.NewLine}… y {selected.Count - 10} más.";
-        var message = $"Se instalarán {selected.Count} actualización(es), aceptando sus términos de licencia:\n\n{preview}\n\n"
-                      + (windows.Count > 0 ? "Windows pedirá UNA vez permiso de administrador para las de Windows.\n" : "")
-                      + (programs.Count > 0 ? "Algunos programas pueden pedir su propio permiso.\n" : "")
-                      + "Puede tardar varios minutos. ¿Continuar?";
-        if (!dialogs.Confirm("Confirmar actualizaciones", message))
+        if (selected.Count > 10) preview += Environment.NewLine + L.F("Upd_AndMore", selected.Count - 10);
+        var message = L.F("Upd_Confirm_Head", selected.Count, preview)
+                      + (windows.Count > 0 ? L.T("Upd_Confirm_Windows") : "")
+                      + (programs.Count > 0 ? L.T("Upd_Confirm_Programs") : "")
+                      + L.T("Upd_Confirm_End");
+        if (!dialogs.Confirm(L.T("Upd_ConfirmTitle"), message))
         {
-            status.Message = "Actualización cancelada. No se instaló nada.";
+            status.Message = L.T("Upd_Cancelled");
             return;
         }
 
         IsBusy = true;
-        BusyLabel = "ACTUALIZANDO…";
-        var log = new List<string> { $"PulsoWin · actualizaciones del {DateTime.Now.ToString("F", CultureInfo.CurrentCulture)}", "" };
+        BusyLabel = L.T("Busy_Updating");
+        var log = new List<string> { L.F("Log_UpdatesHeader", DateTime.Now.ToString("F", CultureInfo.CurrentCulture)), "" };
         var ok = 0;
         var failed = 0;
         var reboot = false;
@@ -139,12 +140,12 @@ public sealed partial class UpdatesViewModel(
         {
             if (windows.Count > 0)
             {
-                foreach (var row in windows) row.Status = "Descargando e instalando…";
-                status.Message = $"Instalando {windows.Count} actualización(es) de Windows… acepta el permiso de administrador si aparece.";
+                foreach (var row in windows) row.Status = L.T("Upd_RowInstalling");
+                status.Message = L.F("Upd_InstallingWindows", windows.Count);
                 var result = await installWindowsUpdates(windows.Select(w => w.Id).ToList());
                 if (result.Error is not null)
                 {
-                    foreach (var row in windows) row.Status = result.Cancelled ? "Cancelado (sin permiso)" : "Error: " + result.Error;
+                    foreach (var row in windows) row.Status = result.Cancelled ? L.T("Upd_RowCancelled") : L.F("Common_Error", result.Error);
                     failed += windows.Count;
                     log.Add($"[windows] {(result.Cancelled ? "cancelado" : "error")}: {result.Error}");
                 }
@@ -155,7 +156,9 @@ public sealed partial class UpdatesViewModel(
                     {
                         var item = result.Items.FirstOrDefault(r => string.Equals(r.UpdateId, row.Id, StringComparison.OrdinalIgnoreCase));
                         var success = item?.Succeeded == true;
-                        row.Status = success ? (reboot ? "Instalada · requiere reiniciar" : "Instalada") : $"No se instaló (código {item?.ResultCode ?? -1})";
+                        row.Status = success
+                            ? (reboot ? L.T("Upd_RowInstalledReboot") : L.T("Upd_RowInstalled"))
+                            : L.F("Upd_RowNotInstalled", item?.ResultCode ?? -1);
                         if (success) { ok++; row.IsSelected = false; } else failed++;
                         log.Add($"[windows {row.NewVersion}] {(success ? "OK" : "FAIL")} · {row.Name}");
                     }
@@ -164,11 +167,11 @@ public sealed partial class UpdatesViewModel(
 
             foreach (var row in programs)
             {
-                row.Status = "Actualizando…";
-                status.Message = $"Actualizando {row.Name}…";
+                row.Status = L.T("Upd_RowUpdating");
+                status.Message = L.F("Upd_Updating", row.Name);
                 var res = await winget.UpgradeAsync(row.Id);
-                if (res.Succeeded) { ok++; row.Status = "Actualizado"; row.IsSelected = false; }
-                else { failed++; row.Status = "Error: " + res.Summary; }
+                if (res.Succeeded) { ok++; row.Status = L.T("Upd_RowUpdated"); row.IsSelected = false; }
+                else { failed++; row.Status = L.F("Common_Error", res.Summary); }
                 log.Add($"[{row.Id}] {(res.Succeeded ? "OK" : "FAIL")} (exit {res.ExitCode}) · {res.Summary}");
             }
 
@@ -176,15 +179,15 @@ public sealed partial class UpdatesViewModel(
             try { logPath = CleanLog.Write(dataDir, log); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
-                logPath = "(no se pudo escribir el registro: " + ex.Message + ")";
+                logPath = L.F("Log_WriteFailed", ex.Message);
             }
-            Summary = $"Listo: {ok} instalada(s), {failed} con error." + (reboot ? " Reinicia el equipo para terminar de aplicar las de Windows." : "");
-            status.Message = $"Actualización terminada. Registro: {logPath}";
+            Summary = L.F("Upd_Done", ok, failed) + (reboot ? L.T("Upd_DoneReboot") : "");
+            status.Message = L.F("Upd_Finished", logPath);
         }
         catch (Exception ex)
         {
-            foreach (var row in selected.Where(r => r.Status.EndsWith('…'))) row.Status = "Interrumpido";
-            status.Message = $"La actualización se interrumpió ({ok} OK y {failed} con error hasta ese momento): {ex.Message}";
+            foreach (var row in selected.Where(r => r.Status.EndsWith('…'))) row.Status = L.T("Upd_RowInterrupted");
+            status.Message = L.F("Upd_Interrupted", ok, failed, ex.Message);
         }
         finally
         {

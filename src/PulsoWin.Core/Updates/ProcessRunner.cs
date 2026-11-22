@@ -53,7 +53,7 @@ public sealed class ProcessRunner : IProcessRunner
         {
             TryKill(process);
             return new ProcessResult(-1, await SafeRead(stdoutTask).ConfigureAwait(false),
-                "Tiempo de espera agotado.", TimedOut: true);
+                Localization.L.T("Common_Timeout"), TimedOut: true);
         }
         catch (OperationCanceledException)
         {

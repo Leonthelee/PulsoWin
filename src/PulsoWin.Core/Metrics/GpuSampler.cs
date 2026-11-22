@@ -24,7 +24,7 @@ public sealed class GpuSampler : IDisposable
             return new GpuStatus(nvidia.Name, nvidia.UsagePercent, nvidia.TemperatureC, "NVML");
 
         var usage = GpuEngineCounters.Total(_counters.Sample()) ?? (_counters.IsAvailable ? 0 : null);
-        return new GpuStatus(nvidia?.Name, usage, nvidia?.TemperatureC, "Contadores de Windows");
+        return new GpuStatus(nvidia?.Name, usage, nvidia?.TemperatureC, Localization.L.T("Gpu_WindowsCounters"));
     }
 
     public void Dispose() => _nvml.Dispose();

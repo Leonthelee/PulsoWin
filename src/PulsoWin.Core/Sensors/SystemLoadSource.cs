@@ -8,7 +8,7 @@ public sealed class SystemLoadSource : ISensorSource
 {
     private readonly Metrics.CpuSampler _cpu = new();
 
-    public string Name => "Sistema";
+    public string Name => Localization.L.T("Sensor_System");
 
     public IReadOnlyList<SensorReading> Read()
     {
@@ -16,10 +16,10 @@ public sealed class SystemLoadSource : ISensorSource
         var ram = MemoryInfo.Current();
         return
         [
-            new SensorReading(Name, "CPU · uso", cpu, "%",
-                cpu is null ? "se calcula a partir de la segunda lectura" : null),
-            new SensorReading(Name, "RAM · en uso", ram?.LoadPercent, "%",
-                ram is { } m ? $"{Common.Bytes.Format((long)(m.TotalBytes - m.AvailableBytes))} de {Common.Bytes.Format((long)m.TotalBytes)}" : null),
+            new SensorReading(Name, Localization.L.F("Sensor_Usage", "CPU"), cpu, "%",
+                cpu is null ? Localization.L.T("Sensor_CpuSecondReading") : null),
+            new SensorReading(Name, Localization.L.T("Sensor_RamInUse"), ram?.LoadPercent, "%",
+                ram is { } m ? Localization.L.F("Common_XofY", Common.Bytes.Format((long)(m.TotalBytes - m.AvailableBytes)), Common.Bytes.Format((long)m.TotalBytes)) : null),
         ];
     }
 

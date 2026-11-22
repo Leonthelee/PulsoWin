@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![.NET 10.0 LTS](https://img.shields.io/badge/.NET-10.0%20LTS-512BD4.svg?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![WPF · MVVM](https://img.shields.io/badge/UI-WPF%20%C2%B7%20MVVM%20Ne%C3%B3n%20Retro-00E5FF.svg)](#-arquitectura-y-flujos-de-ejecución)
-[![Tests 119/119](https://img.shields.io/badge/Tests-119%2F119%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
+[![Tests 136/136](https://img.shields.io/badge/Tests-136%2F136%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
 [![Zero Kernel Drivers](https://img.shields.io/badge/Drivers-Zero%20Kernel%20Drivers-success.svg)](#-decisiones-de-diseño)
 [![Deterministic & AOT-Ready](https://img.shields.io/badge/Build-Deterministic%20%C2%B7%20AOT--Safe-orange.svg)](#-estándares-de-ingeniería-y-trazabilidad)
 
@@ -25,7 +25,7 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.3.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **119 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.3.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **136 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
 
 > 🔐 **Para ver las opciones de red por proceso, PulsoWin debe ejecutarse como Administrador.**
 > Al abrir, la app **pide permiso de administrador** (aviso UAC de Windows). Con él, la pestaña **RED** y el Modo Gadget
@@ -71,6 +71,11 @@ Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para q
 - **5 diales con aguja animada** (suavizada, se refrescan cada 1 s): **Red** (velocidad con escala automática + total de la sesión), **CPU**, **RAM** (con `X.X / Y.Y GB`), **GPU** (uso) y **Temp GPU** (°C). Arco verde → amarillo (&gt;70) → rojo (&gt;85).
 - Sin bordes, translúcida, fuera de la barra de tareas, arrastrable, **siempre visible** (📌) e ícono en la bandeja del sistema. Doble clic o **⤢** vuelve a la app completa.
 - **Sin drivers de kernel ni temperatura de CPU** (no choca con antitrampas como Vanguard): CPU con `GetSystemTimes`, RAM con `GlobalMemoryStatusEx`, GPU con NVML (driver normal de NVIDIA) o los contadores de Windows.
+
+### 7. Idiomas: español e inglés 🌐
+- Al abrir, PulsoWin usa el **idioma de Windows**: español si Windows está en español; inglés en cualquier otro caso.
+- El botón **«🌐 EN» / «🌐 ES»** de la cabecera cambia al otro idioma y ofrece reiniciar la app para aplicarlo. La elección se recuerda.
+- **¿Quieres sumar tu idioma?** Copia `src/PulsoWin.Core/Localization/Texts.en.resx` como `Texts.xx.resx` (por ejemplo `Texts.pt.resx`), traduce los valores sin tocar las claves ni los marcadores `{0}`, y agrega el código a `L.Supported`. Las pruebas avisan si falta un texto o cambia un marcador.
 
 ---
 
@@ -167,11 +172,11 @@ PulsoWin.slnx
 Directory.Build.props             versión, builds reproducibles, strip PDB en Release y firma AssemblyMetadata
 global.json                       SDK .NET 10.0.100 (rollForward: latestFeature)
 src/
-├── PulsoWin.Core/                motor: Cleaning, Sensors, Updates, Common (0 dependencia de UI)
+├── PulsoWin.Core/                motor: Cleaning, Sensors, Updates, Common, Localization (textos es/en; 0 dependencia de UI)
 ├── PulsoWin.Presentation/        ViewModels MVVM y servicios desacoplados de WPF
 └── PulsoWin.App/                 front WPF, tema Neón retro, Assets/pulsowin.ico y auxiliar elevado
 tests/
-└── PulsoWin.Tests/               suite xUnit (119 pruebas unitarias y de ViewModels)
+└── PulsoWin.Tests/               suite xUnit (136 pruebas: motor, ViewModels e idiomas)
 tools/
 └── icon.cs                       generador reproducible del ícono multi-resolución
 installer/
@@ -186,7 +191,7 @@ installer/
 Requisito: [SDK de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) (LTS). .NET 8 dejó de tener soporte en noviembre de 2026.
 
 ```powershell
-# 1. Ejecutar toda la suite de pruebas (119/119 en verde)
+# 1. Ejecutar toda la suite de pruebas (136/136 en verde)
 dotnet test --nologo
 
 # 2. Compilar en Release tratando advertencias como errores (sin rutas locales en RSDS)
@@ -236,7 +241,7 @@ PulsoWin **no tiene telemetría** ni envía datos de uso, del equipo o de la red
 - **Buscar o instalar actualizaciones:** usa `winget` y el Agente de Windows Update, que hablan con los servidores de Microsoft según la política de privacidad de Microsoft.
 - **Perfil del autor en el huevo de pascua:** solo se abre si haces clic en él.
 
-El monitor de red y el visor de hardware leen datos del propio equipo y no los guardan ni los envían. PulsoWin solo guarda localmente cuántas veces se abrió (un número en `%LOCALAPPDATA%\PulsoWin\usos.txt`), para su huevo de pascua.
+El monitor de red y el visor de hardware leen datos del propio equipo y no los guardan ni los envían. PulsoWin solo guarda localmente cuántas veces se abrió (un número en `%LOCALAPPDATA%\PulsoWin\usos.txt`), para su huevo de pascua, y el idioma elegido (`idioma.txt`, en la misma carpeta).
 
 ---
 
