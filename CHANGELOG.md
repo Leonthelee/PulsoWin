@@ -8,8 +8,10 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 ### Agregado
 - **Compilación en GitHub Actions** (`.github/workflows/release.yml`): cada push compila sin advertencias, corre las
   pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
-- **Firma con SignPath Foundation**, lista para activarse con el token: primero se firman `PulsoWin.exe` y las DLL
-  propias, después se arma y firma el MSI, y los `.sha256` se calculan al final. Guía en `docs/firma-signpath.md`.
+
+### Cambiado
+- **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
+  El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
 
 ## [0.4.0] — 2026-11-21
 

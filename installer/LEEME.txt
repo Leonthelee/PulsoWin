@@ -14,7 +14,7 @@ Prefieres instalarlo? Usa PulsoWin-{{VERSION}}-x64.msi (crea acceso en el menu I
 desde Configuracion > Aplicaciones; reemplaza la version anterior).
 
 Si Windows muestra "Windows protegio su PC": pulsa "Mas informacion" y "Ejecutar de todas formas"
-(solo si esta copia no tiene firma digital).
+(PulsoWin no tiene firma digital).
 
 English: unzip, open PulsoWin.exe, accept the administrator prompt for per-process network data
 (or run "PulsoWin.exe --sin-admin"). The app opens in English when Windows is not in Spanish;

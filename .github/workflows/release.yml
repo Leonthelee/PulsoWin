@@ -1,19 +1,12 @@
 # PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 #
-# Compila, prueba y empaqueta PulsoWin en un runner de GitHub (requisito de SignPath Foundation).
+# Compila, prueba y empaqueta PulsoWin en un runner de GitHub: el paquete sale del código público, no de un equipo local.
 #
-#   - Cualquier push o pull request: compila sin advertencias, corre las pruebas y deja el zip y el MSI SIN firma
-#     como artefactos del workflow.
-#   - Etiqueta vX.Y.Z: firma (si SignPath está configurado) y crea un BORRADOR de release con los archivos.
-#     Publicarlo es siempre una decisión manual.
+#   - Cualquier push o pull request: compila sin advertencias, corre las pruebas y deja el zip y el MSI como
+#     artefactos del workflow.
+#   - Etiqueta vX.Y.Z: además crea un BORRADOR de release con los archivos. Publicarlo es siempre una decisión manual.
 #
-# Orden de la firma (importa por Smart App Control, error 0x800711C7):
-#   1. se firman PulsoWin.exe y las DLL propias (artefacto «app»);
-#   2. el MSI se arma con esos binarios ya firmados y después se firma el MSI (artefacto «msi»);
-#   3. los .sha256 se calculan al final, porque firmar cambia el hash.
-#
-# La firma corre solo en etiquetas v* y cuando existen el secreto SIGNPATH_API_TOKEN y la variable SIGNPATH_ORGANIZATION_ID.
-# Configuración de SignPath: ver docs/firma-signpath.md.
+# Los binarios NO tienen firma digital (sin certificado de firma de código). Cada archivo lleva su .sha256.
 
 name: Build y release
 
@@ -34,20 +27,14 @@ concurrency:
 jobs:
   build:
     runs-on: windows-latest
-    # Dos solicitudes de firma de hasta 40 min cada una (incluye la aprobación manual) + compilación y empaquetado.
-    timeout-minutes: 100
+    timeout-minutes: 30
     permissions:
       contents: read
-      actions: read   # SignPath descarga los artefactos de este workflow
     env:
       DOTNET_NOLOGO: 'true'
       DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
-      # Solo se firma al subir una etiqueta de versión: las ramas y los pull requests compilan sin firma, rápido,
-      # y sus pasos nunca reciben el token. (Protege las etiquetas v* en GitHub: ver docs/firma-signpath.md.)
-      SIGN: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
     outputs:
       version: ${{ steps.version.outputs.version }}
-      signed: ${{ env.SIGN }}
     defaults:
       run:
         shell: pwsh
@@ -68,7 +55,7 @@ jobs:
             throw "La etiqueta $env:GITHUB_REF_NAME no coincide con <Version>$version</Version> de Directory.Build.props."
           }
           "version=$version" >> $env:GITHUB_OUTPUT
-          "Versión $version · firma: $env:SIGN"
+          "Versión $version"
 
       - name: Compilar sin advertencias
         run: dotnet build PulsoWin.slnx -c Release --no-incremental -warnaserror
@@ -81,86 +68,20 @@ jobs:
           dotnet publish src/PulsoWin.App -c Release -r win-x64 --self-contained true
           -p:DebugType=none -o artifacts/publish/app
 
-      # ---------- 1. Firma de los binarios propios (antes del MSI) ----------
-      - name: Subir binarios sin firmar
-        id: upload-app
-        if: env.SIGN == 'true'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: app-sin-firmar
-          path: artifacts/publish/app/
-          if-no-files-found: error
-          retention-days: 3
-
-      - name: Firmar binarios (SignPath)
-        if: env.SIGN == 'true'
-        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3.2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'PulsoWin' }}
-          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
-          artifact-configuration-slug: app
-          github-artifact-id: ${{ steps.upload-app.outputs.artifact-id }}
-          wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 2400
-          output-artifact-directory: artifacts/signed/app
-
-      - name: Elegir binarios para empaquetar
-        id: bin
-        run: |
-          $dir = if ($env:SIGN -eq 'true') { 'artifacts/signed/app' } else { 'artifacts/publish/app' }
-          $dir = (Resolve-Path $dir).Path
-          "dir=$dir" >> $env:GITHUB_OUTPUT
-          if ($env:SIGN -eq 'true') {
-            # Si un binario propio quedó sin firma, el release no sirve contra Smart App Control: se detiene aquí.
-            $own = Get-ChildItem $dir -Recurse -Include 'PulsoWin.exe', 'PulsoWin*.dll'
-            $bad = $own | Where-Object { (Get-AuthenticodeSignature $_.FullName).Status -ne 'Valid' }
-            if (-not $own -or $bad) { throw "Sin firma válida: $($bad.Name -join ', ')" }
-            $own | ForEach-Object { "{0}: {1}" -f $_.Name, (Get-AuthenticodeSignature $_.FullName).SignerCertificate.Subject }
-          }
-
-      # ---------- 2. MSI con los binarios ya firmados, y luego firma del MSI ----------
       - name: Armar MSI
         run: >
           dotnet build installer/PulsoWin.Installer.wixproj -c Release
           "-p:Version=${{ steps.version.outputs.version }}"
-          "-p:PublishDir=${{ steps.bin.outputs.dir }}"
+          "-p:PublishDir=${{ github.workspace }}/artifacts/publish/app"
           -o artifacts/msi
 
-      - name: Subir MSI sin firmar
-        id: upload-msi
-        if: env.SIGN == 'true'
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: msi-sin-firmar
-          path: artifacts/msi/PulsoWin-${{ steps.version.outputs.version }}-x64.msi
-          if-no-files-found: error
-          retention-days: 3
-
-      - name: Firmar MSI (SignPath)
-        if: env.SIGN == 'true'
-        uses: signpath/github-action-submit-signing-request@a2c5b60d9c75f073142b653c354b632eedce097b # v3.2
-        with:
-          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
-          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
-          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG || 'PulsoWin' }}
-          signing-policy-slug: ${{ vars.SIGNPATH_POLICY_SLUG || 'release-signing' }}
-          artifact-configuration-slug: msi
-          github-artifact-id: ${{ steps.upload-msi.outputs.artifact-id }}
-          wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 2400
-          output-artifact-directory: artifacts/signed/msi
-
-      # ---------- 3. Zip portable, hashes (al final) ----------
       - name: Zip portable y SHA-256
         env:
           VERSION: ${{ steps.version.outputs.version }}
-          BIN: ${{ steps.bin.outputs.dir }}
+          BIN: artifacts/publish/app
         run: |
           $out = New-Item -ItemType Directory -Force artifacts/release
-          $msi = if ($env:SIGN -eq 'true') { "artifacts/signed/msi/PulsoWin-$env:VERSION-x64.msi" } else { "artifacts/msi/PulsoWin-$env:VERSION-x64.msi" }
-          Copy-Item $msi $out
+          Copy-Item "artifacts/msi/PulsoWin-$env:VERSION-x64.msi" $out
 
           $stage = Join-Path $env:RUNNER_TEMP "PulsoWin-$env:VERSION"
           Copy-Item $env:BIN $stage -Recurse
@@ -214,7 +135,6 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build.outputs.version }}
-          SIGNED: ${{ needs.build.outputs.signed }}
         run: |
           # Las 0.x son versiones preliminares del proyecto; desde la 1.0.0 se publican como estables.
           case "$VERSION" in 0.*) pre="--prerelease" ;; *) pre="" ;; esac
@@ -229,7 +149,7 @@ jobs:
             exit 0
           fi
 
-          if [ "$SIGNED" = "true" ]; then firma="Binarios y MSI firmados con SignPath Foundation."; else firma="⚠️ Compilación SIN firma digital."; fi
+          firma="⚠️ Compilación SIN firma digital: verifica los .sha256."
           printf 'Borrador generado por GitHub Actions (%s). %s\n\nCompleta las notas antes de publicar. Historial: [CHANGELOG](https://github.com/%s/blob/main/CHANGELOG.md).\n' \
             "$GITHUB_SHA" "$firma" "$GITHUB_REPOSITORY" > notas.md
           gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" \
