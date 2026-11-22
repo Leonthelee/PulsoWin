@@ -25,13 +25,12 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **136 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **155 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
 
-> 🔐 **Para ver las opciones de red por proceso, PulsoWin debe ejecutarse como Administrador.**
-> Al abrir, la app **pide permiso de administrador** (aviso UAC de Windows). Con él, la pestaña **RED** y el Modo Gadget
-> muestran el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión) vía ETW.
-> Si rechazas el aviso, PulsoWin abre igual en **modo usuario estándar**: la red se muestra **por interfaz**
-> (Ethernet, Wi-Fi…) y un aviso lo indica. Para no ver el aviso al abrir: `PulsoWin.exe --sin-admin`.
+> 🔐 **PulsoWin abre siempre sin administrador.** La red se ve **por interfaz** (Ethernet, Wi-Fi…).
+> Para ver el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión), pulsa
+> **«🔐 Ver por proceso»** en la pestaña **RED**. Windows pide permiso de administrador **solo para un proceso auxiliar**
+> que mide la red con ETW y le pasa las cifras a la app. PulsoWin sigue sin administrador.
 - **Qué no hace (a propósito):** no promete más FPS, no «optimiza» la RAM y no limpia el registro. Borrar cachés libera espacio, pero no acelera un PC sano; la caché de shaders, de hecho, conviene dejarla (viene desactivada por defecto).
 
 ---
@@ -61,10 +60,15 @@ Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para q
   - Parches de Windows: proceso auxiliar acotado (`ElevatedUpdates` / `WindowsUpdateInstaller`) que solicita **un** permiso UAC y solo acepta identificadores con formato GUID. Avisa si requiere reinicio; nunca reinicia solo.
 - Cada lote de actualización queda auditado en `%LOCALAPPDATA%\PulsoWin\logs`.
 
-### 5. Red (tráfico en vivo, Top 10) — por proceso requiere Administrador
+### 5. Red (tráfico en vivo, Top 10) — por proceso, con un auxiliar elevado
 - **«Aquí te muestro tu tráfico de red actual (los primeros 10)»:** se refresca **cada 1 s**, ordenado por descarga + subida, con PID, proceso, descarga y subida (KB/s o MB/s) y total de la sesión (B/KB/MB/GB, base 1024).
-- **Como Administrador:** ETW del kernel (`TraceEvent`, sesión propia con `StopOnDispose`), bytes exactos **por proceso**. La sesión se cierra al salir: no quedan sesiones del kernel huérfanas.
-- **Sin Administrador:** tráfico real **por interfaz** activa (sin loopback ni las copias de filtros del driver) y el aviso «Modo usuario estándar…». Nunca falla por falta de permisos.
+- **Al abrir:** tráfico real **por interfaz** activa (sin loopback ni las copias de filtros del driver). No pide permisos.
+- **«🔐 Ver por proceso»:** lanza `PulsoWin.exe --net-helper`, un proceso auxiliar elevado sin ventana.
+  - Abre ETW del kernel (`TraceEvent`, sesión propia con `StopOnDispose`) y mide los bytes exactos **por proceso**.
+  - Solo envía números (PID y bytes) por una tubería con nombre aleatorio, a la que solo accede tu usuario. No recibe nada de la app.
+  - Solo trabaja para su propio `PulsoWin.exe`, y termina al cerrar la app: no quedan sesiones del kernel huérfanas.
+- **Si rechazas el aviso:** sigue la vista por interfaz y un aviso lo explica. Nunca falla por falta de permisos.
+- Si abres PulsoWin como administrador por tu cuenta, mide por proceso directamente, sin auxiliar.
 
 ### 6. Modo Gadget (tablero flotante)
 - Botón **«◔ Modo Gadget»** en la cabecera: oculta la app completa y muestra una ventana flotante **sin detener el monitoreo**.
@@ -153,7 +157,8 @@ flowchart TD
 
 | Decisión | Por qué |
 |---|---|
-| Pide administrador al abrir, pero no lo exige | El manifiesto sigue en `asInvoker`: la app se relanza elevada solo si aceptas el aviso (necesario para la red por proceso con ETW). Si lo rechazas, abre igual en modo estándar; `--sin-admin` se salta el aviso. |
+| Nunca se eleva la app entera | Manifiesto `asInvoker` (requisito 9.2 de Windows). Lo que necesita administrador va en procesos auxiliares acotados, que se piden solo al usar esa función: instalar actualizaciones de Windows y medir la red por proceso. |
+| DPI declarado en el manifiesto | `PerMonitorV2` (requisito 1.3): nítido en pantallas con escalado distinto, sin llamar a `SetProcessDPIAware`. |
 | Front y back separados (MVVM) | `Core` (lógica) ← `Presentation` (estado y comandos, testeable sin ventanas) ← `App` (vistas WPF). |
 | Sin driver de kernel en el MVP | WinRing0 está en la lista de drivers vulnerables (Defender lo detecta, CVE-2020-14979) y Windows 11 la aplica por defecto. |
 | Cookies: borrar filas por dominio, sin descifrar | El dominio se guarda en claro (`host_key` en Chromium, `host` en Firefox); el cifrado app-bound de Chrome no impide borrar. |

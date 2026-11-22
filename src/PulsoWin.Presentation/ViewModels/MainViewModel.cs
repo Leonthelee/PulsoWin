@@ -6,6 +6,7 @@ using CommunityToolkit.Mvvm.Input;
 using PulsoWin.Core.Cleaning;
 using PulsoWin.Core.Common;
 using PulsoWin.Core.Metrics;
+using PulsoWin.Core.Network;
 using PulsoWin.Core.Sensors;
 using PulsoWin.Core.Updates;
 using PulsoWin.Presentation.Services;
@@ -116,7 +117,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var clean = new CleanViewModel(RuleCatalog.LoadBuiltIn(), probe, dialogs, new WindowsRecycleBin(), status, dataDir, sources);
         var updates = new UpdatesViewModel(new WingetClient(), () => new WindowsUpdateClient().QueryPending(),
             installWindowsUpdates, dialogs, status, dataDir);
-        return new MainViewModel(clean, new HardwareViewModel(sources), updates, status, sources);
+        // Red por proceso: la pide la persona en la pestaña RED; la mide un auxiliar elevado, no la app.
+        var metrics = new MetricsViewModel(new SystemMetricsService(perProcessFactory: () => new ElevatedTrafficSource()));
+        return new MainViewModel(clean, new HardwareViewModel(sources), updates, status, sources, metrics);
     }
 
     public CleanViewModel Clean { get; }

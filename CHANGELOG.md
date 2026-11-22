@@ -10,6 +10,12 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
 
 ### Cambiado
+- **PulsoWin ya no pide administrador al abrir** (requisito 9.2 de la certificación de apps de escritorio de Windows).
+  La red abre por interfaz, y el botón «🔐 Ver por proceso» de la pestaña RED lanza un auxiliar elevado
+  (`--net-helper`) que solo mide la red con ETW y envía números (PID y bytes) por una tubería privada. Si se rechaza
+  el aviso, sigue la vista por interfaz. `--sin-admin` y `--elevado` ya no hacen falta.
+- **DPI por monitor** (`PerMonitorV2`) declarado en el manifiesto (requisito 1.3).
+- Pruebas: 155 (de 136). Incluyen la tubería real con un auxiliar simulado y la validez del manifiesto.
 - **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
   El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
 

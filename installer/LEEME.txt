@@ -3,9 +3,9 @@ PulsoWin {{VERSION}} - cleaner, hardware viewer and network monitor for Windows 
 
 1. Descomprime esta carpeta donde quieras (por ejemplo, en Documentos).
 2. Abre PulsoWin.exe. No necesita instalarse.
-3. Al abrir, Windows pide permiso de ADMINISTRADOR: es para ver el trafico de red POR PROCESO.
-   Si lo rechazas, PulsoWin abre igual en modo estandar (red por interfaz).
-   Para abrir sin ese aviso: PulsoWin.exe --sin-admin
+3. PulsoWin abre SIN pedir permiso de administrador (la red se ve por interfaz).
+   En la pestana RED, el boton "Ver por proceso" pide permiso de administrador solo para un
+   proceso auxiliar que mide la red por programa. Si lo rechazas, sigue la vista por interfaz.
 4. Pulsa START para analizar que se puede liberar (no borra nada hasta que confirmes).
    Boton "Modo Gadget": diales flotantes de Red, CPU, RAM, GPU y temperatura de GPU.
 5. Idioma: abre en el idioma de Windows (espanol o ingles). El boton "EN / ES" lo cambia.
@@ -16,8 +16,9 @@ desde Configuracion > Aplicaciones; reemplaza la version anterior).
 Si Windows muestra "Windows protegio su PC": pulsa "Mas informacion" y "Ejecutar de todas formas"
 (PulsoWin no tiene firma digital).
 
-English: unzip, open PulsoWin.exe, accept the administrator prompt for per-process network data
-(or run "PulsoWin.exe --sin-admin"). The app opens in English when Windows is not in Spanish;
+English: unzip and open PulsoWin.exe (it never asks for administrator at startup). In the NETWORK tab,
+"Per process" asks for administrator only for a helper that measures per-process traffic.
+The app opens in English when Windows is not in Spanish;
 the "EN / ES" button switches language.
 
 Drivers y BIOS: usa solo el soporte oficial de tu marca (Dell, Lenovo, HP, ASUS: enlaces en README.md).

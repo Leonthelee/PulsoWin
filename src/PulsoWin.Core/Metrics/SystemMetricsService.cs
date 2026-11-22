@@ -38,13 +38,34 @@ public sealed class SystemMetricsService(
     TimeProvider? time = null,
     Func<double?>? cpu = null,
     Func<MemoryInfo?>? memory = null,
-    Func<GpuStatus>? gpu = null)
+    Func<GpuStatus>? gpu = null,
+    Func<ITrafficSource>? perProcessFactory = null)
 {
     /// <summary>Cada cuánto se publica una foto: 1 s para que las agujas se vean casi en vivo.</summary>
     public static readonly TimeSpan DefaultInterval = TimeSpan.FromSeconds(1);
 
     public static string StandardUserNotice => Localization.L.T("Net_StandardNotice");
     public static string AdministratorNotice => Localization.L.T("Net_AdminNotice");
+    public static string HelperNotice => Localization.L.T("Net_HelperNotice");
+
+    /// <summary>
+    /// La red por proceso se puede pedir sin reiniciar: hay un auxiliar elevado disponible y la app no es administrador.
+    /// </summary>
+    public bool CanRequestPerProcess => perProcessFactory is not null && !_isAdministrator();
+
+    private TaskCompletionSource<bool>? _perProcessRequest;
+
+    /// <summary>
+    /// Pide la red por proceso con el auxiliar elevado (Windows muestra el aviso de administrador).
+    /// true si quedó activa; false si se rechazó, falló o no está disponible. Mientras se espera el aviso, las
+    /// métricas siguen llegando con la fuente anterior.
+    /// </summary>
+    public Task<bool> RequestPerProcessAsync()
+    {
+        if (!CanRequestPerProcess) return Task.FromResult(false);
+        var request = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        return (Interlocked.CompareExchange(ref _perProcessRequest, request, null) ?? request).Task;
+    }
 
     private readonly Func<bool> _isAdministrator = isAdministrator ?? IsRunningAsAdministrator;
     private readonly Func<ITrafficSource> _etwFactory = etwFactory ?? (() => new EtwTrafficSource());
@@ -73,9 +94,12 @@ public sealed class SystemMetricsService(
     {
         var isAdmin = _isAdministrator();
         var (source, notice) = await Task.Run(() => OpenNetworkSource(isAdmin), cancellationToken);
+        if (!isAdmin && perProcessFactory is not null) notice = Localization.L.T("Net_StandardNoticeAsk");
         using var gpuSampler = gpu is null ? new GpuSampler() : null;   // NVML se libera al terminar
         var readGpu = gpu ?? gpuSampler!.Sample;
-        using (source)
+        Task<(ITrafficSource? Source, string? Error)>? switching = null;
+        TaskCompletionSource<bool>? pending = null;
+        try
         {
             var calculator = new TrafficRateCalculator(top);
             var last = _time.GetTimestamp();
@@ -86,6 +110,32 @@ public sealed class SystemMetricsService(
             {
                 while (await timer.WaitForNextTickAsync(cancellationToken).ConfigureAwait(true))
                 {
+                    // ¿Se pidió la red por proceso? El aviso de administrador se espera aparte, sin frenar las métricas.
+                    if (switching is null && Interlocked.Exchange(ref _perProcessRequest, null) is { } request)
+                    {
+                        pending = request;
+                        switching = Task.Run(() => TryStart(perProcessFactory!));
+                    }
+                    if (switching is { IsCompleted: true })
+                    {
+                        var (elevated, error) = await switching.ConfigureAwait(true);
+                        switching = null;
+                        if (elevated is not null)
+                        {
+                            source.Dispose();
+                            source = elevated;
+                            notice = HelperNotice;
+                            calculator = new TrafficRateCalculator(top);
+                            calculator.Next(source.ReadCounters(), _interval);
+                        }
+                        else
+                        {
+                            notice = Localization.L.F("Net_HelperFailed", error ?? "");
+                        }
+                        pending!.TrySetResult(elevated is not null);
+                        pending = null;
+                    }
+
                     var (cpuNow, mem, counters, gpuNow) = await Task.Run(() => (_cpu(), _memory(), source.ReadCounters(), readGpu()),
                             cancellationToken)
                         .ConfigureAwait(true);
@@ -116,8 +166,32 @@ public sealed class SystemMetricsService(
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                // Cierre normal: el using libera la fuente de red (y detiene la sesión ETW).
+                // Cierre normal: el finally libera la fuente de red (y detiene la sesión ETW o el auxiliar).
             }
+        }
+        finally
+        {
+            source.Dispose();
+            pending?.TrySetResult(false);
+            Interlocked.Exchange(ref _perProcessRequest, null)?.TrySetResult(false);
+            // Si el aviso seguía abierto al cerrar, el auxiliar que llegue tarde se libera igual.
+            _ = switching?.ContinueWith(t => t.Result.Source?.Dispose(), TaskScheduler.Default);
+        }
+    }
+
+    private static (ITrafficSource? Source, string? Error) TryStart(Func<ITrafficSource> factory)
+    {
+        ITrafficSource? source = null;
+        try
+        {
+            source = factory();
+            source.Start();
+            return (source, null);
+        }
+        catch (Exception ex)
+        {
+            source?.Dispose();
+            return (null, ex.Message);
         }
     }
 

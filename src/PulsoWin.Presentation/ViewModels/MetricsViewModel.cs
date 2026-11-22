@@ -1,6 +1,7 @@
 // PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using PulsoWin.Core.Common;
 using PulsoWin.Core.Metrics;
 using PulsoWin.Core.Network;
@@ -50,6 +51,32 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
     [ObservableProperty] private bool _isPerProcess;
     [ObservableProperty] private string _modeText = "";
     [ObservableProperty] private string _notice = L.T("Net_Starting");
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowPerProcessButton))]
+    [NotifyCanExecuteChangedFor(nameof(RequestPerProcessCommand))]
+    private bool _isRequestingPerProcess;
+
+    /// <summary>
+    /// Botón «Ver por proceso»: solo cuando la red va por interfaz y existe el auxiliar elevado.
+    /// La app nunca se eleva entera; el permiso se pide aquí, al pulsarlo, y solo para medir la red.
+    /// </summary>
+    public bool ShowPerProcessButton => service.CanRequestPerProcess && !IsPerProcess;
+
+    [RelayCommand(CanExecute = nameof(CanRequestPerProcess))]
+    private async Task RequestPerProcessAsync()
+    {
+        IsRequestingPerProcess = true;
+        try
+        {
+            await service.RequestPerProcessAsync();
+        }
+        finally
+        {
+            IsRequestingPerProcess = false;
+        }
+    }
+
+    private bool CanRequestPerProcess() => ShowPerProcessButton && !IsRequestingPerProcess;
 
     /// <summary>Aguja del dial de red, 0..1 sobre la escala dinámica actual.</summary>
     public double NetNeedle => NetScaleMax <= 0 ? 0 : Math.Clamp(NetBytesPerSecond / NetScaleMax, 0, 1);
@@ -96,6 +123,8 @@ public sealed partial class MetricsViewModel(SystemMetricsService service) : Obs
 
         IsAdminMode = s.IsAdminMode;
         IsPerProcess = s.NetworkMode == NetworkMonitorMode.PerProcess;
+        OnPropertyChanged(nameof(ShowPerProcessButton));
+        RequestPerProcessCommand.NotifyCanExecuteChanged();
         ModeText = IsPerProcess ? L.T("Net_ModePerProcess") : L.T("Net_ModeInterface");
         Notice = s.NetworkNotice;
 
