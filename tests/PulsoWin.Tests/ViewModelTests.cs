@@ -290,6 +290,7 @@ public class ViewModelTests
         Assert.StartsWith("Daniel Elias Diaz Lepe", vm.Signature.Author);
         Assert.True(vm.Signature.HasSafeProfileLink);
         Assert.Contains("bienvenido colega", vm.Signature.HelloDev);
+        Assert.Equal("Co-designed with AI coding assistants (Claude & Gemini)", vm.Signature.CoDesign);   // firma oculta en el binario
 
         vm.CloseEasterEggCommand.Execute(null);
         Assert.False(vm.IsEasterEggOpen);

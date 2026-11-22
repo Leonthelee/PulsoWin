@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 namespace PulsoWin.Core.Sensors;
 
 /// <summary>Foto del equipo para comparar antes y después de limpiar.</summary>

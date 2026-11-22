@@ -3,6 +3,14 @@
 Formato basado en [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones con [SemVer](https://semver.org/lang/es/).
 Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub: son los puntos de retorno.
 
+## [Sin publicar]
+
+### Agregado
+- **Firma de co-diseño** «Co-designed with AI coding assistants (Claude & Gemini)»:
+  - **oculta:** `AssemblyMetadata` «CoDesign» incrustado en `PulsoWin.exe`, `PulsoWin.Core.dll` y `PulsoWin.Presentation.dll`; el huevo de pascua la lee de ahí;
+  - **visible:** encabezado en cada archivo `.cs` de `src/`, [AUTHORS.md](AUTHORS.md) y créditos del README.
+- README: secciones «Code signing policy» y «Privacidad».
+
 ## [0.3.0] — 2026-11-21
 
 > 🔐 **Para ver la red por proceso, PulsoWin debe ejecutarse como Administrador.** Desde esta versión la app

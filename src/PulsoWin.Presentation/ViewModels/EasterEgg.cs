@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Reflection;
 
 namespace PulsoWin.Presentation.ViewModels;
@@ -36,8 +37,11 @@ public sealed class KonamiCode
 /// (definidos una sola vez en Directory.Build.props), así el texto visible y el oculto en el binario
 /// nunca se desincronizan.
 /// </summary>
-public sealed record AuthorSignature(string Author, string Profile, string HelloDev)
+public sealed record AuthorSignature(string Author, string Profile, string HelloDev,
+    string CoDesign = AuthorSignature.DefaultCoDesign)
 {
+    public const string DefaultCoDesign = "Co-designed with AI coding assistants (Claude & Gemini)";
+
     public static AuthorSignature FromAssembly(Assembly assembly)
     {
         var meta = assembly.GetCustomAttributes<AssemblyMetadataAttribute>()
@@ -47,7 +51,8 @@ public sealed record AuthorSignature(string Author, string Profile, string Hello
         return new AuthorSignature(
             meta.GetValueOrDefault("Author", "PulsoWin"),
             meta.GetValueOrDefault("Profile", "https://github.com/Leonthelee/PulsoWin"),
-            meta.GetValueOrDefault("HelloDev", "Gracias por usar PulsoWin."));
+            meta.GetValueOrDefault("HelloDev", "Gracias por usar PulsoWin."),
+            meta.GetValueOrDefault("CoDesign", DefaultCoDesign));
     }
 
     /// <summary>Solo se abren enlaces https: el texto viene del binario, pero no se confía a ciegas.</summary>

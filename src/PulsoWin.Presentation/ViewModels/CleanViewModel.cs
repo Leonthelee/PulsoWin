@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Collections.ObjectModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;

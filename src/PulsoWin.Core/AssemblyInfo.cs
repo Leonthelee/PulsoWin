@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Runtime.InteropServices;
 
 // Las DLL nativas (nvml.dll, shell32, kernel32) solo se cargan desde System32,

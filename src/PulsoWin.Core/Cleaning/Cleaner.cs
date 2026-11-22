@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.IO.Enumeration;
 using PulsoWin.Core.Common;
 

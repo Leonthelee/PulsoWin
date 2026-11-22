@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using PulsoWin.Core.Sensors;
 
 namespace PulsoWin.Core.Metrics;

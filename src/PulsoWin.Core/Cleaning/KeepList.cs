@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 namespace PulsoWin.Core.Cleaning;
 
 /// <summary>Dominios cuyas cookies se conservan. "google.com" conserva también "mail.google.com".</summary>

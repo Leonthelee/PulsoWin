@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;

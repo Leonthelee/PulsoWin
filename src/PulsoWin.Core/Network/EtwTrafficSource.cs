@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using Microsoft.Diagnostics.Tracing.Parsers;

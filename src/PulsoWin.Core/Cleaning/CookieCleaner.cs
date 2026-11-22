@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using Microsoft.Data.Sqlite;
 using PulsoWin.Core.Common;
 

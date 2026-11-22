@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 namespace PulsoWin.Core.Network;
 
 /// <summary>Resultado de un intervalo: el top y los totales de TODO el tráfico (no solo del top).</summary>

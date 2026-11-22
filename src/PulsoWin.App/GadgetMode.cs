@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Windows;
 using PulsoWin.Presentation.ViewModels;
 using Forms = System.Windows.Forms;

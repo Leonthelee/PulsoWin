@@ -245,6 +245,8 @@ El monitor de red y el visor de hardware leen datos del propio equipo y no los g
 - **Autoría y dirección:** Daniel Elías Díaz Lepe ([@Leonthelee](https://github.com/Leonthelee))
 - **Co-desarrollo y revisión cruzada:** Claude (Opus 5.5 · Anthropic) y Antigravity Orquestador (Gemini 4 · Google)
 
+> *Co-designed with AI coding assistants (Claude & Gemini).* Ver [AUTHORS.md](AUTHORS.md).
+
 ---
 
 ## 📄 Licencia y avisos

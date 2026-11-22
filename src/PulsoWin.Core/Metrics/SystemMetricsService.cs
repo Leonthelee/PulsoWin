@@ -1,3 +1,4 @@
+// PulsoWin · MIT · Co-designed with AI coding assistants (Claude & Gemini)
 using System.Security.Principal;
 using PulsoWin.Core.Network;
 using PulsoWin.Core.Sensors;

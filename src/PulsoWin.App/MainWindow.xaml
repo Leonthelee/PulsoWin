@@ -450,7 +450,7 @@
                                    Foreground="{StaticResource Green}" LineHeight="20" />
                     </Border>
 
-                    <TextBlock Text="Co-desarrollo: Claude (Anthropic) y Antigravity (Google)." Style="{StaticResource Muted}"
+                    <TextBlock Text="{Binding Signature.CoDesign}" Style="{StaticResource Muted}" TextWrapping="Wrap"
                                Margin="0,14,0,18" />
                     <Button Style="{StaticResource PrimaryButton}" Content="Volver al juego  (Esc)" HorizontalAlignment="Center"
                             Command="{Binding CloseEasterEggCommand}" />
