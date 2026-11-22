@@ -2,16 +2,17 @@
 #
 # Compila, prueba y empaqueta PulsoWin en un runner de GitHub (requisito de SignPath Foundation).
 #
-#   - Cualquier push o pull request: compila sin advertencias, corre las pruebas y deja el zip y el MSI como
-#     artefactos del workflow (sin firma si no hay token de SignPath).
-#   - Etiqueta vX.Y.Z: además crea un BORRADOR de release con los archivos. Publicarlo es siempre una decisión manual.
+#   - Cualquier push o pull request: compila sin advertencias, corre las pruebas y deja el zip y el MSI SIN firma
+#     como artefactos del workflow.
+#   - Etiqueta vX.Y.Z: firma (si SignPath está configurado) y crea un BORRADOR de release con los archivos.
+#     Publicarlo es siempre una decisión manual.
 #
 # Orden de la firma (importa por Smart App Control, error 0x800711C7):
 #   1. se firman PulsoWin.exe y las DLL propias (artefacto «app»);
 #   2. el MSI se arma con esos binarios ya firmados y después se firma el MSI (artefacto «msi»);
 #   3. los .sha256 se calculan al final, porque firmar cambia el hash.
 #
-# La firma se activa sola cuando existe el secreto SIGNPATH_API_TOKEN y la variable SIGNPATH_ORGANIZATION_ID.
+# La firma corre solo en etiquetas v* y cuando existen el secreto SIGNPATH_API_TOKEN y la variable SIGNPATH_ORGANIZATION_ID.
 # Configuración de SignPath: ver docs/firma-signpath.md.
 
 name: Build y release
@@ -20,9 +21,7 @@ on:
   push:
     branches: ['**']
     tags: ['v*']
-    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -35,15 +34,17 @@ concurrency:
 jobs:
   build:
     runs-on: windows-latest
-    timeout-minutes: 45
+    # Dos solicitudes de firma de hasta 40 min cada una (incluye la aprobación manual) + compilación y empaquetado.
+    timeout-minutes: 100
     permissions:
       contents: read
       actions: read   # SignPath descarga los artefactos de este workflow
     env:
       DOTNET_NOLOGO: 'true'
       DOTNET_CLI_TELEMETRY_OPTOUT: 'true'
-      # Los pull requests de forks nunca reciben secretos: ahí la firma queda apagada.
-      SIGN: ${{ secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' && github.event_name != 'pull_request' }}
+      # Solo se firma al subir una etiqueta de versión: las ramas y los pull requests compilan sin firma, rápido,
+      # y sus pasos nunca reciben el token. (Protege las etiquetas v* en GitHub: ver docs/firma-signpath.md.)
+      SIGN: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v') && secrets.SIGNPATH_API_TOKEN != '' && vars.SIGNPATH_ORGANIZATION_ID != '' }}
     outputs:
       version: ${{ steps.version.outputs.version }}
       signed: ${{ env.SIGN }}
@@ -102,7 +103,7 @@ jobs:
           artifact-configuration-slug: app
           github-artifact-id: ${{ steps.upload-app.outputs.artifact-id }}
           wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 1800
+          wait-for-completion-timeout-in-seconds: 2400
           output-artifact-directory: artifacts/signed/app
 
       - name: Elegir binarios para empaquetar
@@ -148,7 +149,7 @@ jobs:
           artifact-configuration-slug: msi
           github-artifact-id: ${{ steps.upload-msi.outputs.artifact-id }}
           wait-for-completion: true
-          wait-for-completion-timeout-in-seconds: 1800
+          wait-for-completion-timeout-in-seconds: 2400
           output-artifact-directory: artifacts/signed/msi
 
       # ---------- 3. Zip portable, hashes (al final) ----------
@@ -184,7 +185,7 @@ jobs:
 
   draft-release:
     needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
       contents: write   # solo este job puede crear el borrador
@@ -198,14 +199,38 @@ jobs:
         working-directory: release
         run: sha256sum -c *.sha256
 
-      - name: Crear borrador de release (se publica a mano)
+      - name: La etiqueta sigue apuntando a este commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Si la etiqueta se movió durante la compilación, estos binarios ya no le corresponden.
+          actual=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_REF_NAME" --jq .sha)
+          if [ "$actual" != "$GITHUB_SHA" ]; then
+            echo "::error::$GITHUB_REF_NAME ahora apunta a $actual, no a $GITHUB_SHA (compilado aquí). No se crea el borrador."
+            exit 1
+          fi
+
+      - name: Crear o completar el borrador de release (se publica a mano)
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.build.outputs.version }}
           SIGNED: ${{ needs.build.outputs.signed }}
         run: |
+          # Las 0.x son versiones preliminares del proyecto; desde la 1.0.0 se publican como estables.
+          case "$VERSION" in 0.*) pre="--prerelease" ;; *) pre="" ;; esac
+
+          # Si una ejecución anterior dejó el borrador a medias, se completa en vez de fallar.
+          if draft=$(gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --json isDraft --jq .isDraft 2>/dev/null); then
+            if [ "$draft" != "true" ]; then
+              echo "::error::La release $GITHUB_REF_NAME ya está publicada: no se reemplazan sus archivos."
+              exit 1
+            fi
+            gh release upload "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" --clobber
+            exit 0
+          fi
+
           if [ "$SIGNED" = "true" ]; then firma="Binarios y MSI firmados con SignPath Foundation."; else firma="⚠️ Compilación SIN firma digital."; fi
           printf 'Borrador generado por GitHub Actions (%s). %s\n\nCompleta las notas antes de publicar. Historial: [CHANGELOG](https://github.com/%s/blob/main/CHANGELOG.md).\n' \
             "$GITHUB_SHA" "$firma" "$GITHUB_REPOSITORY" > notas.md
           gh release create "$GITHUB_REF_NAME" release/* --repo "$GITHUB_REPOSITORY" \
-            --draft --prerelease --verify-tag --title "PulsoWin $VERSION" --notes-file notas.md
+            --draft $pre --verify-tag --title "PulsoWin $VERSION" --notes-file notas.md

@@ -1,7 +1,9 @@
 # Firma de código con SignPath Foundation
 
 PulsoWin se compila y firma en GitHub Actions ([`.github/workflows/release.yml`](../.github/workflows/release.yml)).
-Mientras no exista el token de SignPath, el workflow igual compila, prueba y deja el zip y el MSI **sin firma**.
+
+- **Ramas y pull requests:** compilan, prueban y dejan el zip y el MSI **sin firma**. Esos pasos nunca reciben el token.
+- **Etiquetas `vX.Y.Z`:** se firma, si SignPath está configurado, y se crea el borrador de release.
 
 ## Por qué se firma en dos pasos
 
@@ -24,6 +26,10 @@ Solo se firman archivos de este proyecto. Las DLL de .NET ya vienen firmadas por
 | Variable | `SIGNPATH_ORGANIZATION_ID` | ID de la organización en SignPath |
 | Variable (opcional) | `SIGNPATH_PROJECT_SLUG` | por defecto `PulsoWin` |
 | Variable (opcional) | `SIGNPATH_POLICY_SLUG` | por defecto `release-signing` |
+
+**Recomendado en GitHub:** protege las etiquetas `v*` con una regla (Settings → Rules → Rulesets, objetivo «Tags»)
+para que solo tú puedas crearlas, moverlas o borrarlas. La firma depende de esas etiquetas. Además, SignPath pide
+aprobar a mano cada solicitud, así que nada se firma sin que lo veas.
 
 **En SignPath**, el proyecto necesita dos *artifact configurations* con estos slugs. Los artefactos de GitHub llegan
 como zip, por eso la raíz es `<zip-file>`.
@@ -72,3 +78,7 @@ revisa que cada `PulsoWin.exe` y `PulsoWin*.dll` tenga una firma válida antes d
 3. Con firma activa, SignPath puede pedir la aprobación manual de cada solicitud (la del `app` y la del `msi`).
 4. El workflow deja un **borrador** de release con los archivos y sus hashes verificados. Completa las notas y
    publícalo a mano.
+   - Las versiones 0.x se marcan como preliminares; desde la 1.0.0, como estables.
+   - Si la etiqueta se movió durante la compilación, no se crea el borrador.
+   - Si una ejecución anterior dejó el borrador a medias, al repetirla se completan los archivos. Una release ya
+     publicada nunca se toca.
