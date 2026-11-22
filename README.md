@@ -213,6 +213,33 @@ dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 "-
 
 ---
 
+<a id="code-signing-policy"></a>
+## 🔏 Code signing policy (política de firma de código)
+
+> **Estado:** solicitud enviada a SignPath Foundation, **en revisión**. Hasta que se apruebe, las versiones publicadas (≤ 0.3.0) **no están firmadas**.
+
+Cuando se apruebe: *Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).*
+
+- **Qué se firma:** solo `PulsoWin.exe`, las bibliotecas propias de PulsoWin y el instalador MSI, compilados desde este repositorio en GitHub Actions.
+- **Qué no se firma:** las bibliotecas de terceros incluidas en el paquete, que se distribuyen tal como las publica su autor.
+- **Roles:**
+  - *Autor y revisor:* [@Leonthelee](https://github.com/Leonthelee). Todo cambio propuesto por otra persona (pull request) lo revisa él antes de integrarse.
+  - *Aprobador de firmas:* [@Leonthelee](https://github.com/Leonthelee), que aprueba cada solicitud de firma de una versión.
+- **Seguridad:** las cuentas de GitHub y SignPath del equipo usan autenticación en dos pasos.
+
+<a id="privacidad"></a>
+## 🔒 Privacidad
+
+This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
+PulsoWin **no tiene telemetría** ni envía datos de uso, del equipo o de la red a ningún servidor. Solo se conecta a internet cuando tú lo pides:
+- **Buscar o instalar actualizaciones:** usa `winget` y el Agente de Windows Update, que hablan con los servidores de Microsoft según la política de privacidad de Microsoft.
+- **Perfil del autor en el huevo de pascua:** solo se abre si haces clic en él.
+
+El monitor de red y el visor de hardware leen datos del propio equipo y no los guardan ni los envían.
+
+---
+
 ## 👥 Créditos y desarrollo
 
 - **Autoría y dirección:** Daniel Elías Díaz Lepe ([@Leonthelee](https://github.com/Leonthelee))
@@ -226,6 +253,6 @@ dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.3.0 "-
 
 PulsoWin es un proyecto independiente, escrito desde cero. No está afiliado, patrocinado ni respaldado por Gen Digital, Piriform, CCleaner ni Speccy, que son marcas de sus respectivos dueños y se mencionan solo como referencia.
 
-Dependencias: `Microsoft.Data.Sqlite` y `System.Management` (MIT), `SQLitePCLRaw` (Apache-2.0); pruebas con `xUnit` (Apache-2.0).
+Dependencias: `CommunityToolkit.Mvvm`, `Microsoft.Diagnostics.Tracing.TraceEvent`, `Microsoft.Data.Sqlite`, `System.Diagnostics.PerformanceCounter` y `System.Management` (MIT), `SQLitePCLRaw` (Apache-2.0); pruebas con `xUnit` (Apache-2.0); instalador con WiX Toolset 5 (MS-RL).
 
 Historial de versiones y cómo volver atrás: [CHANGELOG.md](CHANGELOG.md).
