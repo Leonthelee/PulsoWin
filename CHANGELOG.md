@@ -5,9 +5,14 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
 
 ## [Sin publicar]
 
+## [0.4.1] — 2026-11-25
+
 ### Agregado
-- **Compilación en GitHub Actions** (`.github/workflows/release.yml`): cada push compila sin advertencias, corre las
-  pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
+- **Cierre seguro en 2 fases para *Startup Boost* (`BrowserCloser`):** al analizar, Chrome/Edge ocultos sin ventana ya no bloquean las reglas de caché ni cookies; tras confirmar la limpieza se cierran ordenadamente los procesos en segundo plano dentro de la sesión actual (`ProcessProbe.CurrentSessionId`) sin tocar ventanas visibles.
+- **Auto-ajuste de ventana principal (`WindowSizing`):** adapta dimensiones iniciales, mínimos seguros y centrado según el área útil del monitor y escala DPI (`SystemParameters.WorkArea`).
+- **Scripts de construcción e inspección MSI (`tools/build-msi.ps1`, `tools/inspect-msi.ps1`):** validan runtime mínimo, inventario de archivos, ausencia de `.pdb`, servicios y claves `Run` sin necesidad de instalar; `Package.wxs` habilita `AllowSameVersionUpgrades`.
+- **Documentación de seguridad y galería UI:** [SECURITY.md](SECURITY.md) bilingüe y 3 capturas sintéticas de interfaz en `docs/screenshots/`.
+- **Compilación en GitHub Actions** (`.github/workflows/release.yml`): cada push compila sin advertencias, corre las pruebas y genera el zip y el MSI. Con una etiqueta `vX.Y.Z` deja además un borrador de release, que se publica a mano.
 - **Paquete MSIX para la Microsoft Store** (`packaging/msix`): sin firmar, porque la Store lo firma al publicarlo.
   El workflow lo sube como artefacto aparte (`PulsoWin-X.Y.Z-store`). Pasos y justificación de capacidades en
   `docs/microsoft-store.md`.
@@ -25,9 +30,13 @@ Cada versión publicada tiene su etiqueta git (`vX.Y.Z`) y su release en GitHub:
   abierto); la última foto se cuenta antes de volver a la vista por interfaz; el total de la sesión se acumula y no
   baja si una fila deja de llegar; cada fila guarda el nombre de su proceso desde el primer byte; los procesos
   cerrados se conservan hasta 256 y luego se descartan los más antiguos.
-- Pruebas: 170 (de 136). Incluyen la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez de los manifiestos (app y paquete de la Store).
+- Pruebas: **185** (`185/185`, desde 136 en la `0.4.0`). Incluyen `BrowserCloserTests`, `WindowSizingTests`, la tubería real con un auxiliar simulado, las dos puntas autenticadas, la caída del auxiliar, el cierre durante el arranque y la validez de los manifiestos (app y paquete de la Store).
 - **Sin firma de código:** SignPath Foundation no aprobó la solicitud (pide más visibilidad pública del proyecto).
   El README ya no la anuncia en trámite y explica cómo verificar las descargas con sus `.sha256`.
+
+### Seguridad
+- **Parche `CVE-2026-111497` (Brotli):** el runtime `.NET` autocontenido queda fijado en **`10.0.15`** (`PulsoWin.App.csproj`, mínimo exigido `10.0.14` en `build-msi.ps1` y CI).
+- **Hardening de CI:** auditoría `dotnet list package --vulnerable --include-transitive`, verificación automática de `0 .pdb` / cero rutas locales en binarios `Release` e inspección estática del `.msi`.
 
 ## [0.4.0] — 2026-11-21
 

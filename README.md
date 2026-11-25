@@ -4,6 +4,7 @@
 ### *Limpiador seguro, visor de hardware en vivo y gestor unificado de actualizaciones para Windows 10/11*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version 0.4.1](https://img.shields.io/badge/Version-0.4.1-00E5FF.svg)](CHANGELOG.md)
 [![Build & Release](https://github.com/Leonthelee/PulsoWin/actions/workflows/release.yml/badge.svg)](https://github.com/Leonthelee/PulsoWin/actions/workflows/release.yml)
 [![.NET 10.0 LTS](https://img.shields.io/badge/.NET-10.0%20LTS-512BD4.svg?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![WPF · MVVM](https://img.shields.io/badge/UI-WPF%20%C2%B7%20MVVM%20Ne%C3%B3n%20Retro-00E5FF.svg)](#-arquitectura-y-flujos-de-ejecución)
@@ -26,7 +27,7 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 (`-warnaserror`) y pasan las **185 pruebas** (motor, monitor de red, cierre seguro de procesos en segundo plano de Edge/Chrome, ventana adaptativa, localización e instalador).
+- **Estado actual:** **`v0.4.1`**. Compila sin advertencias con el SDK de .NET 10 (`-warnaserror`) y pasan las **185 pruebas** (motor, monitor de red, cierre seguro de procesos en segundo plano de Edge/Chrome, ventana adaptativa, localización e instalador).
 
 > 🔐 **PulsoWin abre siempre sin administrador.** La red se ve **por interfaz** (Ethernet, Wi-Fi…).
 > Para ver el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión), pulsa
