@@ -20,6 +20,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        ApplyAdaptiveBounds();
         _vm = MainViewModel.Create(new WpfDialogService(this), ElevatedUpdates.InstallAsync);
         _vm.UseSignatureFrom(typeof(App).Assembly);
         DataContext = _vm;
@@ -79,6 +80,18 @@ public partial class MainWindow : Window
     private readonly GadgetMode _gadget;
 
     private void GadgetMode_Click(object sender, RoutedEventArgs e) => _gadget.Enter();
+
+    private void ApplyAdaptiveBounds()
+    {
+        Rect area = SystemParameters.WorkArea;
+        WindowBounds bounds = WindowSizing.FitToWorkArea(area.Left, area.Top, area.Width, area.Height);
+        MinWidth = bounds.MinWidth;
+        MinHeight = bounds.MinHeight;
+        Width = bounds.Width;
+        Height = bounds.Height;
+        Left = bounds.Left;
+        Top = bounds.Top;
+    }
 
     /// <summary>
     /// Cambia al otro idioma: lo guarda y ofrece reiniciar (la pregunta va en el idioma nuevo).

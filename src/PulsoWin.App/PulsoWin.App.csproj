@@ -16,6 +16,14 @@
     <!-- Ícono del .exe (Explorador, accesos directos). Lo genera tools/icon.cs a partir del diseño del mando. -->
     <ApplicationIcon>Assets\pulsowin.ico</ApplicationIcon>
   </PropertyGroup>
+  <!-- El MSI y el paquete self-contained empaquetan el runtime de .NET: fijar >= 10.0.14 mitiga CVE-2026-111497 (Brotli). -->
+  <PropertyGroup>
+    <PulsoWinRuntimeVersion>10.0.15</PulsoWinRuntimeVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <KnownFrameworkReference Update="Microsoft.NETCore.App;Microsoft.WindowsDesktop.App"
+                             LatestRuntimeFrameworkVersion="$(PulsoWinRuntimeVersion)" />
+  </ItemGroup>
   <ItemGroup>
     <!-- Windows Forms y System.Drawing NO van como usings implícitos: chocarían con los tipos de WPF
          (Application, MessageBox, Point, Color…). Se usan con el alias explícito "Forms". -->

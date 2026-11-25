@@ -4,9 +4,10 @@
 ### *Limpiador seguro, visor de hardware en vivo y gestor unificado de actualizaciones para Windows 10/11*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Build & Release](https://github.com/Leonthelee/PulsoWin/actions/workflows/release.yml/badge.svg)](https://github.com/Leonthelee/PulsoWin/actions/workflows/release.yml)
 [![.NET 10.0 LTS](https://img.shields.io/badge/.NET-10.0%20LTS-512BD4.svg?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/download/dotnet/10.0)
 [![WPF · MVVM](https://img.shields.io/badge/UI-WPF%20%C2%B7%20MVVM%20Ne%C3%B3n%20Retro-00E5FF.svg)](#-arquitectura-y-flujos-de-ejecución)
-[![Tests 170/170](https://img.shields.io/badge/Tests-170%2F170%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
+[![Tests 185/185](https://img.shields.io/badge/Tests-185%2F185%20Passing-brightgreen.svg)](#-compilar-probar-y-verificación)
 [![Zero Kernel Drivers](https://img.shields.io/badge/Drivers-Zero%20Kernel%20Drivers-success.svg)](#-decisiones-de-diseño)
 [![Deterministic & AOT-Ready](https://img.shields.io/badge/Build-Deterministic%20%C2%B7%20AOT--Safe-orange.svg)](#-estándares-de-ingeniería-y-trazabilidad)
 
@@ -15,7 +16,7 @@
   <i>Muestra exactamente qué va a tocar antes de ejecutar, corre sin privilegios por defecto, no toca el registro y no instala drivers de kernel vulnerables.</i>
 </p>
 
-[Qué hace hoy](#-qué-hace-hoy) • [Arquitectura y Flujos](#-arquitectura-y-flujos-de-ejecución) • [Estándares y Trazabilidad](#-estándares-de-ingeniería-y-trazabilidad) • [Decisiones de Diseño](#-decisiones-de-diseño) • [Compilar y Probar](#-compilar-probar-y-verificación) • [Créditos](#-créditos-y-desarrollo)
+[Interfaz](#-vista-general-de-la-interfaz) • [Qué hace hoy](#-qué-hace-hoy) • [Arquitectura y Flujos](#-arquitectura-y-flujos-de-ejecución) • [Estándares](#-estándares-de-ingeniería-y-trazabilidad) • [Seguridad](SECURITY.md) • [Privacidad](PRIVACY.md) • [Créditos](#-créditos-y-desarrollo)
 
 </div>
 
@@ -25,7 +26,7 @@
 
 Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para quien quiere mantener su PC (por ejemplo, para jugar) sin instalar herramientas que prometen milagros ni cargar servicios opacos en segundo plano.
 
-- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 y pasan las **170 pruebas** (motor y ViewModels). Probado en un equipo (Intel + NVIDIA Quadro + NVMe/SATA), en sesión normal y elevada; se agradecen reportes de otros equipos.
+- **Estado actual:** **`v0.4.0`**. Compila sin advertencias con el SDK de .NET 10 (`-warnaserror`) y pasan las **185 pruebas** (motor, monitor de red, cierre seguro de procesos en segundo plano de Edge/Chrome, ventana adaptativa, localización e instalador).
 
 > 🔐 **PulsoWin abre siempre sin administrador.** La red se ve **por interfaz** (Ethernet, Wi-Fi…).
 > Para ver el consumo exacto **por proceso** (PID, programa, descarga, subida y total de la sesión), pulsa
@@ -35,11 +36,28 @@ Limpiador y visor de hardware en una sola app para Windows 10/11, pensado para q
 
 ---
 
+## 🖥️ Vista General de la Interfaz
+
+> Capturas renderizadas con datos sintéticos de demostración (sin telemetría ni información real de equipo).
+
+| 1. Pestaña **Limpiar** + HUD Neón Retro | 2. Pestaña **Hardware** (sensores en vivo) |
+| :---: | :---: |
+| ![Limpiar](docs/screenshots/01-limpiar.png) | ![Hardware](docs/screenshots/02-hardware.png) |
+
+<details>
+<summary><b>3. Pestaña Red (tráfico en vivo Top 10, clic para ver captura)</b></summary>
+
+![Red](docs/screenshots/03-red.png)
+
+</details>
+
+---
+
 ## ⚙️ Qué hace hoy
 
 ### 1. Limpiar (sin administrador)
 - **Temporales y sistema:** archivos temporales del usuario (solo con más de 24 h), caché de miniaturas, volcados de errores y papelera de reciclaje.
-- **Navegadores (multi-perfil):** caché de Chrome, Edge y Firefox en **todos** los perfiles. Si el navegador está abierto, la regla se bloquea y avisa sin tocar archivos.
+- **Navegadores (multi-perfil y Startup Boost):** caché de Chrome, Edge y Firefox en **todos** los perfiles. Si el navegador tiene una ventana visible, la regla se bloquea y avisa sin tocar archivos; si Edge/Chrome corre únicamente en segundo plano sin ventana (*Startup Boost*), se cierra de forma segura antes de limpiar tras confirmar.
 - **Cookies selectivas con respaldo:** conservan los dominios configurados (`google.com` conserva también `mail.google.com`). Solo opera con el navegador cerrado y siempre guarda copia previa en `%LOCALAPPDATA%\PulsoWin\respaldos-cookies`.
 - **Flujo estricto en tres fases:** **Analizar** (solo lectura) → **Confirmar** (muestra archivos y tamaño exacto) → **Borrar**. Cada lote deja bitácora en `%LOCALAPPDATA%\PulsoWin\logs`.
 - **Métrica Antes / Después:** compara espacio libre en disco, % de RAM en uso y temperatura máxima leída.
@@ -177,16 +195,18 @@ PulsoWin.slnx
 Directory.Build.props             versión, builds reproducibles, strip PDB en Release y firma AssemblyMetadata
 global.json                       SDK .NET 10.0.100 (rollForward: latestFeature)
 src/
-├── PulsoWin.Core/                motor: Cleaning, Sensors, Updates, Common, Localization (textos es/en; 0 dependencia de UI)
-├── PulsoWin.Presentation/        ViewModels MVVM y servicios desacoplados de WPF
-└── PulsoWin.App/                 front WPF, tema Neón retro, Assets/pulsowin.ico y auxiliar elevado
+├── PulsoWin.Core/                motor: Cleaning, Sensors, Metrics, Network, Updates, Common (BrowserCloser), Localization
+├── PulsoWin.Presentation/        ViewModels MVVM y servicios desacoplados de WPF (WindowSizing)
+└── PulsoWin.App/                 front WPF, tema Neón retro, Modo Gadget, Assets/pulsowin.ico y auxiliares elevados
 tests/
-└── PulsoWin.Tests/               suite xUnit (170 pruebas: motor, ViewModels e idiomas)
+└── PulsoWin.Tests/               suite xUnit (185 pruebas: motor, ViewModels, red ETW, BrowserCloser, WindowSizing e idiomas)
 tools/
+├── build-msi.ps1                 pruebas + publicación self-contained + verificación runtime (>= 10.0.14) + MSI
+├── inspect-msi.ps1               auditoría solo lectura del MSI generado (sin servicios ni inicio automático)
 └── icon.cs                       generador reproducible del ícono multi-resolución
 installer/
 ├── PulsoWin.Installer.wixproj    instalador MSI (WiX Toolset 5, MS-RL)
-└── Package.wxs                   Program Files, acceso en el menú Inicio y actualización mayor
+└── Package.wxs                   Program Files, acceso en el menú Inicio y actualización mayor / in-place
 ```
 
 ---
@@ -196,7 +216,7 @@ installer/
 Requisito: [SDK de .NET 10](https://dotnet.microsoft.com/download/dotnet/10.0) (LTS). .NET 8 dejó de tener soporte en noviembre de 2026.
 
 ```powershell
-# 1. Ejecutar toda la suite de pruebas (170/170 en verde)
+# 1. Ejecutar toda la suite de pruebas (185/185 en verde)
 dotnet test --nologo
 
 # 2. Compilar en Release tratando advertencias como errores (sin rutas locales en RSDS)
@@ -205,9 +225,8 @@ dotnet build -c Release --no-incremental -warnaserror --nologo
 # 3. Ejecutar la aplicación de escritorio
 dotnet run --project src/PulsoWin.App
 
-# 4. (Opcional) Publicar y generar el instalador MSI
-dotnet publish src/PulsoWin.App -c Release -r win-x64 --self-contained -p:DebugType=none -o artifacts\publish\win-x64
-dotnet build installer\PulsoWin.Installer.wixproj -c Release -p:Version=0.4.0 "-p:PublishDir=$PWD\artifacts\publish\win-x64" -o artifacts\msi
+# 4. Construir y auditar el instalador MSI (incluye chequeo CVE-2026-111497 y 0 .pdb)
+.\tools\build-msi.ps1
 ```
 
 ---
@@ -253,8 +272,17 @@ El monitor de red y el visor de hardware leen datos del propio equipo y no los g
 
 ## 👥 Créditos y desarrollo
 
-- **Autoría y dirección:** Daniel Elías Díaz Lepe ([@Leonthelee](https://github.com/Leonthelee))
-- **Co-desarrollo y revisión cruzada:** Claude (Opus 5.5 · Anthropic) y Antigravity Orquestador (Gemini 4 · Google)
+- **Autoría, arquitectura y dirección:** Daniel Elías Díaz Lepe ([@Leonthelee](https://github.com/Leonthelee))
+
+### Trazabilidad de asistencia de ingeniería y revisión cruzada por modelo
+
+Cada intervención asistida queda auditada en el historial de `git log` mediante su trailer `Co-Authored-By` y se detalla en [AUTHORS.md](AUTHORS.md) y [SECURITY.md](SECURITY.md):
+
+| Modelo / Entorno | Proveedor | Rol técnico y alcance auditado en el repositorio | Atribución en Git |
+| :--- | :--- | :--- | :--- |
+| **Claude Opus 5.5** *(Claude Code)* | Anthropic | Núcleo de limpieza 3 fases y barreras anti-borrado, monitor de tráfico en vivo por interfaz y auxiliar elevado ETW (`--net-helper` con tubería autenticada por PID), Modo Gadget con 5 diales y bandeja, localización bilingüe (`es`/`en`), MSI WiX v5, empaquetado MSIX para Microsoft Store y workflow SHA-pinned `.github/workflows/release.yml`. | `Claude Opus 5.5 <noreply@anthropic.com>` |
+| **Gemini Pro** *(Antigravity · Modo Planificación)* | Google DeepMind | Arquitectura de aislamiento de privilegios (`asInvoker`), análisis de higiene binaria PE (`RSDS` sin rutas `.pdb`), estrategia de cierre en 2 fases para *Startup Boost* (`BrowserCloser`), especificación `WindowSizing`, endurecimiento supply-chain (`SECURITY.md`, chequeo `CVE-2026-111497` en `coreclr.dll >= 10.0.14` e inspección estática MSI) y revisión cruzada. | `gemini-code-assist[bot]` |
+| **Gemini Flash** *(Antigravity · Modo Ejecución)* | Google DeepMind | Implementación de `BrowserCloser`, `WindowSizing`, `build-msi.ps1` / `inspect-msi.ps1`, suite de pruebas `BrowserCloserTests` y `WindowSizingTests`, extensión de verificación NuGet/MSI en `.github/workflows/release.yml` y renderizado *offscreen* de capturas UI sintéticas (`docs/screenshots/`). | `gemini-code-assist[bot]` |
 
 > *Co-designed with AI coding assistants (Claude & Gemini).* Ver [AUTHORS.md](AUTHORS.md).
 

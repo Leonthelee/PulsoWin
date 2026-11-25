@@ -14,7 +14,8 @@
 
     <SummaryInformation Description="PulsoWin $(ProductVersion): limpiador, visor de hardware y monitor de red" />
 
-    <MajorUpgrade DowngradeErrorMessage="Ya hay instalada una versión más nueva de PulsoWin." />
+    <MajorUpgrade AllowSameVersionUpgrades="yes"
+                  DowngradeErrorMessage="Ya hay instalada una versión más nueva de PulsoWin." />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <!-- Ícono y datos en "Configuración > Aplicaciones" -->

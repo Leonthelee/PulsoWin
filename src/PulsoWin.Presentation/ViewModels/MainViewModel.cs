@@ -114,7 +114,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var status = new StatusBar();
         var probe = new ProcessProbe();
         var dataDir = AppPaths.DataDir;
-        var clean = new CleanViewModel(RuleCatalog.LoadBuiltIn(), probe, dialogs, new WindowsRecycleBin(), status, dataDir, sources);
+        var clean = new CleanViewModel(RuleCatalog.LoadBuiltIn(), probe, dialogs, new WindowsRecycleBin(), status, dataDir, sources, new BrowserCloser());
         var updates = new UpdatesViewModel(new WingetClient(), () => new WindowsUpdateClient().QueryPending(),
             installWindowsUpdates, dialogs, status, dataDir);
         // Red por proceso: la pide la persona en la pestaña RED; la mide un auxiliar elevado, no la app.

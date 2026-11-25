@@ -20,6 +20,7 @@ public sealed partial class CleanViewModel : ObservableObject
     private readonly StatusBar _status;
     private readonly string _dataDir;
     private readonly IReadOnlyList<ISensorSource> _sources;
+    private readonly IBrowserCloser? _closer;
     private List<CookiePlan> _cookiePlans = [];
     private KeepList _cookieKeep = KeepList.Parse(""); // la lista con la que se calcularon los planes que se confirman
 
@@ -51,7 +52,8 @@ public sealed partial class CleanViewModel : ObservableObject
         IRecycleBin recycleBin,
         StatusBar status,
         string dataDir,
-        IReadOnlyList<ISensorSource> sources)
+        IReadOnlyList<ISensorSource> sources,
+        IBrowserCloser? closer = null)
     {
         _probe = probe;
         _dialogs = dialogs;
@@ -59,6 +61,7 @@ public sealed partial class CleanViewModel : ObservableObject
         _status = status;
         _dataDir = dataDir;
         _sources = sources;
+        _closer = closer;
         foreach (var rule in rules) Rules.Add(new RuleRow(rule));
         Rules.Add(RuleRow.CreateRecycleBin());
         _keepText = LoadKeepList();
@@ -98,12 +101,15 @@ public sealed partial class CleanViewModel : ObservableObject
 
             var (scans, recycle, plans) = await Task.Run(() =>
             {
-                var scanner = new Scanner(_probe);
+                // En Windows 11 Edge corre en segundo plano sin ventana (--no-startup-window): durante el análisis
+                // solo se considera «abierto» si tiene ventana visible; al limpiar se cierra ese proceso residual.
+                IProcessProbe scanProbe = _closer is null ? _probe : new VisibleWindowBrowserProbe(_probe, _closer);
+                var scanner = new Scanner(scanProbe);
                 var scanResults = selected.Where(r => !r.IsRecycleBin)
                     .Select(r => (Row: r, Item: scanner.Scan(r.Rule!))).ToList();
                 var bin = selected.Any(r => r.IsRecycleBin) ? _recycleBin.Query() : ((long, long)?)null;
                 var cookiePlans = wantCookies
-                    ? CookieStores.Discover().Select(s => new CookieCleaner(_probe).Plan(s, keep)).ToList()
+                    ? CookieStores.Discover().Select(s => new CookieCleaner(scanProbe).Plan(s, keep)).ToList()
                     : [];
                 return (scanResults, bin, cookiePlans);
             });
@@ -183,6 +189,17 @@ public sealed partial class CleanViewModel : ObservableObject
         _status.Message = L.T("Clean_Cleaning");
         try
         {
+            // Si Chrome o Edge solo están en segundo plano sin ventana (Startup Boost), cerrarlos antes de borrar.
+            if (_closer is not null)
+            {
+                var browserTargets = work.Where(r => !r.IsRecycleBin)
+                    .SelectMany(r => r.Rule!.BlockingProcesses)
+                    .Concat(cookiePlans.Select(p => p.Store.Process))
+                    .Where(p => BrowserCloser.ChromiumBrowsers.Contains(p, StringComparer.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase);
+                await _closer.CloseHeadlessAsync(browserTargets, TimeSpan.FromSeconds(4));
+            }
+
             // Se usa la lista con la que se analizó (y que se confirmó), no lo que haya en el cuadro ahora.
             var keep = _cookieKeep;
             SaveKeepList(string.Join(Environment.NewLine, keep.Domains));
@@ -317,5 +334,13 @@ public sealed partial class CleanViewModel : ObservableObject
         {
             // No es crítico: la lista se usa igual en esta limpieza.
         }
+    }
+
+    private sealed class VisibleWindowBrowserProbe(IProcessProbe inner, IBrowserCloser closer) : IProcessProbe
+    {
+        public bool IsRunning(string processName) =>
+            BrowserCloser.ChromiumBrowsers.Contains(processName, StringComparer.OrdinalIgnoreCase)
+                ? inner.IsRunning(processName) && closer.HasVisibleWindow(processName)
+                : inner.IsRunning(processName);
     }
 }
